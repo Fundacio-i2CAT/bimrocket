@@ -124,7 +124,7 @@ public class WebdavServlet extends HttpServlet
     if (aclRequested)
     {
       ACL acl = fileService.getACL(path);
-      String xml = MutableACLXMLDeserializer.deserialize(acl);
+      String xml = ACLXMLDeserializer.deserialize(acl);
 
       response.setContentType("application/xml");
       response.setCharacterEncoding("UTF-8");
@@ -203,10 +203,13 @@ public class WebdavServlet extends HttpServlet
     Metadata metadata = fileService.get(path);
     if (metadata.isCollection())
     {
-        try {
-            doPropfind(request, response);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        try
+        {
+          doPropfind(request, response);
+        }
+        catch (Exception e)
+        {
+          throw new RuntimeException(e);
         }
     }
     else
@@ -255,7 +258,7 @@ public class WebdavServlet extends HttpServlet
 
     User user = securityService.getCurrentUser();
 
-    MutableACL acl = MutableACLXMLSerializer.serialize(requestBody, user.getId());
+    ACL acl = ACLXMLSerializer.serialize(requestBody, user.getId());
 
     fileService.setACL(path, acl);
 
@@ -530,7 +533,8 @@ public class WebdavServlet extends HttpServlet
           properties.add("{" + node.getNamespaceURI() + "}" + node.getLocalName());
         }
       }
-    } catch (Exception e)
+    }
+    catch (Exception e)
     {
       throw new IOException("Failed to parse PROPFIND body", e);
     }
