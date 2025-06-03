@@ -28,7 +28,7 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.servlet;
+package org.bimrocket.servlet.webdav;
 
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
@@ -46,8 +46,6 @@ import org.bimrocket.service.file.*;
 import org.bimrocket.service.file.exception.LockedFileException;
 import org.bimrocket.service.file.util.MutableACL;
 import org.bimrocket.service.security.SecurityService;
-import org.bimrocket.servlet.webdav.MutableACLXMLDeserializer;
-import org.bimrocket.servlet.webdav.MutableACLXMLSerializer;
 import org.bimrocket.util.URIEncoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -250,24 +248,14 @@ public class WebdavServlet extends HttpServlet
   protected void doAcl(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException, Exception
   {
-    StringBuilder requestBody = new StringBuilder();
-    String line;
-    try (BufferedReader reader = request.getReader())
-    {
-      while ((line = reader.readLine()) != null)
-      {
-        requestBody.append(line).append("\n");
-      }
-    }
+    String requestBody = IOUtils.toString(request.getReader());
 
     Path path = getPath(request);
     logParameters(request, path);
 
-    String requestXmlData = requestBody.toString();
-
     User user = securityService.getCurrentUser();
 
-    MutableACL acl = MutableACLXMLSerializer.serialize(requestXmlData, user.getId());
+    MutableACL acl = MutableACLXMLSerializer.serialize(requestBody, user.getId());
 
     fileService.setACL(path, acl);
 
