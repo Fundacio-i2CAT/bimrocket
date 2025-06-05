@@ -78,6 +78,9 @@ public class ACLXMLSerializer
           case "D:write":
             aclMap.get("WRITE").add(principal);
             break;
+          default:
+            throw new IllegalArgumentException("Unknown Privilege: " + privilegeType + " .Valid Priveleges are: read, write, read-acl, write-acl");
+          }
         }
       }
     }

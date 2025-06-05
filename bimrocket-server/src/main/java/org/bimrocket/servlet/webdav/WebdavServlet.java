@@ -251,6 +251,8 @@ public class WebdavServlet extends HttpServlet
   protected void doAcl(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException, Exception
   {
+    ACL acl = null;
+
     String requestBody = IOUtils.toString(request.getReader());
 
     Path path = getPath(request);
@@ -258,7 +260,17 @@ public class WebdavServlet extends HttpServlet
 
     User user = securityService.getCurrentUser();
 
-    ACL acl = ACLXMLSerializer.serialize(requestBody, user.getId());
+    try
+    {
+      acl = ACLXMLSerializer.serialize(requestBody, user.getId());
+    }
+    catch(IllegalArgumentException e)
+    {
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      response.setContentType("text/plain");
+      response.getWriter().write(e.getMessage());
+      return;
+    }
 
     fileService.setACL(path, acl);
 
