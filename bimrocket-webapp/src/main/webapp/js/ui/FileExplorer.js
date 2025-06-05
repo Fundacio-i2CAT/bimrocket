@@ -11,7 +11,7 @@ import { LoginDialog } from "./LoginDialog.js";
 import { ServiceDialog } from "./ServiceDialog.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
-import { AclEditorDialog } from "./AclEditorDialog.js";
+import { AclEditorDialog } from "./ACLEditorDialog.js";
 import { Toast } from "./Toast.js";
 import { ServiceManager } from "../io/ServiceManager.js";
 import { FileService, Metadata, Result, ACL } from "../io/FileService.js";
@@ -272,7 +272,7 @@ class FileExplorer extends Panel
   {
     const application = this.application;
     const aclFilePath = this.basePath;
-    const dialog = new AclEditorDialog(application, this.service, aclFilePath);
+    const dialog = new ACLEditorDialog(application, this.service, aclFilePath);
     dialog.load();
   }
 

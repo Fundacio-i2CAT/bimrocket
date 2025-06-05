@@ -3,7 +3,7 @@ import { Controls } from "./Controls.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { Result } from "../io/FileService.js";
 
-class AclEditorDialog extends Dialog
+class ACLEditorDialog extends Dialog
 {
   constructor(application, fileService, aclFilePath)
   {
@@ -74,4 +74,4 @@ class AclEditorDialog extends Dialog
   }
 }
 
-export { AclEditorDialog };
+export { ACLEditorDialog };
