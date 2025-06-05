@@ -264,11 +264,18 @@ public class WebdavServlet extends HttpServlet
     {
       acl = ACLXMLSerializer.serialize(requestBody, user.getId());
     }
-    catch(IllegalArgumentException e)
+    catch( IllegalArgumentException e)
     {
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      response.setContentType("text/plain");
+      response.setContentType("application/json");
       response.getWriter().write(e.getMessage());
+      return;
+    }
+    catch (Exception e)
+    {
+      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      response.setContentType("text/plain");
+      response.getWriter().write("Internal Server Error");
       return;
     }
 

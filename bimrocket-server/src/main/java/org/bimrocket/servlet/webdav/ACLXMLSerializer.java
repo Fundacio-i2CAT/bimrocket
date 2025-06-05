@@ -1,5 +1,6 @@
 package org.bimrocket.servlet.webdav;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bimrocket.service.file.ACL;
 import org.bimrocket.service.file.Privilege;
 import org.bimrocket.service.file.util.MutableACL;
@@ -13,10 +14,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // Deserialize XML to MutableACL object
 public class ACLXMLSerializer
@@ -79,7 +77,20 @@ public class ACLXMLSerializer
             aclMap.get("WRITE").add(principal);
             break;
           default:
-            throw new IllegalArgumentException("Unknown Privilege: " + privilegeType + " .Valid Priveleges are: read, write, read-acl, write-acl");
+            ObjectMapper mapper = new ObjectMapper();Add commentMore actions
+
+            Map<String, Object> info = new LinkedHashMap<>();
+            info.put("validPriveleges", Arrays.asList("read", "write", "read-acl", "write-acl"));
+
+            Map<String, Object> message = new LinkedHashMap<>();
+            message.put("unknownPrivilege", privilegeType);
+            message.put("info", info);
+
+            Map<String, Object> root = new LinkedHashMap<>();
+            root.put("message", message);
+
+            String jsonError = mapper.writeValueAsString(root);
+            throw new IllegalArgumentException(jsonError);
           }
         }
       }
