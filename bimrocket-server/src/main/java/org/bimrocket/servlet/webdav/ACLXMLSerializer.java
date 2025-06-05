@@ -1,6 +1,17 @@
 package org.bimrocket.servlet.webdav;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.bimrocket.service.file.ACL;
 import org.bimrocket.service.file.Privilege;
 import org.bimrocket.service.file.util.MutableACL;
@@ -10,11 +21,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 // Deserialize XML to MutableACL object
 public class ACLXMLSerializer
@@ -77,7 +84,7 @@ public class ACLXMLSerializer
             aclMap.get("WRITE").add(principal);
             break;
           default:
-            ObjectMapper mapper = new ObjectMapper();Add commentMore actions
+            ObjectMapper mapper = new ObjectMapper();
 
             Map<String, Object> info = new LinkedHashMap<>();
             info.put("validPriveleges", Arrays.asList("read", "write", "read-acl", "write-acl"));
@@ -91,7 +98,6 @@ public class ACLXMLSerializer
 
             String jsonError = mapper.writeValueAsString(root);
             throw new IllegalArgumentException(jsonError);
-          }
         }
       }
     }
