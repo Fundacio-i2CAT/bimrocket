@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// i2CAT: Deserialize XML to MutableACL object
+// Deserialize XML to MutableACL object
 public class ACLXMLSerializer
 {
 
@@ -31,7 +31,7 @@ public class ACLXMLSerializer
   );
   private static final String BAD_ROLE = "Unknown Role ";
 
-  // i2CAT: Receives current user to replace when tag is D:owner
+  // Receives current user to replace when tag is D:owner
   public static ACL serialize(String xml, String userId) throws Exception
   {
     MutableACL acl = new MutableACL();
