@@ -11,7 +11,7 @@ import { LoginDialog } from "./LoginDialog.js";
 import { ServiceDialog } from "./ServiceDialog.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
-import { AclEditorDialog } from "./ACLEditorDialog.js";
+import { ACLEditorDialog } from "./ACLEditorDialog.js";
 import { Toast } from "./Toast.js";
 import { ServiceManager } from "../io/ServiceManager.js";
 import { FileService, Metadata, Result, ACL } from "../io/FileService.js";
