@@ -101,9 +101,11 @@ class ServerAdminDialog extends Dialog
     
     this.addButton("close", "button.close", () => this.hide());
   
-    if (this.usersLoaded && this.users) {
+    if (this.usersLoaded && this.users) 
+    {
       this.populateUsers(this.users);
-      if (this.tabbedPane && this.tabbedPane.paneElem) {
+      if (this.tabbedPane && this.tabbedPane.paneElem) 
+      {
         this.tabbedPane.paneElem.style.display = "block";
       }
     }
@@ -112,7 +114,8 @@ class ServerAdminDialog extends Dialog
   updateSecurityService() {
     const urlEntered = this.apiServiceElem.value.trim();
 
-    if (!this.application.services[this.group]) {
+    if (!this.application.services[this.group]) 
+    {
       this.application.services[this.group] = {};
     }
 
@@ -125,7 +128,8 @@ class ServerAdminDialog extends Dialog
     this.application.services[this.group] = this.service;
   }
 
-  createUsersTab(container) {
+  createUsersTab(container) 
+  {
 
     if (this.usersTabContainer && this.usersTabContainer.parentNode) {
       this.usersTabContainer.parentNode.removeChild(this.usersTabContainer);
@@ -151,16 +155,18 @@ class ServerAdminDialog extends Dialog
     this.usersTabContainer = tabContent;
   }
   
-  populateUsers(users) {
+  populateUsers(users) 
+  {
     this.allUsers = users;
 
-    if (!this.tableContainer) {
-        console.error("Table container not found!");
-        return;
+    if (!this.tableContainer) 
+    {
+      return;
     }
     this.tableContainer.style.display = "block";
 
-    if (this.usersTableElem) {
+    if (this.usersTableElem) 
+    {
       this.usersTableElem.remove();
       this.usersTableElem = null;
     }
@@ -176,7 +182,8 @@ class ServerAdminDialog extends Dialog
     tbody.innerHTML = "";
     tbody.style.textAlign = "left";
 
-    if (!users || users.length === 0) {
+    if (!users || users.length === 0) 
+    {
       let row = tbody.insertRow();
       let cell = row.insertCell(0);
       cell.colSpan = 3;
@@ -187,7 +194,8 @@ class ServerAdminDialog extends Dialog
       return;
     }
 
-    users.forEach((user, index) => {
+    users.forEach((user, index) => 
+    {
       const row = Controls.addTableRow(this.usersTableElem);
 
       Controls.addLink(row.children[0], user.id || "-", "#", null, null,
@@ -200,12 +208,14 @@ class ServerAdminDialog extends Dialog
 
     });
 
-    if (this.addUserButton) {
+    if (this.addUserButton) 
+    {
       this.addUserButton.style.display = "block";
     }
   }
 
-  showUserDetails(user, index) {
+  showUserDetails(user, index) 
+  {
     this.currentUserIndex = index;
     this.showUserForm(user);
   }
@@ -231,13 +241,16 @@ class ServerAdminDialog extends Dialog
     }
   }
 
-  searchUsers() {
+  searchUsers() 
+  {
     
-    if (!this.service || this.service.url !== this.apiServiceElem.value.trim()) {
+    if (!this.service || this.service.url !== this.apiServiceElem.value.trim()) 
+    {
       this.updateSecurityService();
     }
 
-    const onCompleted = users => {
+    const onCompleted = users => 
+    {
       this.hideProgressBar();
       this.users = users;
       this.usersLoaded = true;
@@ -245,14 +258,15 @@ class ServerAdminDialog extends Dialog
 
       this.hideUserForm();
       
-      if (this.tabbedPane && this.tabbedPane.paneElem) {
+      if (this.tabbedPane && this.tabbedPane.paneElem) 
+      {
         this.tabbedPane.paneElem.style.display = "block";
       }
     };
 
-    const onError = error => {
+    const onError = error => 
+    {
       this.hideProgressBar();
-      console.error("Error getting users:", error);
       this.handleError(error, () => this.searchUsers());
     };
 
@@ -261,14 +275,17 @@ class ServerAdminDialog extends Dialog
     this.service.getUsers(onCompleted, onError);
   }
   
-  createUserForm() {
-    if (!this.detailPanelElem) {
+  createUserForm() 
+  {
+    if (!this.detailPanelElem) 
+    {
       this.detailPanelElem = document.createElement("div");
       this.detailPanelElem.className = "bcf_panel";
       this.detailPanelElem.style.display = "none";
     }
 
-    if (this.usersTabContainer) {
+    if (this.usersTabContainer) 
+    {
       this.usersTabContainer.appendChild(this.detailPanelElem);
     }
   
@@ -282,62 +299,42 @@ class ServerAdminDialog extends Dialog
     this.detailHeaderElem.className = "admin_topic_nav";
     this.detailBodyElem.appendChild(this.detailHeaderElem);
 
-    this.backButton = Controls.addButton(
-      this.detailHeaderElem,
-      "backUsers",
-      "button.back",
-      () => this.hideUserForm()
-    );
+    this.backButton = Controls.addButton(this.detailHeaderElem,
+      "backUsers", "button.back", () => this.hideUserForm());
 
-    this.idField = Controls.addTextField(
-      this.detailBodyElem, "id", "bim|label.id"
-    );
+    this.idField = Controls.addTextField(this.detailBodyElem, 
+      "id", "bim|label.id");
 
-    this.usernameField = Controls.addTextField(
-      this.detailBodyElem, "username", "label.name"
-    );
+    this.usernameField = Controls.addTextField(this.detailBodyElem, 
+      "username", "label.name");
 
-    this.emailField = Controls.addTextField(
-      this.detailBodyElem, "email", "bim|label.email"
-    );
+    this.emailField = Controls.addTextField(this.detailBodyElem, 
+      "email", "bim|label.email");
 
-    this.passwordField = Controls.addTextField(
-      this.detailBodyElem, "password", "label.password"
-    );
+    this.passwordField = Controls.addTextField(this.detailBodyElem, 
+      "password", "label.password");
     this.passwordField.type = "password";
 
-    this.passwordConfirmField = Controls.addTextField(
-      this.detailBodyElem, "passwordConfirm", "bim|label.confirm_password"
-    );
+    this.passwordConfirmField = Controls.addTextField(this.detailBodyElem, 
+      "passwordConfirm", "bim|label.confirm_password");
     this.passwordConfirmField.type = "password";
-      
-    // this.roleField = Controls.addTextAreaField(
-    //   this.detailBodyElem,
-    //   "roles",
-    //   "bim|label.roles",
-    //   null
-    // );
 
-    this.tagsInput = Controls.addTagsInput(
-      this.detailBodyElem,
-      "roles",
-      "bim|label.roles",
-      "bim|placeholder.add_tags",
-      []
-    );
+    this.tagsInput = Controls.addTagsInput(this.detailBodyElem,
+      "roles", "bim|label.roles", "bim|placeholder.add_tags", []);
 
     this.detailButtonsElem = document.createElement("div");
     this.detailButtonsElem.className = "admin_buttons";
     this.detailBodyElem.appendChild(this.detailButtonsElem);
 
-    this.saveButton = Controls.addButton(
-      this.detailButtonsElem,
-      "saveUser",
-      "button.save",
-      () => {
-        if (this.validatePasswords()) {
+    this.saveButton = Controls.addButton(this.detailButtonsElem,
+      "saveUser", "button.save", () => 
+      {
+        if (this.validatePasswords()) 
+        {
           this.saveUser();
-        } else {
+        } 
+        else 
+        {
           MessageDialog.create("ERROR", "bim|message.confirm_password_error")
             .setClassName("error")
             .setI18N(this.application.i18n).show();
@@ -346,11 +343,8 @@ class ServerAdminDialog extends Dialog
       }
     );
 
-    this.deleteButton = Controls.addButton(
-      this.detailButtonsElem,
-      "deleteUser",
-      "button.delete",
-      () => {
+    this.deleteButton = Controls.addButton(this.detailButtonsElem,
+      "deleteUser", "button.delete", () => {
         ConfirmDialog.create("bim|title.delete_user",
           "bim|question.delete_user")
           .setAction(() => {
@@ -363,17 +357,21 @@ class ServerAdminDialog extends Dialog
     );
   }
 
-  validatePasswords() {
+  validatePasswords() 
+  {
     return this.passwordField.value === this.passwordConfirmField.value;
   }
 
-  hideUserForm() {
+  hideUserForm() 
+  {
     this.detailPanelElem.style.display = "none";
     
-    if (this.tableContainer) {
+    if (this.tableContainer) 
+    {
       this.tableContainer.style.display = "block";
     }
-    if (this.toolbar) {
+    if (this.toolbar) 
+    {
       this.toolbar.style.display = "flex";
     }
   }
@@ -384,7 +382,6 @@ class ServerAdminDialog extends Dialog
     const username = this.usernameField.value.trim();
     const newPassword = this.passwordField.value;
     const email = this.emailField.value.trim();
-    // const roles = this.roleField.value.split(',').map(role => role.trim());
     const roles = this.tagsInput.getTags();
 
     const user = {
@@ -395,19 +392,22 @@ class ServerAdminDialog extends Dialog
       roles: roles,
     };
 
-    if (newPassword) {
+    if (newPassword) 
+    {
       user.password = newPassword;
     }
-
-    else if (this.currentUserData?.password_hash) {
+    else if (this.currentUserData?.password_hash) 
+    {
       user.password_hash = this.currentUserData.password_hash;
     }
 
-    if (this.currentUserData?.creation_date) {
+    if (this.currentUserData?.creation_date) 
+    {
       user.creation_date = this.currentUserData.creation_date;
     }
 
-    const onCompleted = () => {
+    const onCompleted = () => 
+    {
       this.hideProgressBar();
       this.hideUserForm();
       this.searchUsers();
@@ -483,15 +483,14 @@ class ServerAdminDialog extends Dialog
     }
     this.detailPanelElem.style.display = "block";
     this.deleteButton.disabled = (user === null);
-    if (user) {
+    if (user) 
+    {
       // update
       this.currentUserData = user;
-      // this input should be readonly
       this.idField.value = user.id || "";
       this.idField.readOnly = true;
       this.usernameField.value = user.name || "";
       this.emailField.value = user.email || "";
-      // this.roleField.value = user.roles ? user.roles.join(", ") : "";
       this.tagsInput.setTags(user.roles || []);
       this.currentUserId = user.id;
   
@@ -511,7 +510,6 @@ class ServerAdminDialog extends Dialog
       this.idField.readOnly = false;
       this.usernameField.value = "";
       this.emailField.value = "";
-      // this.roleField.value = "";
       this.tagsInput.setTags([]);
       this.currentUserId = null;
   

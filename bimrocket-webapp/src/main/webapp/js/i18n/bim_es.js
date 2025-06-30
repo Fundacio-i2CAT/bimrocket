@@ -105,7 +105,7 @@ export const translations =
   "label.roles_management": "Gestión de roles",
   "label.configuration": "Configuración",
   "label.id": "Id:",
-  "label.email": "Email:",
+  "label.email": "Email:  ",
   "label.roles": "Roles:",
   "label.confirm_password": "Confirmar contraseña:",
 
