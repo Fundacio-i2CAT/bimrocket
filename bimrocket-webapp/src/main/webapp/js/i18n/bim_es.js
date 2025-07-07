@@ -161,6 +161,7 @@ export const translations =
   "message.user_deleted" : "Usuario borrado.",
   "message.confirm_password_error" : "Las contraseñas no coinciden.",
   "message.user_searched" : "No se ha encontrado ningún usuario.",
+  "message.all_fields_required": "Todos los campos son obligatorios.",
 
   "question.delete_project" : "Quieres borrar este proyecto y todas sus incidencias?",
   "question.delete_topic" : "Quieres borrar esta incidencia?",

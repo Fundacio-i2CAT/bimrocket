@@ -160,6 +160,7 @@ export const translations =
   "message.user_deleted" : "User deleted.",
   "message.confirm_password_error" : "The passwords do not match.",
   "message.user_searched" : "No user found.",
+  "message.all_fields_required": "All fields are required.",
 
   "question.delete_project" : "Do you want to delete this project and all its topics?",
   "question.delete_topic" : "Do you want to delete this topic?",

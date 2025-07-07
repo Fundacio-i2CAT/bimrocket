@@ -360,6 +360,14 @@ class ServerAdminDialog extends Dialog
     const email = this.emailField.value.trim();
     const roles = this.tagsInput.getTags();
 
+
+    if (!id || !username || !email || roles.length === 0) {
+      MessageDialog.create("ERROR", "bim|message.all_fields_required")
+        .setClassName("error")
+        .setI18N(application.i18n).show();
+      return;
+    }
+
     const user = {
       active: true,
       id: id,
@@ -367,6 +375,7 @@ class ServerAdminDialog extends Dialog
       email: email,
       roles: roles,
     };
+    
 
     if (newPassword) 
     {
