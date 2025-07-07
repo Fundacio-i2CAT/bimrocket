@@ -18,8 +18,7 @@ class ServerAdminTool extends Tool
     this.immediate = true;
 
     this.dialog = new ServerAdminDialog(this.application,
-      { title : "bim|title.admin_service",
-      });
+      { title : "bim|title.admin_service" });
   }
 
   execute()

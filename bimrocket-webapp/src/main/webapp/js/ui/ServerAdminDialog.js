@@ -29,10 +29,8 @@ class ServerAdminDialog extends Dialog
     this.tableContainer = null;
     this.usersLoaded = false;
     
-    // Set initial service
     this.service = this.application.services[this.group];
   
-    // Main containers
     const mainContainer = this.createContainer('admin_panel', this.bodyElem);
     const connPanel = this.createContainer('admin_body', mainContainer);
     const mainWrapper = this.createContainer('admin_panel', this.bodyElem);
@@ -49,29 +47,6 @@ class ServerAdminDialog extends Dialog
   
     const buttonsContainer = this.createContainer('admin_buttons', connPanel);
     this.connButtonsElem = buttonsContainer;
-  
-    // Button to update the security service URL
-    // this.updateServiceButton = Controls.addButton(
-    //   buttonsContainer, 
-    //   "updateService", 
-    //   "button.update_service", 
-    //   () => this.updateSecurityService()
-    // );
-    
-    // Button to connect and get users
-    // this.sendElem = document.createElement("div");
-    // this.sendElem.className = "auth-column"; 
-    // this.connPanelElem.appendChild(this.sendElem);
-  
-    // this.usernameElem = Controls.addTextField(this.sendElem,
-    //   "upload_model_username", "label.username");
-    // this.passwordElem = Controls.addPasswordField(this.sendElem,
-    //   "upload_model_password", "label.password");
-  
-    // this.sendButton = Controls.addButton(this.sendElem,
-    //   "upload_model_send", "button.connect", () => {
-    //     this.authenticateAndGetUsers();
-    //   });
   
     this.connectButton = Controls.addButton(buttonsContainer, 
       "adminConnect", "button.connect", () => {
@@ -111,7 +86,8 @@ class ServerAdminDialog extends Dialog
     }
   }
 
-  updateSecurityService() {
+  updateSecurityService() 
+  {
     const urlEntered = this.apiServiceElem.value.trim();
 
     if (!this.application.services[this.group]) 
@@ -146,7 +122,7 @@ class ServerAdminDialog extends Dialog
     tabContent.appendChild(this.toolbar);
   
     this.newUserButton = Controls.addButton(this.toolbar,
-      "newUser", "bim|button.new_user", () => this.showUserForm());
+      "newUser", "bim|button.new_user", () => this.showUser());
 
     this.tableContainer = document.createElement("div");
     this.tableContainer.className = "table_container";
@@ -187,7 +163,7 @@ class ServerAdminDialog extends Dialog
       let row = tbody.insertRow();
       let cell = row.insertCell(0);
       cell.colSpan = 3;
-      I18N.set(cell, "textContent", "bim|messaget.user_searched");
+      I18N.set(cell, "textContent", "bim|message.user_searched");
       this.application.i18n.update(cell);
       cell.style.textAlign = "center";
       if (this.toolbar) this.toolbar.style.display = "none";
@@ -217,7 +193,7 @@ class ServerAdminDialog extends Dialog
   showUserDetails(user, index) 
   {
     this.currentUserIndex = index;
-    this.showUserForm(user);
+    this.showUser(user);
   }
 
   deleteUser(userId)
@@ -280,7 +256,7 @@ class ServerAdminDialog extends Dialog
     if (!this.detailPanelElem) 
     {
       this.detailPanelElem = document.createElement("div");
-      this.detailPanelElem.className = "bcf_panel";
+      this.detailPanelElem.className = "admin_panel";
       this.detailPanelElem.style.display = "none";
     }
 
@@ -470,7 +446,7 @@ class ServerAdminDialog extends Dialog
     loginDialog.show();
   }
 
-  showUserForm(user = null) {
+  showUser(user = null) {
     if (this.tableContainer) {
       this.tableContainer.style.display = "none";
     }
@@ -514,9 +490,11 @@ class ServerAdminDialog extends Dialog
       this.currentUserId = null;
   
       this.passwordField.value = "";
+      this.passwordField.placeholder ="";
       this.passwordField.required = true;
       
       this.passwordConfirmField.value = "";
+      this.passwordConfirmField.placeholder = "";
       this.passwordConfirmField.required = true;
     }
   

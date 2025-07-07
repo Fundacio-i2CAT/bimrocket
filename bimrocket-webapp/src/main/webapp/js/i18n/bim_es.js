@@ -172,6 +172,6 @@ export const translations =
   "question.delete_user" : "Quieres borrar este usuario?",
 
   "placeholder.keep_password": "Dejar en blanco para mantener la contraseña actual",
-  "placeholder.confirm_password": "Confirmar nueva contraseña (si se cambia)",
+  "placeholder.confirm_password": "Repite la nueva contraseña",
   "placeholder.add_tags": "Escribe y pulsa Enter para añadir etiquetas",
 };

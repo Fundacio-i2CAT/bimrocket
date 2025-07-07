@@ -175,6 +175,6 @@ export const translations =
   "question.delete_user" : "Vols esborrar aquest usuari?",
 
   "placeholder.keep_password": "Deixa en blanc per mantenir la paraula de pas actual",
-  "placeholder.confirm_password": "Confirma la nova paraula de pas (si la canvies)",
+  "placeholder.confirm_password": "Repeteix la nova paraula de pas",
   "placeholder.add_tags": "Escriu i prem Enter per afegir etiquetes"
 };

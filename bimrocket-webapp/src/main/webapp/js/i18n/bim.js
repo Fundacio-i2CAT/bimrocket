@@ -171,6 +171,6 @@ export const translations =
   "question.delete_user" : "Do you want to delete this usuar?",
 
   "placeholder.keep_password": "Leave blank to keep current password",
-  "placeholder.confirm_password": "Confirm new password (if changing)",
+  "placeholder.confirm_password": "Repeat new password",
   "placeholder.add_tags": "Write and press Enter to add tags"
 };
