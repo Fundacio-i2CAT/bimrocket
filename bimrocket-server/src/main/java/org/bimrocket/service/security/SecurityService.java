@@ -611,7 +611,8 @@ public class SecurityService
       byte[] decoded = Base64.getDecoder().decode(input);
       return decoded.length == 32;
     }
-    catch (IllegalArgumentException e) {
+    catch (IllegalArgumentException e)
+    {
       return false;
     }
   }
