@@ -534,7 +534,7 @@ public class SecurityService
       throw new InvalidRequestException(ID_IS_REQUIRED);
 
     String password = user.getPassword();
-    if (!ldapEnabled && StringUtils.isBlank(password))
+    if (!ldapEnabled && StringUtils.isBlank(password) && !isHashBase64SHA256(user.getPasswordHash()))
     {
       throw new InvalidRequestException(PASSWORD_IS_REQUIRED);
     }
@@ -600,6 +600,20 @@ public class SecurityService
           roleIds.add(subRoleId);
         }
       }
+    }
+  }
+
+  private boolean isHashBase64SHA256(String input)
+  {
+    if (input == null || input.length() != 44) return false;
+    try
+    {
+      byte[] decoded = Base64.getDecoder().decode(input);
+      return decoded.length == 32;
+    }
+    catch (IllegalArgumentException e)
+    {
+      return false;
     }
   }
 }
