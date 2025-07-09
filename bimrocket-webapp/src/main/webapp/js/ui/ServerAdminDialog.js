@@ -361,8 +361,8 @@ class ServerAdminDialog extends Dialog
     const roles = this.tagsInput.getTags();
 
 
-    if (!id || !username || !email || roles.length === 0) {
-      MessageDialog.create("ERROR", "bim|message.all_fields_required")
+    if (!username || !email) {
+      MessageDialog.create("ERROR", "bim|message.fields_required")
         .setClassName("error")
         .setI18N(application.i18n).show();
       return;
@@ -432,7 +432,7 @@ class ServerAdminDialog extends Dialog
     }
     else
     {
-      let message = error.message;
+      let message = error.message?.split(":").slice(1).join(":").trim() || error.message;
       MessageDialog.create("ERROR", message)
         .setClassName("error")
         .setI18N(this.application.i18n).show();

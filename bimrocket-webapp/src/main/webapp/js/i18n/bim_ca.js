@@ -164,7 +164,7 @@ export const translations =
   "message.user_deleted" : "Usuari esborrat.",
   "message.confirm_password_error" : "Les contrasenyes no coincideixen.",
   "message.user_searched" : "No s'ha trobat cap usuari.",
-  "message.all_fields_required": "Tots els camps són obligatoris.",
+  "message.fields_required": "El nom i l'email són obligatoris.",
 
   "question.delete_project" : "Vols esborrar aquest projecte i totes les seves incidències?",
   "question.delete_topic" : "Vols esborrar aquesta incidència?",
