@@ -107,7 +107,8 @@ class ServerAdminDialog extends Dialog
   createUsersTab(container) 
   {
 
-    if (this.usersTabContainer && this.usersTabContainer.parentNode) {
+    if (this.usersTabContainer && this.usersTabContainer.parentNode) 
+    {
       this.usersTabContainer.parentNode.removeChild(this.usersTabContainer);
       this.usersTabContainer = null;
     }
@@ -455,7 +456,8 @@ class ServerAdminDialog extends Dialog
     loginDialog.show();
   }
 
-  showUser(user = null) {
+  showUser(user = null) 
+  {
     if (this.tableContainer) {
       this.tableContainer.style.display = "none";
     }
