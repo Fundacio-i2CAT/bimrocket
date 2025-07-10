@@ -223,7 +223,8 @@ public class SecurityService
   {
     LOGGER.log(Level.FINE, "userId: {0}", user.getId());
 
-    validateUser(user);
+    //Send true to parameter isNewUser
+    validateUser(user, true);
 
     try (SecurityDaoConnection conn = daoStore.getConnection())
     {
@@ -250,7 +251,8 @@ public class SecurityService
     String userId = userUpdate.getId();
     LOGGER.log(Level.FINE, "userId: {0}", userId);
 
-    validateUser(userUpdate);
+    //Send false to parameter isNewUser
+    validateUser(userUpdate, false);
 
     try (SecurityDaoConnection conn = daoStore.getConnection())
     {
@@ -528,13 +530,13 @@ public class SecurityService
     }
   }
 
-  private void validateUser(User user)
+  private void validateUser(User user, boolean isNewUser)
   {
     if (StringUtils.isBlank(user.getId()))
       throw new InvalidRequestException(ID_IS_REQUIRED);
 
     String password = user.getPassword();
-    if (!ldapEnabled && StringUtils.isBlank(password) && !isHashBase64SHA256(user.getPasswordHash()))
+    if (!ldapEnabled && StringUtils.isBlank(password) && isNewUser)
     {
       throw new InvalidRequestException(PASSWORD_IS_REQUIRED);
     }
@@ -603,17 +605,4 @@ public class SecurityService
     }
   }
 
-  private boolean isHashBase64SHA256(String input)
-  {
-    if (input == null || input.length() != 44) return false;
-    try
-    {
-      byte[] decoded = Base64.getDecoder().decode(input);
-      return decoded.length == 32;
-    }
-    catch (IllegalArgumentException e)
-    {
-      return false;
-    }
-  }
 }
