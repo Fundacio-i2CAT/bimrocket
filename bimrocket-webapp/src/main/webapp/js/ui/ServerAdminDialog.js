@@ -375,18 +375,9 @@ class ServerAdminDialog extends Dialog
       name: username,
       email: email,
       roles: roles,
+      password: newPassword
     };
     
-
-    if (newPassword) 
-    {
-      user.password = newPassword;
-    }
-    else if (this.currentUserData?.password_hash) 
-    {
-      user.password_hash = this.currentUserData.password_hash;
-    }
-
     if (this.currentUserData?.creation_date) 
     {
       user.creation_date = this.currentUserData.creation_date;
