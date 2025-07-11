@@ -269,7 +269,10 @@ public class SecurityService
         user.setActive(userUpdate.getActive());
       }
       user.setRoleIds(userUpdate.getRoleIds());
-      user.setPasswordHash(userUpdate.getPasswordHash());
+      if (!StringUtils.isBlank(userUpdate.getPassword()))
+      {
+        user.setPasswordHash(userUpdate.getPasswordHash());
+      }
       String dateString = getISODate();
       user.setModifyDate(dateString);
       user = userDao.update(user);
