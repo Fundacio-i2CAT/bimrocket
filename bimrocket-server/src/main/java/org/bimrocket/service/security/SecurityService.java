@@ -269,7 +269,7 @@ public class SecurityService
         user.setActive(userUpdate.getActive());
       }
       user.setRoleIds(userUpdate.getRoleIds());
-      if (!StringUtils.isBlank(userUpdate.getPassword()))
+      if (!StringUtils.isBlank(userUpdate.getPasswordHash()))
       {
         user.setPasswordHash(userUpdate.getPasswordHash());
       }
