@@ -101,6 +101,7 @@ export const translations =
   "label.bim_explode_yoffset" : "Y axis offset:",
   "label.bim_explode_zoffset" : "Z axis offset:",
   "label.select_components" : "Select components in view:",
+
   "label.admin_service": "Admin server:",
   "label.users": "User management",
   "label.roles_management": "Roles management",
@@ -126,6 +127,7 @@ export const translations =
   "title.viewpoint" : "Topic viewpoint",
   "title.delete_doc_ref" : "Delete document reference",
   "title.select_components" : "Select components",
+
   "title.delete_user" : "Delete user",
 
   "title.bim_delta_snapshots" : "IFC snapshots",

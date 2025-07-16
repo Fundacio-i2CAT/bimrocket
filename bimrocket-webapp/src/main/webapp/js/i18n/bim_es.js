@@ -101,6 +101,7 @@ export const translations =
   "label.bim_explode_yoffset" : "Desplazamiento eje Y:",
   "label.bim_explode_zoffset" : "Desplazamiento eje Z:",
   "label.select_components" : "Selecciona los objetos de la vista:",
+
   "label.admin_service" : "Servidor Admin:",
   "label.users": "Gestión de usuarios",
   "label.roles_management": "Gestión de roles",
@@ -126,6 +127,7 @@ export const translations =
   "title.viewpoint" : "Vista de la incidencia",
   "title.delete_doc_ref" : "Borrar referencia a documento",
   "title.select_components" : "Selecciona objetos",
+
   "title.delete_user" : "Borrar usuario",
 
   "title.bim_delta_snapshots" : "Capturas IFC",
@@ -149,6 +151,7 @@ export const translations =
   "message.doc_ref_saved" : "Referencia a documento guardada.",
   "message.topic_searched" : "No se han encontrado incidencias.",
   "message.no_components_selected": "No se han encontrado objetos para esta vista",
+
   "message.operation_completed": "Operación completada",
 
   "message.bsdd_dictionary_count" : count => `Diccionarios: ${count}`,
