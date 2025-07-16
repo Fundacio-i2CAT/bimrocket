@@ -146,7 +146,6 @@ export const translations =
   "message.doc_ref_deleted" : "Referencia a documento borrada.",
   "message.doc_ref_saved" : "Referencia a documento guardada.",
   "message.topic_searched" : "No se han encontrado incidencias.",
-  "message.operation_completed": "Operación completada",
 
   "message.bsdd_dictionary_count" : count => `Diccionarios: ${count}`,
   "message.bsdd_class_count" : count => `Clases: ${count}`,

@@ -146,10 +146,6 @@ export const translations =
   "message.doc_ref_deleted" : "Referència a document esborrada.",
   "message.doc_ref_saved" : "Referència a document desada.",
   "message.topic_searched" : "No s'ha trobat cap incidència.",
-  "message.extensions_phase_started": "Fase de revisió iniciada correctament.",
-  "message.extensions_phase_ended": "Fase de revisió finalitzada correctament.",
-  "message.extensions_phase_published": "Fase pública iniciada correctament.",
-  "message.operation_completed": "Operació completada",
 
   "message.bsdd_dictionary_count" : count => `Diccionaris: ${count}`,
   "message.bsdd_class_count" : count => `Classes: ${count}`,
