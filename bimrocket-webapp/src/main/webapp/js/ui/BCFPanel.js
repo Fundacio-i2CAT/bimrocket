@@ -93,8 +93,6 @@ class BCFPanel extends Panel
     I18N.set(this.filterTitle, "textContent", "bim|label.filter_projects");
     this.filterProjectsElem.appendChild(this.filterTitle);
 
-    // this.projectIdFilterField = Controls.addTextField(this.filterProjectsElem,
-    //   "projectIdFilter", "bim|label.filter_project_id");
     this.projectNameFilterField = Controls.addTextField(this.filterProjectsElem,
       "projectNameFilter", "bim|label.filter_project_name");
 
@@ -111,12 +109,10 @@ class BCFPanel extends Panel
       "clearFilters", "button.clear", () => this.clearFilters());
 
     const updateSearchButton = () => {
-      // const hasId = this.projectIdFilterField.value.trim() !== "";
       const hasName = this.projectNameFilterField.value.trim() !== "";
-      this.searchProjectsButton.disabled = !(hasName);
+      this.searchProjectsButton.disabled = !hasName;
     };
 
-    // this.projectIdFilterField.addEventListener("input", updateSearchButton);
     this.projectNameFilterField.addEventListener("input", updateSearchButton);
 
     // filter panel
@@ -395,7 +391,6 @@ class BCFPanel extends Panel
 
   clearFilters = () => {
     this.searchProjectsButton.disabled = true;
-    // this.projectIdFilterField.value = "";
     this.projectNameFilterField.value = "";
 
     this.refreshProjects();
@@ -1059,18 +1054,14 @@ class BCFPanel extends Panel
 
   refreshProjects()
   {
-
-    // const idFilter = this.projectIdFilterField ? this.projectIdFilterField.value.trim() : "";
     const nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
 
     const filter = {
-      // idFilter: idFilter,
       nameFilter: nameFilter
     };
 
     const onCompleted = serverProjects =>
     {
-      console.log('Resposta JSON completa:', JSON.stringify(serverProjects, null, 2));
       this.hideProgressBar();
       this.filterProjectsElem.style.display = "";
       this.filterPanelElem.style.display = "";
@@ -1122,9 +1113,12 @@ class BCFPanel extends Panel
 
       const options = [];
 
-      if (projectMap.size === 0) {
+      if (projectMap.size === 0) 
+      {
         options.push(["", "Cap projecte coincideix"]);
-      } else {
+      } 
+      else 
+      {
         projectMap.forEach((project, projectId) => {
           let name = project.name + " [";
           if (project.persistent) name += "P";
@@ -1146,7 +1140,6 @@ class BCFPanel extends Panel
 
     this.clearTopics();
     this.showProgressBar();
-    console.log('filter: ', filter)
     this.service.getProjects(filter, onCompleted, onError);
   }
 

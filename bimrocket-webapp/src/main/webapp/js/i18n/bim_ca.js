@@ -14,7 +14,7 @@ export const translations =
   "button.references" : "Referències",
   "button.save_extensions" : "Desa extensions",
   "button.new_user": "Usuari nou",
-  "button.reset_projects": "Refrescar",
+  "button.reset_projects": "Refresca",
 
   "tool.bim_inventory.label" : "Inventari BIM",
   "tool.bim_inventory.help" : "Inventari BIM",
