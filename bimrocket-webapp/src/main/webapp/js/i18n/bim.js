@@ -14,6 +14,7 @@ export const translations =
   "button.references" : "References",
   "button.save_extensions" : "Save extensions",
   "button.new_user": "New user",
+  "button.reset_projects": "Update",
 
   "tool.bim_inventory.label" : "BIM inventory",
   "tool.bim_inventory.help" : "BIM inventory setup",
@@ -105,6 +106,8 @@ export const translations =
   "label.bim_explode_yoffset" : "Y axis offset:",
   "label.bim_explode_zoffset" : "Z axis offset:",
   "label.select_components" : "Select components in view:",
+  "label.filter_projects" : "Filter projects",
+  "label.filter_project_name": "Project name:",
 
   "label.admin_service" : "Admin server:",
   "label.users" : "User management",

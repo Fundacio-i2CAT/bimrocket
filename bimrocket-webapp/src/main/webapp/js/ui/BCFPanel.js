@@ -80,6 +80,45 @@ class BCFPanel extends Panel
     this.deleteServiceButton = Controls.addButton(this.connButtonsElem,
       "bcfDelete", "button.delete", () => this.showDeleteDialog());
 
+    // filter projects
+
+    this.filterProjectsElem = document.createElement("div");
+    this.filterProjectsElem.className = "bcf_body";
+    this.filterProjectsElem.style.display = "none";
+    this.searchPanelElem.appendChild(this.filterProjectsElem);
+
+    this.filterTitle = document.createElement("div");
+    this.filterTitle.style.fontWeight = "bold";
+    this.filterTitle.style.padding = "2px";
+    I18N.set(this.filterTitle, "textContent", "bim|label.filter_projects");
+    this.filterProjectsElem.appendChild(this.filterTitle);
+
+    // this.projectIdFilterField = Controls.addTextField(this.filterProjectsElem,
+    //   "projectIdFilter", "bim|label.filter_project_id");
+    this.projectNameFilterField = Controls.addTextField(this.filterProjectsElem,
+      "projectNameFilter", "bim|label.filter_project_name");
+
+    this.buttonContainer = document.createElement("div");
+    this.buttonContainer.style.display = "flex";
+    this.buttonContainer.style.justifyContent = "center";
+    this.filterProjectsElem.appendChild(this.buttonContainer);
+
+    this.searchProjectsButton = Controls.addButton(this.buttonContainer,
+      "searchProjects", "bim|button.reset_projects", () => this.refreshProjects());
+    this.searchProjectsButton.disabled = true;
+
+    this.clearButton = Controls.addButton(this.buttonContainer,
+      "clearFilters", "button.clear", () => this.clearFilters());
+
+    const updateSearchButton = () => {
+      // const hasId = this.projectIdFilterField.value.trim() !== "";
+      const hasName = this.projectNameFilterField.value.trim() !== "";
+      this.searchProjectsButton.disabled = !(hasName);
+    };
+
+    // this.projectIdFilterField.addEventListener("input", updateSearchButton);
+    this.projectNameFilterField.addEventListener("input", updateSearchButton);
+
     // filter panel
 
     this.filterPanelElem = document.createElement("div");
@@ -353,6 +392,14 @@ class BCFPanel extends Panel
       () => this.saveProjectExtensions());
 
   }
+
+  clearFilters = () => {
+    this.searchProjectsButton.disabled = true;
+    // this.projectIdFilterField.value = "";
+    this.projectNameFilterField.value = "";
+
+    this.refreshProjects();
+  };
 
   clearTopics()
   {
@@ -1012,9 +1059,20 @@ class BCFPanel extends Panel
 
   refreshProjects()
   {
+
+    // const idFilter = this.projectIdFilterField ? this.projectIdFilterField.value.trim() : "";
+    const nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
+
+    const filter = {
+      // idFilter: idFilter,
+      nameFilter: nameFilter
+    };
+
     const onCompleted = serverProjects =>
     {
+      console.log('Resposta JSON completa:', JSON.stringify(serverProjects, null, 2));
       this.hideProgressBar();
+      this.filterProjectsElem.style.display = "";
       this.filterPanelElem.style.display = "";
       this.topicTableElem.style.display = "";
 
@@ -1063,15 +1121,19 @@ class BCFPanel extends Panel
       }
 
       const options = [];
-      projectMap.forEach((project, projectId) =>
-      {
-        let name = project.name + " [";
-        if (project.persistent) name += "P";
-        if (project.visible) name += "V";
-        name += "]";
 
-        options.push([projectId, name]);
-      });
+      if (projectMap.size === 0) {
+        options.push(["", "Cap projecte coincideix"]);
+      } else {
+        projectMap.forEach((project, projectId) => {
+          let name = project.name + " [";
+          if (project.persistent) name += "P";
+          if (project.visible) name += "V";
+          name += "]";
+
+          options.push([projectId, name]);
+        });
+      }
       Controls.setSelectOptions(this.projectElem, options);
 
       this.updateFilterControls();
@@ -1084,7 +1146,8 @@ class BCFPanel extends Panel
 
     this.clearTopics();
     this.showProgressBar();
-    this.service.getProjects(onCompleted, onError);
+    console.log('filter: ', filter)
+    this.service.getProjects(filter, onCompleted, onError);
   }
 
   saveProject()

@@ -14,6 +14,7 @@ export const translations =
   "button.references" : "Referències",
   "button.save_extensions" : "Desa extensions",
   "button.new_user": "Usuari nou",
+  "button.reset_projects": "Refrescar",
 
   "tool.bim_inventory.label" : "Inventari BIM",
   "tool.bim_inventory.help" : "Inventari BIM",
@@ -105,6 +106,8 @@ export const translations =
   "label.bim_explode_yoffset" : "Desplaçament eix Y:",
   "label.bim_explode_zoffset" : "Desplaçament eix Z:",
   "label.select_components" : "Selecciona els objectes de la vista:",
+  "label.filter_projects" : "Filtra projectes",
+  "label.filter_project_name": "Per nom:",
 
   "label.admin_service" : "Servidor Admin:",
   "label.users" : "Gestió d'usuaris",

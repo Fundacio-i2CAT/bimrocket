@@ -15,10 +15,30 @@ class BCFService extends Service
     super(parameters);
   }
 
-  getProjects(onCompleted, onError)
-  {
-    this.invoke("GET", "projects", null, onCompleted, onError);
+  // getProjects(onCompleted, onError)
+  // {
+  //   this.invoke("GET", "projects", null, onCompleted, onError);
+  // }
+
+  getProjects(filter, onCompleted, onError) {
+    let query = "";
+    
+    const nameFilter = filter ? filter.nameFilter : null;
+    const conditions = [];
+  
+    if (nameFilter && nameFilter.trim()) {
+      const nameEscaped = nameFilter.trim().replace(/'/g, "''").toLowerCase();
+      conditions.push(`contains(tolower(name),'${nameEscaped}')`);
+    }
+  
+    if (conditions.length > 0) {
+      const filterText = conditions.join(" and ");
+      query = `?$filter=${encodeURIComponent(filterText)}`;
+    }
+  
+    this.invoke("GET", "projects" + query, null, onCompleted, onError);
   }
+  
 
   getProject(projectId, onCompleted, onError)
   {
