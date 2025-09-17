@@ -11,7 +11,6 @@ import { Environment } from "../Environment.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { Toast } from "./Toast.js";
 import { LoginDialog } from "./LoginDialog.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class ServerAdminDialog extends Dialog
 {
@@ -317,11 +316,13 @@ class ServerAdminDialog extends Dialog
   {
     const queryParams = [];
     
-    if (filter && filter.trim()) {
+    if (filter && filter.trim()) 
+    {
       queryParams.push(`$filter=${encodeURIComponent(filter)}`);
     }
     
-    if (orderBy && orderBy.trim()) {
+    if (orderBy && orderBy.trim()) 
+    {
       queryParams.push(`$orderBy=${encodeURIComponent(orderBy)}`);
     }
     
@@ -332,17 +333,20 @@ class ServerAdminDialog extends Dialog
   {
     const conditions = [];
     
-    if (idFilter && idFilter.trim()) {
+    if (idFilter && idFilter.trim()) 
+    {
       const idEscaped = idFilter.trim().replace(/'/g, "''").toLowerCase();
       conditions.push(`contains(tolower(id),'${idEscaped}')`);
     }
     
-    if (nameFilter && nameFilter.trim()) {
+    if (nameFilter && nameFilter.trim()) 
+    {
       const nameEscaped = nameFilter.trim().replace(/'/g, "''").toLowerCase();
       conditions.push(`contains(tolower(name),'${nameEscaped}')`);
     }
     
-    if (conditions.length === 0) {
+    if (conditions.length === 0) 
+    {
       return '';
     }
     
