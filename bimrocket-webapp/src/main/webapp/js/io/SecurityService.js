@@ -15,39 +15,11 @@ class SecurityService extends Service
     super(parameters);
   }
 
-  getUsers(filter, onCompleted, onError) 
+  getUsers(queryString, onCompleted, onError) 
   {
-    let query = "";
-    
-    const idFilter = filter ? filter.idFilter : null;
-    const nameFilter = filter ? filter.nameFilter : null;
-    
-    const conditions = [];
-    
-    if (idFilter && idFilter.trim()) 
-    {
-      const idEscaped = idFilter.trim().replace(/'/g, "''").toLowerCase();
-      conditions.push(`contains(tolower(id),'${idEscaped}')`);
-    }
-    
-    if (nameFilter && nameFilter.trim()) 
-    {
-      const nameEscaped = nameFilter.trim().replace(/'/g, "''").toLowerCase();
-      conditions.push(`contains(tolower(name),'${nameEscaped}')`);
-    }
-    
-    if (conditions.length > 0) {
-      const filterText = conditions.join(" and ");
-      query = `?$filter=${encodeURIComponent(filterText)}`;
-    }
-  
-    this.invoke("GET", "users" + query, null, onCompleted, onError);
+    const endpoint = "users" + (queryString || "");
+    this.invoke("GET", endpoint, null, onCompleted, onError);
   }
-  
-  // getUsers(onCompleted, onError)
-  // {
-  //   this.invoke("GET", "users", null, onCompleted, onError);
-  // }
 
   getUser(userId, onCompleted, onError)
   {

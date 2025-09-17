@@ -11,6 +11,7 @@ import { Environment } from "../Environment.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { Toast } from "./Toast.js";
 import { LoginDialog } from "./LoginDialog.js";
+import { WebUtils } from "../utils/WebUtils.js";
 
 class ServerAdminDialog extends Dialog
 {
@@ -285,12 +286,11 @@ class ServerAdminDialog extends Dialog
   
     const idFilter = this.idFilterField ? this.idFilterField.value.trim() : "";
     const nameFilter = this.nameFilterField ? this.nameFilterField.value.trim() : "";
-    
-    const filter = {
-      idFilter: idFilter,
-      nameFilter: nameFilter
-    };
   
+    const oDataExpression = this.buildODataExpression(idFilter, nameFilter);
+    const oDataOrderBy = "creation_date,id";
+    const queryString = this.buildODataQuery(oDataExpression, oDataOrderBy);
+
     const onCompleted = users => {
       this.hideProgressBar();
       this.users = users; 
@@ -310,9 +310,45 @@ class ServerAdminDialog extends Dialog
   
     this.showProgressBar();
     
-    this.service.getUsers(filter, onCompleted, onError);
+    this.service.getUsers(queryString, onCompleted, onError);
   }
-  
+
+  buildODataQuery(filter, orderBy) 
+  {
+    const queryParams = [];
+    
+    if (filter && filter.trim()) {
+      queryParams.push(`$filter=${encodeURIComponent(filter)}`);
+    }
+    
+    if (orderBy && orderBy.trim()) {
+      queryParams.push(`$orderBy=${encodeURIComponent(orderBy)}`);
+    }
+    
+    return queryParams.length > 0 ? `?${queryParams.join('&')}` : "";
+  }
+   
+  buildODataExpression(idFilter, nameFilter)
+  {
+    const conditions = [];
+    
+    if (idFilter && idFilter.trim()) {
+      const idEscaped = idFilter.trim().replace(/'/g, "''").toLowerCase();
+      conditions.push(`contains(tolower(id),'${idEscaped}')`);
+    }
+    
+    if (nameFilter && nameFilter.trim()) {
+      const nameEscaped = nameFilter.trim().replace(/'/g, "''").toLowerCase();
+      conditions.push(`contains(tolower(name),'${nameEscaped}')`);
+    }
+    
+    if (conditions.length === 0) {
+      return '';
+    }
+    
+    return conditions.join(' and ');
+  }
+
   createUserForm() 
   {
     if (!this.detailPanelElem) 
