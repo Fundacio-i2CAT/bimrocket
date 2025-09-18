@@ -148,11 +148,11 @@ class ServerAdminDialog extends Dialog
     I18N.set(this.filterTitle, "textContent", "bim|label.search_users");
     this.searchBody.appendChild(this.filterTitle);
 
-    this.idFilterField = Controls.addTextField(this.searchBody,
-      "idFilter", "bim|label.search_id");
+    this.idFilterFieldElem = Controls.addTextField(this.searchBody,
+      "user_idFilter", "bim|label.search_id");
     
-    this.nameFilterField = Controls.addTextField(this.searchBody,
-      "nameFilter", "bim|label.search_name");
+    this.nameFilterFieldElem = Controls.addTextField(this.searchBody,
+      "user_nameFilter", "bim|label.search_name");
     
     this.buttonContainer = document.createElement("div");
     this.buttonContainer.style.display = "flex";
@@ -174,19 +174,19 @@ class ServerAdminDialog extends Dialog
     this.usersTabContainer = tabContent;
 
     const updateSearchButton = () => {
-      const hasId = this.idFilterField.value.trim() !== "";
-      const hasName = this.nameFilterField.value.trim() !== "";
+      const hasId = this.idFilterFieldElem.value.trim() !== "";
+      const hasName = this.nameFilterFieldElem.value.trim() !== "";
       this.searchUsersButton.disabled = !(hasId || hasName);
     };
   
-    this.idFilterField.addEventListener("input", updateSearchButton);
-    this.nameFilterField.addEventListener("input", updateSearchButton);
+    this.idFilterFieldElem.addEventListener("input", updateSearchButton);
+    this.nameFilterFieldElem.addEventListener("input", updateSearchButton);
   }
   
   clearFilters = () => {
     this.searchUsersButton.disabled = true;
-    this.idFilterField.value = "";
-    this.nameFilterField.value = "";
+    this.idFilterFieldElem.value = "";
+    this.nameFilterFieldElem.value = "";
 
     this.searchUsers();
   };
@@ -283,12 +283,11 @@ class ServerAdminDialog extends Dialog
       this.updateSecurityService();
     }
   
-    const idFilter = this.idFilterField ? this.idFilterField.value.trim() : "";
-    const nameFilter = this.nameFilterField ? this.nameFilterField.value.trim() : "";
+    const id = this.idFilterFieldElem ? this.idFilterFieldElem.value : "";
+    const name = this.nameFilterFieldElem ? this.nameFilterFieldElem.value : "";
   
-    const oDataExpression = this.buildODataExpression(idFilter, nameFilter);
-    const orderBy = "id";
-    const queryString = this.buildQuery(oDataExpression, orderBy);
+    let odataFilter = this.buildODataFilter(id, name);
+    let odataOrderBy = "id";
 
     const onCompleted = users => {
       this.hideProgressBar();
@@ -309,40 +308,22 @@ class ServerAdminDialog extends Dialog
   
     this.showProgressBar();
     
-    this.service.getUsers(queryString, onCompleted, onError);
-  }
-
-  buildQuery(filter, orderBy) 
-  {
-    const queryParams = [];
-    
-    if (filter && filter.trim()) 
-    {
-      queryParams.push(`$filter=${encodeURIComponent(filter)}`);
-    }
-    
-    if (orderBy && orderBy.trim()) 
-    {
-      queryParams.push(`$orderBy=${encodeURIComponent(orderBy)}`);
-    }
-    
-    return queryParams.length > 0 ? `?${queryParams.join('&')}` : "";
+    this.service.getUsers(odataFilter, odataOrderBy, onCompleted, onError);
   }
    
-  buildODataExpression(idFilter, nameFilter)
+  buildODataFilter(id, name)
   {
     const conditions = [];
-    
-    if (idFilter && idFilter.trim()) 
+    if (id) 
     {
-      const idEscaped = idFilter.trim().replace(/'/g, "''").toLowerCase();
-      conditions.push(`contains(tolower(id),'${idEscaped}')`);
+      let pattern = id.toLowerCase().replace(/'/g, "''");
+      conditions.push(`contains(tolower(id), '${pattern}')`);
     }
     
-    if (nameFilter && nameFilter.trim()) 
+    if (name) 
     {
-      const nameEscaped = nameFilter.trim().replace(/'/g, "''").toLowerCase();
-      conditions.push(`contains(tolower(name),'${nameEscaped}')`);
+      let pattern = name.toLowerCase().replace(/'/g, "''");
+      conditions.push(`contains(tolower(name), '${pattern}')`);
     }
     
     if (conditions.length === 0) 
