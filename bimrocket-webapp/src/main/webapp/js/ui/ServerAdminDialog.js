@@ -287,8 +287,8 @@ class ServerAdminDialog extends Dialog
     const nameFilter = this.nameFilterField ? this.nameFilterField.value.trim() : "";
   
     const oDataExpression = this.buildODataExpression(idFilter, nameFilter);
-    const oDataOrderBy = "creation_date,id";
-    const queryString = this.buildODataQuery(oDataExpression, oDataOrderBy);
+    const orderBy = "id";
+    const queryString = this.buildQuery(oDataExpression, orderBy);
 
     const onCompleted = users => {
       this.hideProgressBar();
@@ -312,7 +312,7 @@ class ServerAdminDialog extends Dialog
     this.service.getUsers(queryString, onCompleted, onError);
   }
 
-  buildODataQuery(filter, orderBy) 
+  buildQuery(filter, orderBy) 
   {
     const queryParams = [];
     
