@@ -13,8 +13,8 @@ export const translations =
   "button.definition" : "Definició",
   "button.references" : "Referències",
   "button.save_extensions" : "Desa extensions",
-  "button.new_user": "Usuari nou",
-  "button.reset_projects": "Refresca",
+  "button.new_user" : "Usuari nou",
+  "button.back_topics" : "Torna als projectes",
 
   "tool.bim_inventory.label" : "Inventari BIM",
   "tool.bim_inventory.help" : "Inventari BIM",

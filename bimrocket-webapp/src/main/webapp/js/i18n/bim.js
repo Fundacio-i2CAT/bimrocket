@@ -13,8 +13,8 @@ export const translations =
   "button.definition" : "Definition",
   "button.references" : "References",
   "button.save_extensions" : "Save extensions",
-  "button.new_user": "New user",
-  "button.reset_projects": "Update",
+  "button.new_user" : "New user",
+  "button.back_topics" : "Back to projects",
 
   "tool.bim_inventory.label" : "BIM inventory",
   "tool.bim_inventory.help" : "BIM inventory setup",
