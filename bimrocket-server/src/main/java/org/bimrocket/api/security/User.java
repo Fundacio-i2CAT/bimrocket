@@ -72,6 +72,9 @@ public class User
   @JsonProperty("modify_date")
   String modifyDate;
 
+  @JsonProperty("token")
+  String token;
+
   public String getId()
   {
     return id;
@@ -161,4 +164,14 @@ public class User
   {
     this.modifyDate = modifyDate;
   }
+
+  public String getToken()
+    {
+        return token;
+    }
+
+  public void setToken(String token)
+    {
+        this.token = token;
+    }
 }
