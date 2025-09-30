@@ -511,10 +511,7 @@ public class SecurityService
         String[] parts = token.split("\\.");
         if (parts.length != 3) throw new IllegalArgumentException("Token invalid");
 
-        // Decode payload (part 1: header, 2: payload, 3: signature)
-        //String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-        //System.out.println("Payload: " + payloadJson);
-        //TODO: find User by token
+        // find User by token
         ODataParser parser = new ODataParser(userFieldMap);
         Expression filter = parser.parseFilter("token eq '" + token + "'");
         List<OrderByExpression> orderBy = parser.parseOrderBy("name");
