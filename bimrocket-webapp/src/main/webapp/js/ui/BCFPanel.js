@@ -104,7 +104,6 @@ class BCFPanel extends Panel
 
     this.searchProjectsButton = Controls.addButton(this.buttonContainer,
       "searchProjects", "button.search", () => this.refreshProjects());
-    this.searchProjectsButton.disabled = true;
 
     this.clearButton = Controls.addButton(this.buttonContainer,
       "clearFilters", "button.clear", () => this.clearFilters());
@@ -122,7 +121,7 @@ class BCFPanel extends Panel
 
     this.projectTree = new Tree(this.projectTreeContainer);
 
-    this.projectTree.addEventListener("change", () => this.changeProject());
+    // this.projectTree.addEventListener("change", () => this.changeProject());
 
     this.filterPanelElem = document.createElement("div");
     this.filterPanelElem.className = "bcf_body";
@@ -135,7 +134,7 @@ class BCFPanel extends Panel
     this.projectElem = Controls.addSelectField(this.filterPanelElem,
       "bcfProject", "bim|label.project");
     this.projectElem.addEventListener("change", () => this.changeProject());
-    this.projectElem.disabled = true;
+    this.projectElem.style.display = "none";
 
     this.typeFilterElem = Controls.addSelectField(this.filterPanelElem,
       "bcfTypeFilter", "bim|label.type");
@@ -430,24 +429,23 @@ class BCFPanel extends Panel
       let node = this.projectTree.addNode(label, event => {
         this.projectElem.value = project.id;
         this.changeProject();
+        this.searchTopics();
       }, className);
 
     
-      let topicsCount = 0;
-      let subLabel = `Topics (${topicsCount})`;
+      // let topicsCount = 0;
+      // let subLabel = `Topics (${topicsCount})`;
       
-      node.addNode(subLabel, event => {
-        this.projectElem.value = project.id;
-        this.changeProject();
-        this.searchTopics();
-      }, "BCFProjectInfo");
+      // node.addNode(subLabel, event => {
+      //   this.projectElem.value = project.id;
+      //   this.changeProject();
+      //   this.searchTopics();
+      // }, "BCFProjectInfo");
     }
   }
 
   clearFilters = () => {
-    this.searchProjectsButton.disabled = true;
     this.projectNameFilterField.value = "";
-
     this.refreshProjects();
   };
 
@@ -472,11 +470,42 @@ class BCFPanel extends Panel
     this.connPanelElem.style.display = "none";
     this.filterProjectsElem.style.display = "none";
 
+    this.updateProjectTitle();
+
     if (!this.topics)
     {
       this.searchTopics();
     }
   }
+
+  updateProjectTitle()
+  {
+    const existingTitle = this.filterPanelElem.querySelector(".project-title");
+    if (existingTitle) 
+    {
+      existingTitle.remove();
+    }
+
+    const projectId = this.getProjectId();
+    if (projectId) 
+    {
+      const project = this.projectMap.get(projectId);
+      if (project) 
+      {
+        const title = document.createElement("p");
+        title.className = "project-title";
+
+        let status = "[";
+        if (project.persistent) status += "P";
+        if (project.visible) status += "V";
+        status += "]";
+
+        title.textContent = `${project.name} ${status}`;
+        this.projectElem.parentNode.insertBefore(title, this.projectElem.nextSibling);
+      }
+    }
+  }
+
 
   showTopic(topic = null, index = -1)
   {
@@ -607,6 +636,8 @@ class BCFPanel extends Panel
     {
       this.backTopicsListButton.style.display = "block";
     }
+
+    this.updateProjectTitle();
 
     let projectId = this.getProjectId();
     if (projectId === null) return;
@@ -1245,10 +1276,13 @@ class BCFPanel extends Panel
     const onCompleted = project =>
     {
       this.hideProgressBar();
+      if (this.projectMap.has(projectId)) 
+      {
+        this.projectMap.get(projectId).name = projectName;
+      }
       Toast.create("bim|message.project_saved")
         .setI18N(application.i18n).show();
-      this.refreshProjects();
-//      this.showTopicList();
+      this.showTopicList();
     };
 
     const onError = error =>
@@ -1768,8 +1802,9 @@ class BCFPanel extends Panel
 
   changeProject()
   {
+    this.updateProjectTitle();
     this.clearTopics();
-    this.updateFilterControls();
+    // this.updateFilterControls();
     this.exportButton.disabled = true;
   }
 
@@ -1898,6 +1933,7 @@ class BCFPanel extends Panel
 
   updateFilterControls()
   {
+    console.log('refreshExtensions updateFilterControls')
     const projectMap = this.projectMap;
     let projectId = this.projectElem.value;
     let project = projectMap.get(projectId);
