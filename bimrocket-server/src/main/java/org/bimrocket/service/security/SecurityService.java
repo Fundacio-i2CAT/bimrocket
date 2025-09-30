@@ -53,6 +53,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bimrocket.api.security.Role;
 import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
+import org.bimrocket.dao.expression.io.odata.ODataParser;
 import org.bimrocket.exception.InvalidRequestException;
 import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
@@ -511,10 +512,18 @@ public class SecurityService
         if (parts.length != 3) throw new IllegalArgumentException("Token invalid");
 
         // Decode payload (part 1: header, 2: payload, 3: signature)
-        String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-        System.out.println("Payload: " + payloadJson);
+        //String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+        //System.out.println("Payload: " + payloadJson);
         //TODO: find User by token
-
+        ODataParser parser = new ODataParser(userFieldMap);
+        Expression filter = parser.parseFilter("token eq '" + token + "'");
+        List<OrderByExpression> orderBy = parser.parseOrderBy("name");
+        List<User> users = getUsers(filter, orderBy);
+        if (users.isEmpty())
+        {
+            throw new NotAuthorizedException(USER_NOT_FOUND);
+        }
+        return users.get(0);
       }
     }
     return anonymousUser;
