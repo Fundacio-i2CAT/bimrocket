@@ -701,6 +701,14 @@ class ServerAdminDialog extends Dialog
     const description = this.roleDescriptionField.value.trim();
     const roles = this.rolesTagsInput.getTags();
 
+    if (!id) 
+    {
+      MessageDialog.create("ERROR", "bim|message.id_field_required")
+        .setClassName("error")
+        .setI18N(application.i18n).show();
+      return; 
+    }
+
     const role = {
       id: id,
       description: description,
