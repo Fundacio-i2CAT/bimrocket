@@ -59,6 +59,7 @@ import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
 import org.bimrocket.service.security.store.SecurityDaoStore;
 import org.bimrocket.service.security.store.empty.SecurityEmptyDaoStore;
+import org.bimrocket.util.TextUtils;
 import org.eclipse.microprofile.config.Config;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 import org.bimrocket.util.ExpiringCache;
@@ -106,6 +107,10 @@ public class SecurityService
     "SEC006: Invalid password format.";
   static final String PASSWORD_IS_REQUIRED =
     "SEC007: Password is required.";
+  static final String TOKEN_MISSING =
+    "SEC008: No access token provided.";
+  static final String TOKEN_EXPIRED =
+    "SEC009: Access token expired. Use refresh token.";
 
   @Inject
   Instance<HttpServletRequest> requestInstance;
@@ -516,11 +521,20 @@ public class SecurityService
         Expression filter = parser.parseFilter("access_token eq '" + token + "'");
         List<OrderByExpression> orderBy = parser.parseOrderBy("name");
         List<User> users = getUsers(filter, orderBy);
-        if (users.isEmpty())
+        if (users.isEmpty()) // User not found
         {
-            throw new NotAuthorizedException(USER_NOT_FOUND);
+            throw new NotAuthorizedException(TOKEN_MISSING);
         }
-        return users.get(0);
+
+        User user = users.get(0);
+
+        // Validate if access_token_expires_at has been expired
+        if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 1)
+        {
+            throw new NotAuthorizedException(TOKEN_EXPIRED);
+        }
+
+        return user;
       }
     }
     return anonymousUser;

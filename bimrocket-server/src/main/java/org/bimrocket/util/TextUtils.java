@@ -31,6 +31,8 @@
 package org.bimrocket.util;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
@@ -48,5 +50,30 @@ public class TextUtils
   {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     return df.format(date);
+  }
+
+  public static int compareDates(String dateInit, String dateEnd)
+  {
+    //Return
+    // 0 = Equals
+    // 1 = dateInit < dateEnd
+    // 2 = dateInit > dateEnd
+    DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+    LocalDateTime date1 = LocalDateTime.parse(dateInit, df);
+    LocalDateTime date2 = LocalDateTime.parse(dateEnd, df);
+
+    if (date1.isBefore(date2))
+    {
+      return 1;
+    }
+    else if (date1.isAfter(date2))
+    {
+      return 2;
+    }
+    else
+    {
+      return 0;
+    }
   }
 }
