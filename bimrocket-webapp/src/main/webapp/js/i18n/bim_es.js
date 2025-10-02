@@ -181,6 +181,8 @@ export const translations =
   "message.confirm_password_error" : "Las contraseñas no coinciden.",
   "message.user_searched" : "No se ha encontrado ningún usuario.",
   "message.fields_required" : "Nombre y email son obligatorios.",
+  "message.connection_success": "Conexión correcta.",
+  "message.connected": "Conexión ya establecida.",
   "message.no_model_found" : "No se ha encontrado ningún modelo.",
   "message.model_saved" : "Modelo guardado.",
   "message.model_updated" : "Modelo actualizado.",

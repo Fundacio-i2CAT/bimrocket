@@ -30,7 +30,9 @@ class ServerAdminDialog extends Dialog
     this.usersLoaded = false;
     
     this.service = this.application.services[this.group];
-  
+    this.serviceUrlConnected = null;
+    this.isConnected = false;
+
     const mainContainer = this.createContainer('admin_panel', this.bodyElem);
     const connPanel = this.createContainer('admin_body', mainContainer);
     const mainWrapper = this.createContainer('admin_panel', this.bodyElem);
@@ -55,8 +57,21 @@ class ServerAdminDialog extends Dialog
   
     this.connectButton = Controls.addButton(buttonsContainer, 
       "adminConnect", "button.connect", () => {
-        this.updateSecurityService();
-        this.searchUsers();
+        const currentUrl = this.apiServiceElem.value.trim();
+
+        if (this.isConnected && this.serviceUrlConnected === currentUrl) 
+        {
+          Toast.create("bim|message.connected")
+            .setI18N(this.application.i18n).show();
+          return;
+        }
+        if (!this.service || this.service.url !== currentUrl || this.serviceUrlConnected !== currentUrl)
+        {
+          this.updateSecurityService();
+          this.isConnected = false;
+          this.serviceUrlConnected = null;
+        }
+        this.searchUsers(true);
       });
   
     // hidden initially
@@ -81,14 +96,6 @@ class ServerAdminDialog extends Dialog
     
     this.addButton("close", "button.close", () => this.hide());
   
-    if (this.usersLoaded && this.users) 
-    {
-      this.populateUsers(this.users);
-      if (this.tabbedPane && this.tabbedPane.paneElem) 
-      {
-        this.tabbedPane.paneElem.style.display = "block";
-      }
-    }
   }
 
   updateSecurityService() 
@@ -124,15 +131,10 @@ class ServerAdminDialog extends Dialog
 
     this.toolbar = document.createElement("div");
     this.toolbar.className = "admin_toolbar";
-    this.toolbar.style.display = "none"; // hidden initially
     tabContent.appendChild(this.toolbar);
 
     this.newUserButton = Controls.addButton(this.toolbar,
-      "newUser", "bim|button.new_user", () => {
-        this.showUser();
-        this.searchToolbar.style.display = "none";
-        console.log(this.searchToolbar)
-    });
+      "newUser", "bim|button.new_user", () => this.showUser());
 
     this.searchToolbar = document.createElement("div");
     this.searchToolbar.className = "search_panel";
@@ -159,10 +161,8 @@ class ServerAdminDialog extends Dialog
     this.buttonContainer.style.justifyContent = "center";
     this.searchBody.appendChild(this.buttonContainer);
     
-    
     this.searchUsersButton = Controls.addButton(this.buttonContainer,
-      "searchTopics", "button.search", () => this.searchUsers());
-    this.searchUsersButton.disabled = true;
+      "searchTopics", "button.search", () => this.searchUsers(false));
       
     this.clearButton= Controls.addButton(this.buttonContainer,
       "clearFilters", "button.clear", () => this.clearFilters());
@@ -183,18 +183,15 @@ class ServerAdminDialog extends Dialog
     this.nameFilterFieldElem.addEventListener("input", updateSearchButton);
   }
   
-  clearFilters = () => {
-    this.searchUsersButton.disabled = true;
+  clearFilters = () => 
+  {
     this.idFilterFieldElem.value = "";
     this.nameFilterFieldElem.value = "";
-
-    this.searchUsers();
   };
 
   populateUsers(users) 
   {
     this.allUsers = users;
-
     if (!this.tableContainer) 
     {
       return;
@@ -226,7 +223,6 @@ class ServerAdminDialog extends Dialog
       I18N.set(cell, "textContent", "bim|message.user_searched");
       this.application.i18n.update(cell);
       cell.style.textAlign = "center";
-      if (this.toolbar) this.toolbar.style.display = "none";
       return;
     }
 
@@ -277,37 +273,62 @@ class ServerAdminDialog extends Dialog
     }
   }
 
-  searchUsers() {
-    if (!this.service || this.service.url !== this.apiServiceElem.value.trim()) 
+  searchUsers(connectionMode = false) 
+  {
+    const currentUrl = this.apiServiceElem.value.trim();
+
+    if (connectionMode && this.isConnected && this.serviceUrlConnected === currentUrl) 
+    {
+      Toast.create("bim|message.already_connected")
+        .setI18N(this.application.i18n).show();
+      return;
+    }
+    if (!this.service || this.service.url !== currentUrl || this.serviceUrlConnected !== currentUrl) 
     {
       this.updateSecurityService();
+      this.isConnected = false;
+      this.serviceUrlConnected = null;
     }
-  
+
     const id = this.idFilterFieldElem ? this.idFilterFieldElem.value : "";
     const name = this.nameFilterFieldElem ? this.nameFilterFieldElem.value : "";
-  
+
     let odataFilter = this.buildODataFilter(id, name);
     let odataOrderBy = "id";
 
-    const onCompleted = users => {
+    const onCompleted = users => 
+    {
       this.hideProgressBar();
       this.users = users; 
       this.usersLoaded = true;
-      this.populateUsers(users); 
-      this.hideUserForm();
-      
-      if (this.tabbedPane && this.tabbedPane.paneElem) {
+
+      if (connectionMode) 
+      {
+        this.isConnected = true;
+        this.serviceUrlConnected = currentUrl;
+        Toast.create("bim|message.connection_success")
+          .setI18N(this.application.i18n).show();
+      }
+
+      if (this.tabbedPane && this.tabbedPane.paneElem) 
+      {
         this.tabbedPane.paneElem.style.display = "block";
       }
+
+      if (!connectionMode)
+      {
+        this.populateUsers(users);
+        this.hideUserForm();
+      }
     };
-  
-    const onError = error => {
+
+    const onError = error => 
+    {
       this.hideProgressBar();
-      this.handleError(error, () => this.searchUsers());
+      this.handleError(error, () => this.searchUsers(connectionMode));
     };
-  
+
     this.showProgressBar();
-    
     this.service.getUsers(odataFilter, odataOrderBy, onCompleted, onError);
   }
    
@@ -522,7 +543,7 @@ class ServerAdminDialog extends Dialog
     const loginDialog = new LoginDialog(this.application, message);
     loginDialog.login = (username, password) =>
     {
-      this.service.setCredentials("admin", "bimrocket");
+      this.service.setCredentials(username, password);
       if (onLogin) onLogin();
     };
     loginDialog.onCancel = () =>

@@ -184,6 +184,8 @@ export const translations =
   "message.confirm_password_error" : "Les contrasenyes no coincideixen.",
   "message.user_searched" : "No s'ha trobat cap usuari.",
   "message.fields_required" : "El nom i l'email són obligatoris.",
+  "message.connection_success" : "Connexió correcta.",
+  "message.connected" : "Connexió ja establerta",
   "message.no_model_found" : "No s'ha trobat cap model.",
   "message.model_saved" : "Model desat.",
   "message.model_updated" : "Model actualitzat.",

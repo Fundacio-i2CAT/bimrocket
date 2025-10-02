@@ -179,6 +179,8 @@ export const translations =
   "message.confirm_password_error" : "The passwords do not match.",
   "message.user_searched" : "No user found.",
   "message.fields_required" : "Name and email are required.",
+  "message.connection_success": "Connection successful.",
+  "message.connected": "Already connected.",
   "message.no_model_found" : "No model found.",
   "message.model_saved" : "Model saved.",
   "message.model_updated" : "Model updated.",
