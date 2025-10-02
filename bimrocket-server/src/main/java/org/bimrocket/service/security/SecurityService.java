@@ -513,7 +513,7 @@ public class SecurityService
 
         // find User by token
         ODataParser parser = new ODataParser(userFieldMap);
-        Expression filter = parser.parseFilter("token eq '" + token + "'");
+        Expression filter = parser.parseFilter("access_token eq '" + token + "'");
         List<OrderByExpression> orderBy = parser.parseOrderBy("name");
         List<User> users = getUsers(filter, orderBy);
         if (users.isEmpty())
