@@ -87,7 +87,11 @@ public class AuthenticationFilter implements ContainerRequestFilter
     }
     catch (NotAuthorizedException ex)
     {
-      context.abortWith(getErrorResponse(401, "Not authorized."));
+      String message = (ex.getMessage() == null || ex.getMessage().isBlank())
+              ? "Not authorized."
+              : ex.getMessage();
+
+      context.abortWith(getErrorResponse(401, message));
       return;
     }
 

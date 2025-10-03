@@ -111,6 +111,8 @@ public class SecurityService
     "SEC008: No access token provided.";
   static final String TOKEN_EXPIRED =
     "SEC009: Access token expired. Use refresh token.";
+  static final String REFRESH_TOKEN_EXPIRED =
+    "SEC010: REFRESH token expired.";
 
   @Inject
   Instance<HttpServletRequest> requestInstance;
@@ -527,6 +529,12 @@ public class SecurityService
         }
 
         User user = users.get(0);
+
+        // Validate if refresh_token_expires_at has been expired
+        if (TextUtils.compareDates(user.getRefreshTokenExpiresAt(), getISODate()) == 1)
+        {
+          throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
+        }
 
         // Validate if access_token_expires_at has been expired
         if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 1)
