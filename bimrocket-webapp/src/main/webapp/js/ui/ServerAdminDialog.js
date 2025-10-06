@@ -30,8 +30,6 @@ class ServerAdminDialog extends Dialog
     this.usersLoaded = false;
     
     this.service = this.application.services[this.group];
-    this.serviceUrlConnected = null;
-    this.isConnected = false;
 
     const mainContainer = this.createContainer('admin_panel', this.bodyElem);
     const connPanel = this.createContainer('admin_body', mainContainer);
@@ -55,32 +53,13 @@ class ServerAdminDialog extends Dialog
     const buttonsContainer = this.createContainer('admin_buttons', connPanel);
     this.connButtonsElem = buttonsContainer;
   
-    this.connectButton = Controls.addButton(buttonsContainer, 
-      "adminConnect", "button.connect", () => {
-        const currentUrl = this.apiServiceElem.value.trim();
-
-        if (this.isConnected && this.serviceUrlConnected === currentUrl) 
-        {
-          Toast.create("bim|message.connected")
-            .setI18N(this.application.i18n).show();
-          return;
-        }
-        if (!this.service || this.service.url !== currentUrl || this.serviceUrlConnected !== currentUrl)
-        {
-          this.updateSecurityService();
-          this.isConnected = false;
-          this.serviceUrlConnected = null;
-        }
-        this.searchUsers(true);
-      });
-  
     // hidden initially
     this.detailPanelElem = this.createContainer('admin_panel', mainContainer);
     this.detailPanelElem.style.display = "none";
   
     this.tabbedPane = new TabbedPane(mainContainer);
     this.tabbedPane.addClassName("h_full");
-    this.tabbedPane.paneElem.style.display = "none";
+    this.tabbedPane.paneElem.style.display = "block";
     const usersTab = this.tabbedPane.addTab("users", "bim|label.users");
     
     this.createUsersTab(usersTab);
@@ -100,7 +79,7 @@ class ServerAdminDialog extends Dialog
 
   updateSecurityService() 
   {
-    const urlEntered = this.apiServiceElem.value.trim();
+    const securityServiceUrl = this.apiServiceElem.value.trim();
 
     if (!this.application.services[this.group]) 
     {
@@ -109,7 +88,7 @@ class ServerAdminDialog extends Dialog
 
     this.service = new SecurityService({
       name: "security",
-      url: urlEntered,
+      url: securityServiceUrl,
       credentialsAlias: Environment.SERVER_ALIAS
     });
     
@@ -131,6 +110,7 @@ class ServerAdminDialog extends Dialog
 
     this.toolbar = document.createElement("div");
     this.toolbar.className = "admin_toolbar";
+    this.toolbar.style.display = "flex";
     tabContent.appendChild(this.toolbar);
 
     this.newUserButton = Controls.addButton(this.toolbar,
@@ -138,6 +118,7 @@ class ServerAdminDialog extends Dialog
 
     this.searchToolbar = document.createElement("div");
     this.searchToolbar.className = "search_panel";
+    this.searchToolbar.style.display = "block";
     tabContent.appendChild(this.searchToolbar);
 
     this.searchBody = document.createElement("div");
@@ -162,13 +143,14 @@ class ServerAdminDialog extends Dialog
     this.searchBody.appendChild(this.buttonContainer);
     
     this.searchUsersButton = Controls.addButton(this.buttonContainer,
-      "searchTopics", "button.search", () => this.searchUsers(false));
+      "searchTopics", "button.search", () => this.searchUsers());
       
     this.clearButton= Controls.addButton(this.buttonContainer,
       "clearFilters", "button.clear", () => this.clearFilters());
     
     this.tableContainer = document.createElement("div");
     this.tableContainer.className = "table_container";
+    this.tableContainer.style.display = "block";
     tabContent.appendChild(this.tableContainer);
 
     this.usersTabContainer = tabContent;
@@ -176,7 +158,6 @@ class ServerAdminDialog extends Dialog
     const updateSearchButton = () => {
       const hasId = this.idFilterFieldElem.value.trim() !== "";
       const hasName = this.nameFilterFieldElem.value.trim() !== "";
-      this.searchUsersButton.disabled = !(hasId || hasName);
     };
   
     this.idFilterFieldElem.addEventListener("input", updateSearchButton);
@@ -240,10 +221,6 @@ class ServerAdminDialog extends Dialog
 
     });
 
-    if (this.addUserButton) 
-    {
-      this.addUserButton.style.display = "block";
-    }
   } 
   
   showUserDetails(user, index) 
@@ -273,21 +250,13 @@ class ServerAdminDialog extends Dialog
     }
   }
 
-  searchUsers(connectionMode = false) 
+  searchUsers() 
   {
-    const currentUrl = this.apiServiceElem.value.trim();
+    const securityServiceUrl = this.apiServiceElem.value.trim();
 
-    if (connectionMode && this.isConnected && this.serviceUrlConnected === currentUrl) 
-    {
-      Toast.create("bim|message.already_connected")
-        .setI18N(this.application.i18n).show();
-      return;
-    }
-    if (!this.service || this.service.url !== currentUrl || this.serviceUrlConnected !== currentUrl) 
+    if (!this.service || this.service.url !== securityServiceUrl) 
     {
       this.updateSecurityService();
-      this.isConnected = false;
-      this.serviceUrlConnected = null;
     }
 
     const id = this.idFilterFieldElem ? this.idFilterFieldElem.value : "";
@@ -301,31 +270,19 @@ class ServerAdminDialog extends Dialog
       this.hideProgressBar();
       this.users = users; 
       this.usersLoaded = true;
-
-      if (connectionMode) 
-      {
-        this.isConnected = true;
-        this.serviceUrlConnected = currentUrl;
-        Toast.create("bim|message.connection_success")
-          .setI18N(this.application.i18n).show();
-      }
-
+      this.populateUsers(users);
+      this.hideUserForm();
       if (this.tabbedPane && this.tabbedPane.paneElem) 
       {
         this.tabbedPane.paneElem.style.display = "block";
       }
 
-      if (!connectionMode)
-      {
-        this.populateUsers(users);
-        this.hideUserForm();
-      }
     };
 
     const onError = error => 
     {
       this.hideProgressBar();
-      this.handleError(error, () => this.searchUsers(connectionMode));
+      this.handleError(error, () => this.searchUsers());
     };
 
     this.showProgressBar();
@@ -460,7 +417,15 @@ class ServerAdminDialog extends Dialog
     }
   }
 
-  saveUser() {
+  saveUser() 
+  {
+    const securityServiceUrl = this.apiServiceElem.value.trim();
+
+    if (!this.service || this.service.url !== securityServiceUrl) 
+    {
+      this.updateSecurityService();
+    }
+
     const application = this.application;
     const id = this.idField.value;
     const username = this.usernameField.value.trim();
@@ -468,8 +433,8 @@ class ServerAdminDialog extends Dialog
     const email = this.emailField.value.trim();
     const roles = this.tagsInput.getTags();
 
-
-    if (!username || !email) {
+    if (!username || !email) 
+    {
       MessageDialog.create("ERROR", "bim|message.fields_required")
         .setClassName("error")
         .setI18N(application.i18n).show();
@@ -512,7 +477,7 @@ class ServerAdminDialog extends Dialog
         onCompleted, onError);
     } 
     else // creation
-    { 
+    {
       this.service.createUser(user, onCompleted, onError);
     }
   }
