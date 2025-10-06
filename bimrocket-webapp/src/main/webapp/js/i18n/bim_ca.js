@@ -117,6 +117,9 @@ export const translations =
   "label.inherited_roles" : "Rols heretats:",
   "label.select_role" : "Selecciona rol",
   "label.confirm_password" : "Confirma paraula de pas:",
+  "label.search_users": "Cercar usuaris:",
+  "label.search_id": "Cercar per id:",
+  "label.search_name": "Cercar per nom:",
 
   "col.index" : "Ídx.",
   "col.topic" : "Incidència",

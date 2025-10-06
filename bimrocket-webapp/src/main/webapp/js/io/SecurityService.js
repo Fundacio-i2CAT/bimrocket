@@ -40,9 +40,24 @@ class SecurityService extends Service
     this.invoke("DELETE", "roles/" + roleId, null, onCompleted, onError);
   }
 
-  getUsers(onCompleted, onError)
+  getUsers(odataFilter, odataOrderBy, onCompleted, onError)
   {
-    this.invoke("GET", "users", null, onCompleted, onError);
+    let query = "";
+    if (odataFilter || odataOrderBy)
+    {
+      query = "?";
+      if (odataFilter)
+      {
+        query += "$filter=" + odataFilter;
+      }
+      if (odataOrderBy)
+      {
+        if (!query.endsWith("?")) query += "&";
+        query += "$orderBy=" + odataOrderBy;
+      }
+    }
+    
+    this.invoke("GET", "users" + query, null, onCompleted, onError);
   }
 
   getUser(userId, onCompleted, onError)
