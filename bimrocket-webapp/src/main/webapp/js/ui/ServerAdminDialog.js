@@ -37,9 +37,15 @@ class ServerAdminDialog extends Dialog
   
     const mainContainer = this.createContainer('admin_panel', this.bodyElem);
     const connPanel = this.createContainer('admin_body', mainContainer);
+    const mainWrapper = this.createContainer('admin_panel', this.bodyElem);
+    const mainPanel = this.createContainer('admin_body', mainWrapper);
+
+    this.searchToolbar= null;
+    this.filterTitle = null;
   
     this.connPanelElem = connPanel;
-    this.mainContainer = mainContainer;
+    this.mainContainer = mainWrapper;
+    this.mainPanelElem = mainPanel;
 
     this.apiServiceElem = Controls.addTextField(connPanel,
       "securityService", "bim|label.admin_service", "securityServiceUrl");
@@ -54,16 +60,22 @@ class ServerAdminDialog extends Dialog
         this.updateSecurityService();
         this.authenticateAndLoadData();
       });
+    
+    // hidden initially
+    this.detailPanelElem = this.createContainer('admin_panel', mainContainer);
+    this.detailPanelElem.style.display = "none";
   
     this.tabbedPane = new TabbedPane(mainContainer);
     this.tabbedPane.addClassName("h_full");
     this.tabbedPane.paneElem.style.display = "none";
     
-    const usersTab = this.tabbedPane.addTab("users", "bim|label.users");
+    const usersTab = 
+      this.tabbedPane.addTab("users", "bim|label.users");
     this.createUsersTab(usersTab);
 
-    const rolesTab = this.tabbedPane.addTab("roles", "bim|label.roles_management");
-    const rolesTabSelector = this.tabbedPane.getTab("roles").selector;
+    const rolesTab = 
+      this.tabbedPane.addTab("roles", "bim|label.roles_management");
+      const rolesTabSelector = this.tabbedPane.getTab("roles").selector;
 
     rolesTabSelector.addEventListener("click", () => {
       if (!this.rolesLoaded) {
@@ -74,12 +86,12 @@ class ServerAdminDialog extends Dialog
 
     this.createRolesTab(rolesTab);
 
-    const configTab = this.tabbedPane.addTab("config", "bim|label.configuration");
-    configTab.textContent = "Settings coming soon";
-  
-    this.createUserSearchPanel();
+    const configTab = 
+      this.tabbedPane.addTab("config", "bim|label.configuration");
+      configTab.textContent = "Settings coming soon";
     
     this.createUserForm();
+
     this.createRoleForm();
 
     this.addButton("close", "button.close", () => this.hide());
@@ -109,7 +121,7 @@ class ServerAdminDialog extends Dialog
       credentialsAlias: Environment.SERVER_ALIAS
     });
     
-    this.application.services[this.group]["security"] = this.service;
+    this.application.services[this.group] = this.service;
   }
 
   createTab(container, tabClassName, toolbarClassName, buttonId, buttonLabel, buttonCallback, tabContainerProperty, toolbarProperty, tableContainerProperty) 
@@ -149,6 +161,8 @@ class ServerAdminDialog extends Dialog
       "toolbar",
       "tableContainer"
     );
+
+    this.createUserSearchPanel();
   }
   
   createRolesTab(container) 
@@ -440,19 +454,22 @@ class ServerAdminDialog extends Dialog
     let odataFilter = this.buildODataFilter(id, name);
     let odataOrderBy = "id";
 
-    const onCompleted = users => {
+    const onCompleted = users => 
+    {
       this.hideProgressBar();
-      this.users = users; 
+      this.users = users;
       this.usersLoaded = true;
       this.populateUsers(users); 
       this.hideUserForm();
       
-      if (this.tabbedPane && this.tabbedPane.paneElem) {
+      if (this.tabbedPane && this.tabbedPane.paneElem) 
+      {
         this.tabbedPane.paneElem.style.display = "block";
       }
     };
   
-    const onError = error => {
+    const onError = error => 
+    {
       this.hideProgressBar();
       this.handleError(error, () => this.searchUsers());
     };
@@ -890,6 +907,11 @@ class ServerAdminDialog extends Dialog
   showUser(user = null) 
   {
     this.toggleVisibility(this.tableContainer, this.toolbar, this.detailPanelElem, this.usersTabContainer);
+
+    if (this.searchToolbar) {
+      this.searchToolbar.style.display = "none";
+    }
+
     this.deleteButton.disabled = (user === null);
   
     const isCreation = user === null;
