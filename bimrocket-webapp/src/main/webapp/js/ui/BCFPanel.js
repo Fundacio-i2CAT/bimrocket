@@ -69,12 +69,9 @@ class BCFPanel extends Panel
       });
 
     this.connButtonsElem = document.createElement("div");
-    this.connButtonsElem.style.display = "none";
     this.connPanelElem.appendChild(this.connButtonsElem);
     this.connButtonsElem.className = "bcf_buttons";
 
-    this.connectButton = Controls.addButton(this.connButtonsElem,
-      "bcfConnect", "button.connect", () => this.refreshProjects());
     this.addServiceButton = Controls.addButton(this.connButtonsElem,
       "bcfAdd", "button.add", () => this.showAddDialog());
     this.editServiceButton = Controls.addButton(this.connButtonsElem,
@@ -110,7 +107,6 @@ class BCFPanel extends Panel
 
     const updateSearchButton = () => {
       const hasName = this.projectNameFilterField.value.trim() !== "";
-      this.searchProjectsButton.disabled = !hasName;
     };
 
     this.projectNameFilterField.addEventListener("input", updateSearchButton);
@@ -432,21 +428,11 @@ class BCFPanel extends Panel
         this.searchTopics();
       }, className);
 
-    
-      // let topicsCount = 0;
-      // let subLabel = `Topics (${topicsCount})`;
-      
-      // node.addNode(subLabel, event => {
-      //   this.projectElem.value = project.id;
-      //   this.changeProject();
-      //   this.searchTopics();
-      // }, "BCFProjectInfo");
     }
   }
 
   clearFilters = () => {
     this.projectNameFilterField.value = "";
-    this.refreshProjects();
   };
 
   clearTopics()
@@ -472,10 +458,8 @@ class BCFPanel extends Panel
 
     this.updateProjectTitle();
 
-    if (!this.topics)
-    {
-      this.searchTopics();
-    }
+    this.searchTopics();
+
   }
 
   updateProjectTitle()
@@ -1804,7 +1788,7 @@ class BCFPanel extends Panel
   {
     this.updateProjectTitle();
     this.clearTopics();
-    // this.updateFilterControls();
+    this.updateFilterControls();
     this.exportButton.disabled = true;
   }
 
@@ -1860,7 +1844,6 @@ class BCFPanel extends Panel
       this.service = null;
     }
     let service = this.service;
-    this.connectButton.style.display = service ? "" : "none";
     this.addServiceButton.style.display = "";
     this.editServiceButton.style.display = service ? "" : "none";
     this.deleteServiceButton.style.display = service ? "" : "none";
@@ -1933,7 +1916,6 @@ class BCFPanel extends Panel
 
   updateFilterControls()
   {
-    console.log('refreshExtensions updateFilterControls')
     const projectMap = this.projectMap;
     let projectId = this.projectElem.value;
     let project = projectMap.get(projectId);
