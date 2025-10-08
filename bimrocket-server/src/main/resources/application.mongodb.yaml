@@ -161,11 +161,11 @@ databases:
   # MONGODB (LOCAL CONEXION)
   #########################################
   bimdb:
-   url: localhost://root:mongodb@mongodb:27017/bimdb?authSource=admin
+    url: mongodb://root:mongodb@localhost:27017/bimdb?authSource=admin
   IFC2X3:
-   url: localhost://root:mongodb@mongodb:27017/IFC2X3?authSource=admin
+    url: mongodb://root:mongodb@localhost:27017/IFC2X3?authSource=admin
   IFC4:
-   url: localhost://root:mongodb@mongodb:27017/IFC4?authSource=admin
+    url: mongodb://root:mongodb@localhost:27017/IFC4?authSource=admin
 
   #########################################
   # MONGODB (REMOTE CONEXION)

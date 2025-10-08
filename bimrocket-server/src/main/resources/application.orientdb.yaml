@@ -99,15 +99,15 @@ services:
 # database config
 databases:
   bimdb:
-    url: embedded:${BIMROCKET_DATA_PATH}/db/bimdb
+    url: remote:localhost:2424/bimdb
     username: root
     password: orientdb
   IFC2X3:
-    url: embedded:${BIMROCKET_DATA_PATH}/db/IFC2X3
+    url: remote:localhost:2424/IFC2X3
     username: root
     password: orientdb
   IFC4:
-    url: embedded:${BIMROCKET_DATA_PATH}/db/IFC4
+    url: remote:localhost:2424/IFC4
     username: root
     password: orientdb
 
