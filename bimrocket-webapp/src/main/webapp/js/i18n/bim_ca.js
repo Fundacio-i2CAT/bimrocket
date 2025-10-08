@@ -201,5 +201,7 @@ export const translations =
 
   "placeholder.keep_password": "Deixa en blanc per mantenir la paraula de pas actual",
   "placeholder.confirm_password": "Repeteix la nova paraula de pas",
-  "placeholder.add_tags": "Escriu i prem Enter per afegir etiquetes"
+  "placeholder.add_tags": "Escriu i prem Enter per afegir etiquetes",
+
+  "action.ShowProjectSetup" : "Configuració",
 };

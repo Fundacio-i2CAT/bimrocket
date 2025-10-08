@@ -196,5 +196,7 @@ export const translations =
 
   "placeholder.keep_password": "Leave blank to keep current password",
   "placeholder.confirm_password": "Repeat new password",
-  "placeholder.add_tags": "Write and press Enter to add tags"
+  "placeholder.add_tags": "Write and press Enter to add tags",
+
+  "action.ShowProjectSetup" : "Setup",
 };

@@ -13,6 +13,8 @@ import { LoginDialog } from "./LoginDialog.js";
 import { Dialog } from "./Dialog.js";
 import { TabbedPane } from "./TabbedPane.js";
 import { Toast } from "./Toast.js";
+import { Action } from "./Action.js";
+import { ContextMenu } from "./ContextMenu.js";
 import { ServiceManager } from "../io/ServiceManager.js";
 import { BCFService } from "../io/BCFService.js";
 import { ObjectUtils } from "../utils/ObjectUtils.js";
@@ -34,6 +36,12 @@ class BCFPanel extends Panel
 
     this.service = null;
 
+    this.contextActions = [];
+
+    this.addContextAction(ShowProjectSetupAction);
+
+    this.contextMenu = new ContextMenu(this.application);
+
     this.topics = null;
     this.extensions = null;
     this.index = -1;
@@ -45,7 +53,7 @@ class BCFPanel extends Panel
     this.docRefGuid = null;
     this.projectMap = new Map();
 
-
+    this.selectedProjectId = null;
     // search panel
     this.searchPanelElem = document.createElement("div");
     this.searchPanelElem.id = "bcf_search_panel";
@@ -117,21 +125,14 @@ class BCFPanel extends Panel
 
     this.projectTree = new Tree(this.projectTreeContainer);
 
-    // this.projectTree.addEventListener("change", () => this.changeProject());
-
     this.filterPanelElem = document.createElement("div");
     this.filterPanelElem.className = "bcf_body";
     this.filterPanelElem.style.display = "none";
     this.searchPanelElem.appendChild(this.filterPanelElem);
     
     this.backTopicsListButton = Controls.addButton(this.filterPanelElem,
-      "backTopicsList", "bim|button.back_topics", () => this.refreshProjects());
+      "backTopicsList", "button.back", () => this.refreshProjects());
       
-    this.projectElem = Controls.addSelectField(this.filterPanelElem,
-      "bcfProject", "bim|label.project");
-    this.projectElem.addEventListener("change", () => this.changeProject());
-    this.projectElem.style.display = "none";
-
     this.typeFilterElem = Controls.addSelectField(this.filterPanelElem,
       "bcfTypeFilter", "bim|label.type");
 
@@ -422,12 +423,21 @@ class BCFPanel extends Panel
 
       let className = "BCFProject";
       
-      let node = this.projectTree.addNode(label, event => {
-        this.projectElem.value = project.id;
+      let node = this.projectTree.addNode(label, event => 
+      {
+        this.selectedProjectId = project.id;
+        console.log(this.selectedProjectId);  
         this.changeProject();
-        this.searchTopics();
       }, className);
 
+      node.addEventListener('contextmenu', (event) => 
+      {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        this.selectedProjectId = project.id;
+        this.showContextMenu(event, project);
+      });
     }
   }
 
@@ -478,6 +488,7 @@ class BCFPanel extends Panel
       {
         const title = document.createElement("p");
         title.className = "project-title";
+        title.style.fontWeight = "bold";
 
         let status = "[";
         if (project.persistent) status += "P";
@@ -485,7 +496,7 @@ class BCFPanel extends Panel
         status += "]";
 
         title.textContent = `${project.name} ${status}`;
-        this.projectElem.parentNode.insertBefore(title, this.projectElem.nextSibling);
+        this.backTopicsListButton.parentNode.insertBefore(title, this.backTopicsListButton.nextSibling);
       }
     }
   }
@@ -607,10 +618,6 @@ class BCFPanel extends Panel
 
   searchTopics()
   {
-    this.connPanelElem.style.display = "none";
-    this.filterProjectsElem.style.display = "none";
-    this.projectTreeContainer.style.display = "none";
-
     this.filterPanelElem.style.display = "";
     this.topicTableElem.style.display = "";
 
@@ -1129,7 +1136,7 @@ class BCFPanel extends Panel
     }
   }
 
-  refreshExtensions()
+  refreshExtensions(onExtensionsLoaded = null)
   {
     let projectId = this.getProjectId();
     if (projectId === null) return;
@@ -1139,6 +1146,11 @@ class BCFPanel extends Panel
       this.hideProgressBar();
       this.extensions = extensions;
       this.populateExtensions();
+
+      if (onExtensionsLoaded)
+      {
+        onExtensionsLoaded(extensions);
+      }
     };
 
     const onError = error =>
@@ -1234,10 +1246,7 @@ class BCFPanel extends Panel
           options.push([projectId, name]);
         });
       }
-      Controls.setSelectOptions(this.projectElem, options);
-
       this.showProjects();
-      this.updateFilterControls();
     };
 
     const onError = error =>
@@ -1407,15 +1416,17 @@ class BCFPanel extends Panel
     this.detailPanelElem.style.display = "none";
     this.setupPanelElem.style.display = "";
 
-    const projectId = this.projectElem.value;
+    const projectId = this.selectedProjectId;
     this.projectNameElem.value = this.projectMap.get(projectId).name;
-
-    const json = JSON.stringify(this.extensions, null, 2);
-
-    const state = this.extensionsView.state;
-    const tx = state.update(
-      { changes: { from: 0, to: state.doc.length, insert: json } });
-    this.extensionsView.dispatch(tx);
+    
+    this.refreshExtensions((extensions) => 
+    {
+      const json = JSON.stringify(extensions, null, 2);
+      const state = this.extensionsView.state;
+      const tx = state.update(
+        { changes: { from: 0, to: state.doc.length, insert: json } });
+      this.extensionsView.dispatch(tx);
+    });
   }
 
   populateTopicTable()
@@ -1573,8 +1584,6 @@ class BCFPanel extends Panel
     for (let viewpoint of viewpoints)
     {
       let itemListElem = document.createElement("li");
-
-
 
       let spanElem = document.createElement("span");
       spanElem.className = "icon viewpoint";
@@ -1778,7 +1787,7 @@ class BCFPanel extends Panel
 
   getProjectId()
   {
-    let projectId = this.projectElem.value;
+    let projectId = this.selectedProjectId;
     if (projectId === "") projectId = null;
 
     return projectId;
@@ -1790,6 +1799,18 @@ class BCFPanel extends Panel
     this.clearTopics();
     this.updateFilterControls();
     this.exportButton.disabled = true;
+    
+    this.connPanelElem.style.display = "none";
+    this.filterProjectsElem.style.display = "none";
+    this.projectTreeContainer.style.display = "none";
+    
+    this.filterPanelElem.style.display = "";
+    this.topicTableElem.style.display = "";
+    
+    if (this.backTopicsListButton) 
+    {
+      this.backTopicsListButton.style.display = "block";
+    }
   }
 
   formatDate(dateString)
@@ -1917,13 +1938,15 @@ class BCFPanel extends Panel
   updateFilterControls()
   {
     const projectMap = this.projectMap;
-    let projectId = this.projectElem.value;
-    let project = projectMap.get(projectId);
+    let projectId = this.selectedProjectId;
+    let project = projectId ? projectMap.get(projectId) : null;
 
     const noProjects = projectMap.size === 0;
-    this.searchTopicsButton.disabled = noProjects || !project.persistent;
-    this.searchNewTopicButton.disabled = noProjects || !project.persistent;
-    this.setupProjectButton.disabled = noProjects;
+    const noProjectSelected = !projectId || !project;
+  
+    this.searchTopicsButton.disabled = noProjects || noProjectSelected || !project.persistent;
+    this.searchNewTopicButton.disabled = noProjects || noProjectSelected || !project.persistent;
+    this.setupProjectButton.disabled = noProjects || noProjectSelected;
 
     this.refreshExtensions();
 
@@ -1991,6 +2014,71 @@ class BCFPanel extends Panel
   hideProgressBar()
   {
     this.application.progressBar.visible = false;
+  }
+
+  addContextAction(contextActionClass)
+  {
+    this.contextActions.push(new contextActionClass(this));
+  }
+
+  showContextMenu(event, project)
+  {
+    if (project) {
+      this.selectedProjectId = project.id;
+    }
+    this.contextMenu.actions = this.contextActions;
+    this.contextMenu.show(event);
+  }
+}
+
+class BCFContextAction extends Action
+{
+  constructor(bcfPanel)
+  {
+    super();
+    this.bcfPanel = bcfPanel;
+  }
+
+  getLabel()
+  {
+    let name = this.constructor.name;
+    if (name.endsWith("Action")) name = name.substring(0, name.length - 6);
+    return "bim|action." + name;
+  }
+
+  getClassName()
+  {
+    return "edit";
+  }
+
+  isEnabled()
+  {
+    return false;
+  }
+
+  getSelectedProject()
+  {
+    return this.bcfPanel.selectedProjectId ? 
+      this.bcfPanel.projectMap.get(this.bcfPanel.selectedProjectId) : null;
+  }
+}
+
+class ShowProjectSetupAction extends BCFContextAction
+{
+  constructor(bcfPanel)
+  {
+    super(bcfPanel);
+  }
+
+  isEnabled()
+  {
+    const project = this.getSelectedProject();
+    return project && project.persistent;
+  }
+
+  perform()
+  {
+    this.bcfPanel.showProjectSetup();
   }
 }
 

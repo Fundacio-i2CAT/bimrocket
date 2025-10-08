@@ -199,4 +199,6 @@ export const translations =
   "placeholder.keep_password": "Dejar en blanco para mantener la contraseña actual",
   "placeholder.confirm_password": "Repite la nueva contraseña",
   "placeholder.add_tags": "Escribe y pulsa Enter para añadir etiquetas",
+
+  "action.ShowProjectSetup" : "Configuración",
 };
