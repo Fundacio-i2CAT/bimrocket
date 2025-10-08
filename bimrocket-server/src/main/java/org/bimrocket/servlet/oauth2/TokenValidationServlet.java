@@ -41,14 +41,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.bimrocket.service.file.*;
 import org.bimrocket.service.security.SecurityService;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
@@ -67,33 +60,33 @@ public class TokenValidationServlet extends HttpServlet
   static final Logger LOGGER =
     Logger.getLogger(TokenValidationServlet.class.getName());
 
-  private static final String OAUTH2_METHODS =
-    "GET";
-
-  private static final String OAUTH2_HEADERS =
-    "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match,x-requested-with";
-
   @Inject
   transient SecurityService securityService;
 
-
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException, JsonProcessingException
+    throws ServletException, IOException
   {
     String token = request.getParameter("token");
     if (token == null || token.isBlank())
     {
-      sendUnauthorized(response, "missing_token");
+      sendBadRequest(response, "Missing token parameter");
       return;
     }
 
     logParameters(request, token);
 
-    //Decode token
-    JsonNode jsonNode = decodeJWTToken(token);
-    String username = jsonNode.get("preferred_username").asText();
-    String origin = jsonNode.get("iss").asText();
+    try {
+      //Decode token
+      JsonNode jsonNode = decodeJWTToken(token);
+      String username = jsonNode.get("preferred_username").asText();
+      String origin = jsonNode.get("iss").asText();
+    }
+    catch(Exception jp)
+    {
+      sendDecodeException(response, "Invalid Token");
+      return;
+    }
 
   }
 
@@ -122,11 +115,16 @@ public class TokenValidationServlet extends HttpServlet
     }
   }
 
-  private void sendUnauthorized(HttpServletResponse resp, String error) throws IOException
+  private void sendBadRequest(HttpServletResponse resp, String error) throws IOException
   {
-    resp.setHeader("WWW-Authenticate",
-            "Bearer realm=\"bimrocket realm\", error=\"" + error + "\"");
-    resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    resp.setContentType("application/json");
+    resp.getWriter().write("{\"error\":\"" + error + "\"}");
+  }
+
+  private void sendDecodeException(HttpServletResponse resp, String error) throws IOException
+  {
+    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     resp.setContentType("application/json");
     resp.getWriter().write("{\"error\":\"" + error + "\"}");
   }
