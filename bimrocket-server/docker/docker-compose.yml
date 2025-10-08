@@ -33,6 +33,21 @@ services:
     networks:
       - bimrocket_network
 
+#  mongodb:
+#   image: mongo:8.0.13
+#   container_name: mongodb
+#   restart: always
+#   ports:
+#     - "27017:27017"
+#   environment:
+#     MONGO_INITDB_ROOT_USERNAME: root
+#     MONGO_INITDB_ROOT_PASSWORD: mongodb
+#   volumes:
+#     - ../mongo_data/db:/data/db
+#   networks:
+#     - bimrocket_network
+
+
 networks:
   bimrocket_network:
     driver: bridge
