@@ -11,6 +11,7 @@ import { Environment } from "../Environment.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { Toast } from "./Toast.js";
 import { LoginDialog } from "./LoginDialog.js";
+import { ConfirmDialog } from "./ConfirmDialog.js";
 
 class ServerAdminDialog extends Dialog
 {
@@ -28,6 +29,9 @@ class ServerAdminDialog extends Dialog
     this.toolbar = null;
     this.tableContainer = null;
     this.usersLoaded = false;
+    this.rolesTableElem = null;
+    this.rolesLoaded = false; 
+    this.rolesTabContainer = null;
     
     this.service = this.application.services[this.group];
 
@@ -35,16 +39,14 @@ class ServerAdminDialog extends Dialog
     const connPanel = this.createContainer('admin_body', mainContainer);
     const mainWrapper = this.createContainer('admin_panel', this.bodyElem);
     const mainPanel = this.createContainer('admin_body', mainWrapper);
+
+    this.searchToolbar= null;
+    this.filterTitle = null;
   
     this.connPanelElem = connPanel;
     this.mainContainer = mainWrapper;
     this.mainPanelElem = mainPanel;
 
-    this.searchToolbar= null;
-
-    this.filterContainer = null;
-    this.filterTitle = null;
-  
     this.apiServiceElem = Controls.addTextField(connPanel,
       "securityService", "bim|label.admin_service", "securityServiceUrl");
     this.apiServiceElem.value = `${Environment.SERVER_URL}/api`;
@@ -53,26 +55,45 @@ class ServerAdminDialog extends Dialog
     const buttonsContainer = this.createContainer('admin_buttons', connPanel);
     this.connButtonsElem = buttonsContainer;
   
+    this.connectButton = Controls.addButton(buttonsContainer, 
+      "adminConnect", "button.connect", () => {
+        this.updateSecurityService();
+        this.authenticateAndLoadData();
+      });
+    
     // hidden initially
     this.detailPanelElem = this.createContainer('admin_panel', mainContainer);
     this.detailPanelElem.style.display = "none";
   
     this.tabbedPane = new TabbedPane(mainContainer);
     this.tabbedPane.addClassName("h_full");
-    this.tabbedPane.paneElem.style.display = "block";
-    const usersTab = this.tabbedPane.addTab("users", "bim|label.users");
+    this.tabbedPane.paneElem.style.display = "none";
     
+    const usersTab = 
+      this.tabbedPane.addTab("users", "bim|label.users");
     this.createUsersTab(usersTab);
-  
-    const rolesTab =
+
+    const rolesTab = 
       this.tabbedPane.addTab("roles", "bim|label.roles_management");
-      rolesTab.textContent = "Roles feature coming soon";
-    const configTab =
+      const rolesTabSelector = this.tabbedPane.getTab("roles").selector;
+
+    rolesTabSelector.addEventListener("click", () => {
+      if (!this.rolesLoaded) {
+        this.searchRoles();
+        this.rolesLoaded = true;
+      }
+    });
+
+    this.createRolesTab(rolesTab);
+
+    const configTab = 
       this.tabbedPane.addTab("config", "bim|label.configuration");
       configTab.textContent = "Settings coming soon";
-  
-    this.createUserForm();
     
+    this.createUserForm();
+
+    this.createRoleForm();
+
     this.addButton("close", "button.close", () => this.hide());
   
   }
@@ -95,31 +116,78 @@ class ServerAdminDialog extends Dialog
     this.application.services[this.group] = this.service;
   }
 
+  createTab(container, tabClassName, toolbarClassName, buttonId, buttonLabel, buttonCallback, tabContainerProperty, toolbarProperty, tableContainerProperty) 
+  {
+    if (this[tabContainerProperty] && this[tabContainerProperty].parentNode) 
+    {
+      this[tabContainerProperty].parentNode.removeChild(this[tabContainerProperty]);
+      this[tabContainerProperty] = null;
+    }
+  
+    const tabContent = document.createElement("div");
+    tabContent.className = tabClassName;
+    container.appendChild(tabContent);
+  
+    this[toolbarProperty] = document.createElement("div");
+    this[toolbarProperty].className = toolbarClassName;
+    tabContent.appendChild(this[toolbarProperty]);
+  
+    Controls.addButton(this[toolbarProperty], buttonId, buttonLabel, buttonCallback);
+  
+    this[tableContainerProperty] = document.createElement("div");
+    this[tableContainerProperty].className = "table_container";
+    tabContent.appendChild(this[tableContainerProperty]);
+  
+    this[tabContainerProperty] = tabContent;
+  }
+  
   createUsersTab(container) 
   {
+    this.createTab(
+      container,
+      "users_tab_content",
+      "admin_toolbar",
+      "newUser",
+      "bim|button.new_user",
+      () => this.showUser(),
+      "usersTabContainer",
+      "toolbar",
+      "tableContainer"
+    );
 
-    if (this.usersTabContainer && this.usersTabContainer.parentNode) 
-    {
-      this.usersTabContainer.parentNode.removeChild(this.usersTabContainer);
-      this.usersTabContainer = null;
-    }
+    this.createUserSearchPanel();
+  }
+  
+  createRolesTab(container) 
+  {
+    this.createTab(
+      container,
+      "roles_tab_content",
+      "admin_toolbar",
+      "newRole",
+      "bim|button.new_role",
+      () => this.showRole(),
+      "rolesTabContainer",
+      "rolesToolbar",
+      "rolesTableContainer"
+    );
+  }
 
-    const tabContent = document.createElement("div");
-    tabContent.className = "users_tab_content";
-    container.appendChild(tabContent);
-
-    this.toolbar = document.createElement("div");
-    this.toolbar.className = "admin_toolbar";
-    this.toolbar.style.display = "flex";
-    tabContent.appendChild(this.toolbar);
-
-    this.newUserButton = Controls.addButton(this.toolbar,
-      "newUser", "bim|button.new_user", () => this.showUser());
+  createUserSearchPanel() 
+  {
+    if (!this.usersTabContainer) return;
 
     this.searchToolbar = document.createElement("div");
     this.searchToolbar.className = "search_panel";
-    this.searchToolbar.style.display = "block";
-    tabContent.appendChild(this.searchToolbar);
+    
+    if (this.toolbar && this.toolbar.parentNode) 
+    {
+      this.toolbar.parentNode.insertBefore(this.searchToolbar, this.toolbar.nextSibling);
+    } 
+    else 
+    {
+      this.usersTabContainer.appendChild(this.searchToolbar);
+    }
 
     this.searchBody = document.createElement("div");
     this.searchBody.className = "admin_body";
@@ -145,17 +213,11 @@ class ServerAdminDialog extends Dialog
     this.searchUsersButton = Controls.addButton(this.buttonContainer,
       "searchTopics", "button.search", () => this.searchUsers());
       
-    this.clearButton= Controls.addButton(this.buttonContainer,
+    this.clearButton = Controls.addButton(this.buttonContainer,
       "clearFilters", "button.clear", () => this.clearFilters());
-    
-    this.tableContainer = document.createElement("div");
-    this.tableContainer.className = "table_container";
-    this.tableContainer.style.display = "block";
-    tabContent.appendChild(this.tableContainer);
 
-    this.usersTabContainer = tabContent;
-
-    const updateSearchButton = () => {
+    const updateSearchButton = () => 
+    {
       const hasId = this.idFilterFieldElem.value.trim() !== "";
       const hasName = this.nameFilterFieldElem.value.trim() !== "";
     };
@@ -218,15 +280,99 @@ class ServerAdminDialog extends Dialog
         () => this.showUserDetails(user, index));
 
       row.children[2].textContent = user.roles?.join(", ") || "-";
-
     });
 
-  } 
-  
+    if (this.toolbar) 
+    {
+      this.toolbar.style.display = "flex";
+    }
+  }
+
+  populateRoles(roles) 
+  {
+    this.allRoles = roles;
+    if (!this.rolesTableContainer) 
+    {
+      return;
+    }
+    this.rolesTableContainer.style.display = "block";
+
+    if (this.rolesTableElem) 
+    {
+      this.rolesTableElem.remove();
+      this.rolesTableElem = null;
+    }
+    
+    const columnKeys = ["bim|col.id", "bim|col.description", "bim|col.inherited_role"];
+    const roleTableColumns = columnKeys.map(key => this.application.i18n.get(key));
+
+    this.rolesTableElem = Controls.addTable(this.rolesTableContainer,
+      "roleTable", roleTableColumns,
+      "data");
+
+    const tbody = this.rolesTableElem.tBodies[0];
+    tbody.innerHTML = "";
+    tbody.style.textAlign = "left";
+
+    if (!roles || roles.length === 0) 
+    {
+      let row = tbody.insertRow();
+      let cell = row.insertCell(0);
+      cell.colSpan = 3;
+      I18N.set(cell, "textContent", "bim|message.role_searched");
+      this.application.i18n.update(cell);
+      cell.style.textAlign = "center";
+      return;
+    }
+
+    roles.forEach((role, index) => 
+    {
+      const row = Controls.addTableRow(this.rolesTableElem);
+      
+      Controls.addLink(row.children[0], role.id || "-", "#", null, null,
+      () => this.showRoleDetails(role, index));
+      
+      row.children[1].textContent = role.description || "-";
+      row.children[2].textContent = role.roles?.join(", ") || "-";
+    });
+
+    if (this.rolesToolbar) 
+    {
+      this.rolesToolbar.style.display = "flex";
+    }
+  }
+
+  populateRolesSelect(roles) 
+  { 
+    if (!this.rolesSelectElem) return;
+    
+    this.rolesSelectElem.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = this.application.i18n.get("bim|label.select_role");
+    this.rolesSelectElem.appendChild(defaultOption);
+
+    const filteredRoles = roles.filter(role => role.id !== this.currentRoleId);
+    
+    filteredRoles.forEach((role) => {
+      const option = document.createElement("option");
+      option.value = role.id;
+      option.textContent = role.id;
+      this.rolesSelectElem.appendChild(option);
+    });
+  }
+
   showUserDetails(user, index) 
   {
     this.currentUserIndex = index;
     this.showUser(user);
+  }
+
+  showRoleDetails(role, index) 
+  {
+    this.currentRoleIndex = index;
+    this.showRole(role);
   }
 
   deleteUser(userId)
@@ -241,7 +387,7 @@ class ServerAdminDialog extends Dialog
 
     const onError = error =>
     {
-      this.handleError(error, () => this.deleteTopic(userId));
+      this.handleError(error, () => this.deleteUser(userId));
     };
     if (userId)
     {
@@ -250,11 +396,47 @@ class ServerAdminDialog extends Dialog
     }
   }
 
+  deleteRole(roleId) 
+  {
+    const onCompleted = () => 
+    {
+      this.hideProgressBar();
+      this.searchRoles();
+      Toast.create("bim|message.role_deleted")
+        .setI18N(this.application.i18n)
+        .show();
+    };
+
+    const onError = (error) => 
+    {
+      this.handleError(error, () => this.deleteRole(roleId));
+    };
+
+    if (roleId) 
+    {
+      this.showProgressBar();
+      this.service.deleteRole(roleId, onCompleted, onError);
+    }
+  }
+
+  authenticateAndLoadData() 
+  {
+    const onCompleted = () => 
+    {
+      this.searchUsers();
+    };
+    const onError = (error) => 
+    {
+      this.handleError(error, () => this.authenticateAndLoadData());
+    };
+    this.service.getUsers("", "", onCompleted, onError);
+  }
+
   searchUsers() 
   {
     const securityServiceUrl = this.apiServiceElem.value.trim();
 
-    if (!this.service || this.service.url !== securityServiceUrl) 
+    if (!this.service || this.service.url !== securityServiceUrl)
     {
       this.updateSecurityService();
     }
@@ -268,17 +450,18 @@ class ServerAdminDialog extends Dialog
     const onCompleted = users => 
     {
       this.hideProgressBar();
-      this.users = users; 
+      this.users = users;
       this.usersLoaded = true;
       this.populateUsers(users);
       this.hideUserForm();
+      
       if (this.tabbedPane && this.tabbedPane.paneElem) 
       {
         this.tabbedPane.paneElem.style.display = "block";
       }
 
     };
-
+  
     const onError = error => 
     {
       this.hideProgressBar();
@@ -288,7 +471,42 @@ class ServerAdminDialog extends Dialog
     this.showProgressBar();
     this.service.getUsers(odataFilter, odataOrderBy, onCompleted, onError);
   }
-   
+
+  searchRoles() 
+  {
+    if (!this.service || this.service.url !== this.apiServiceElem.value.trim()) 
+    {
+      this.updateSecurityService();
+    }
+
+    const onCompleted = roles => 
+    {
+      this.hideProgressBar();
+      this.roles = roles;
+      this.allRoles = roles;
+      this.rolesLoaded = true;
+      this.populateRoles(roles);
+      this.hideRoleForm();
+
+      this.populateRolesSelect(roles);
+
+      if (this.tabbedPane && this.tabbedPane.paneElem) 
+      {
+        this.tabbedPane.paneElem.style.display = "block";
+      }
+    };
+
+    const onError = error => 
+    {
+      this.hideProgressBar();
+      this.handleError(error, () => this.searchRoles());
+    };
+
+    this.showProgressBar();
+
+    this.service.getRoles(onCompleted, onError);
+  }
+  
   buildODataFilter(id, name)
   {
     const conditions = [];
@@ -357,7 +575,7 @@ class ServerAdminDialog extends Dialog
     this.passwordConfirmField.type = "password";
 
     this.tagsInput = Controls.addTagsInput(this.detailBodyElem,
-      "roles", "bim|label.roles", "bim|placeholder.add_tags", []);
+      "roles", "bim|label.roles", "bim|placeholder.add_tags", [], "", true);
 
     this.detailButtonsElem = document.createElement("div");
     this.detailButtonsElem.className = "admin_buttons";
@@ -394,12 +612,79 @@ class ServerAdminDialog extends Dialog
     );
   }
 
-  validatePasswords() 
+  createRoleForm()
+  {
+    this.roleDetailPanelElem = this.roleDetailPanelElem || document.createElement("div");
+    this.roleDetailPanelElem.className = "admin_panel";
+    this.roleDetailPanelElem.style.display = "none";
+
+    this.rolesTabContainer?.appendChild(this.roleDetailPanelElem);
+    this.roleDetailPanelElem.innerHTML = '';
+
+    this.roleDetailBodyElem = document.createElement("div");
+    this.roleDetailBodyElem.className = "admin_body";
+    this.roleDetailPanelElem.appendChild(this.roleDetailBodyElem);
+
+    this.roleDetailHeaderElem = document.createElement("div");
+    this.roleDetailHeaderElem.className = "admin_topic_nav";
+    this.roleDetailBodyElem.appendChild(this.roleDetailHeaderElem);
+    this.backRoleButton = Controls.addButton(this.roleDetailHeaderElem, "backRoles", "button.back", () => this.hideRoleForm());
+
+    this.roleIdField = Controls.addTextField(this.roleDetailBodyElem, 
+      "roleId", "bim|label.id");
+
+    this.roleDescriptionField = Controls.addTextField(this.roleDetailBodyElem, 
+      "roleDescription", "bim|label.description");
+
+    this.rolesSelectElem = Controls.addSelectField(
+      this.roleDetailBodyElem,
+      "rolesSelect",
+      "bim|label.inherited_roles",
+      []
+    );
+
+    this.rolesSelectElem.addEventListener("change", (event) => {
+      const selectedRoleId = this.rolesSelectElem.value;
+
+      if (selectedRoleId && this.rolesTagsInput) {
+        const currentTags = this.rolesTagsInput.getTags();
+        if (!currentTags.includes(selectedRoleId)) {
+          this.rolesTagsInput.addTag(selectedRoleId);
+        }
+        this.rolesSelectElem.value = "";
+      }
+    });
+
+    this.rolesTagsInput = Controls.addTagsInput(this.roleDetailBodyElem, 
+      "roles", "", "bim|placeholder.add_tags", [], "", false);
+
+    this.roleDetailButtonsElem = document.createElement("div");
+    this.roleDetailButtonsElem.className = "admin_buttons";
+    this.roleDetailBodyElem.appendChild(this.roleDetailButtonsElem);
+
+    this.saveRoleButton = Controls.addButton(this.roleDetailButtonsElem, "saveRole", 
+      "button.save", () => this.saveRole());
+
+    this.deleteRoleButton = Controls.addButton(this.roleDetailButtonsElem, 
+      "deleteRole", "button.delete", () => {
+        ConfirmDialog.create("bim|title.delete_role", 
+          "bim|question.delete_role")
+          .setAction(() => {
+            this.deleteRole(this.currentRoleId);
+            this.hideRoleForm();
+          })
+          .setAcceptLabel("button.delete")
+          .setI18N(this.application.i18n).show();
+      }
+    );
+  }
+
+  validatePasswords()
   {
     return this.passwordField.value === this.passwordConfirmField.value;
   }
 
-  hideUserForm() 
+  hideUserForm()
   {
     this.detailPanelElem.style.display = "none";
     
@@ -416,16 +701,23 @@ class ServerAdminDialog extends Dialog
       this.searchToolbar.style.display = "flex";
     }
   }
-
-  saveUser() 
+    
+  hideRoleForm()
   {
+    this.roleDetailPanelElem.style.display = "none";
+    
+    this.rolesTableContainer && (this.rolesTableContainer.style.display = "block");
+    this.rolesToolbar && (this.rolesToolbar.style.display = "flex");
+  }
+    
+  saveUser()
+    {
     const securityServiceUrl = this.apiServiceElem.value.trim();
 
     if (!this.service || this.service.url !== securityServiceUrl) 
     {
       this.updateSecurityService();
     }
-
     const application = this.application;
     const id = this.idField.value;
     const username = this.usernameField.value.trim();
@@ -482,6 +774,48 @@ class ServerAdminDialog extends Dialog
     }
   }
 
+  saveRole() 
+  {
+    const { application } = this;
+    const id = this.roleIdField.value;
+    const description = this.roleDescriptionField.value.trim();
+    const roles = this.rolesTagsInput.getTags();
+
+    if (!id) 
+    {
+      MessageDialog.create("ERROR", "bim|message.id_field_required")
+        .setClassName("error")
+        .setI18N(application.i18n).show();
+      return; 
+    }
+
+    const role = {
+      id: id,
+      description: description,
+      roles: roles,
+    };
+
+    const onCompleted = () => 
+    {
+      this.hideProgressBar();
+      this.hideRoleForm();
+      this.searchRoles();
+      Toast.create("bim|message.role_saved")
+        .setI18N(application.i18n).show();
+    };
+
+    const onError = error => 
+    {
+      this.hideProgressBar();
+      this.handleError(error, () => this.saveRole());
+    };
+
+    this.showProgressBar();
+    this.currentRoleId
+      ? this.service.updateRole(role, onCompleted, onError)
+      : this.service.createRole(role, onCompleted, onError);
+  }
+
   handleError(error, onLogin)
   {
     this.hideProgressBar();
@@ -496,11 +830,34 @@ class ServerAdminDialog extends Dialog
     }
     else
     {
-      let message = error.message?.split(":").slice(1).join(":").trim() || error.message;
+      let message = this.cleanErrorMessage(error.message);
       MessageDialog.create("ERROR", message)
         .setClassName("error")
         .setI18N(this.application.i18n).show();
     }
+  }
+
+  cleanErrorMessage(errorMessage) 
+  {
+    if (!errorMessage) return this.application.i18n.get("Error");
+
+    const recordIndex = errorMessage.indexOf("#");
+    if (recordIndex !== -1) 
+    {
+      const afterHash = errorMessage.slice(recordIndex);
+      const secondColon = afterHash.indexOf(":", afterHash.indexOf(":") + 1);
+      if (secondColon !== -1) 
+      {
+        return afterHash.slice(secondColon + 1).trim();
+      }
+    }
+    const firstColon = errorMessage.indexOf(":");
+    if (firstColon !== -1) 
+    {
+      return errorMessage.slice(firstColon + 1).trim();
+    }
+
+    return errorMessage;
   }
 
   requestCredentials(message, onLogin, onFailed)
@@ -519,66 +876,84 @@ class ServerAdminDialog extends Dialog
     loginDialog.show();
   }
 
+  toggleVisibility(container, toolbar, detailPanelElem, parentContainer) 
+  {
+    if (container) {
+      container.style.display = "none";
+    }
+    if (toolbar) {
+      toolbar.style.display = "none";
+    }
+    if (!detailPanelElem.parentNode) {
+      parentContainer.appendChild(detailPanelElem);
+    }
+    detailPanelElem.style.display = "block";
+  }
+  
+  updateFields(fields) 
+  {
+    fields.forEach(({ field, value, readOnly, placeholder, required }) => 
+    {
+      if (field) 
+      {
+        field.value = value || "";
+        if (readOnly !== undefined) field.readOnly = readOnly;
+        if (placeholder !== undefined) field.placeholder = placeholder;
+        if (required !== undefined) field.required = required;
+      }
+    });
+  }
+
   showUser(user = null) 
   {
-    if (this.tableContainer) 
-    {
-      this.tableContainer.style.display = "none";
-    }
-    if (this.toolbar) 
-    {
-      this.toolbar.style.display = "none";
-    }
-    if (this.searchToolbar)
-    {
+    this.toggleVisibility(this.tableContainer, this.toolbar, this.detailPanelElem, this.usersTabContainer);
+
+    if (this.searchToolbar) {
       this.searchToolbar.style.display = "none";
     }
-    
-    if (!this.detailPanelElem.parentNode) {
-      this.usersTabContainer.appendChild(this.detailPanelElem);
-    }
-    this.detailPanelElem.style.display = "block";
+
     this.deleteButton.disabled = (user === null);
-    if (user) 
-    {
-      // update
-      this.currentUserData = user;
-      this.idField.value = user.id || "";
-      this.idField.readOnly = true;
-      this.usernameField.value = user.name || "";
-      this.emailField.value = user.email || "";
-      this.tagsInput.setTags(user.roles || []);
-      this.currentUserId = user.id;
   
-      this.passwordField.value = "";
-      this.passwordField.placeholder = this.application.i18n.get("bim|placeholder.keep_password");
-      this.passwordField.required = false;
-      
-      this.passwordConfirmField.value = "";
-      this.passwordConfirmField.placeholder = this.application.i18n.get("bim|placeholder.confirm_password");
-      this.passwordConfirmField.required = false;
-    } 
-    else 
-    {
-      // creation
-      this.currentUserData = null;
-      this.idField.value = "";
-      this.idField.readOnly = false;
-      this.usernameField.value = "";
-      this.emailField.value = "";
-      this.tagsInput.setTags([]);
-      this.currentUserId = null;
+    const isCreation = user === null;
+    this.currentUserData = isCreation ? null : user;
+    this.currentUserId = isCreation ? null : user.id;
   
-      this.passwordField.value = "";
-      this.passwordField.placeholder ="";
-      this.passwordField.required = true;
-      
-      this.passwordConfirmField.value = "";
-      this.passwordConfirmField.placeholder = "";
-      this.passwordConfirmField.required = true;
-    }
+    this.updateFields([
+      { field: this.idField, value: user?.id, readOnly: !isCreation },
+      { field: this.usernameField, value: user?.name },
+      { field: this.emailField, value: user?.email },
+      { field: this.passwordField, value: "", placeholder: isCreation ? "" : this.application.i18n.get("bim|placeholder.keep_password"), required: isCreation },
+      { field: this.passwordConfirmField, value: "", placeholder: isCreation ? "" : this.application.i18n.get("bim|placeholder.confirm_password"), required: isCreation }
+    ]);    
   
+    this.tagsInput.setTags(user?.roles || []);
   }
+
+  showRole(role = null) 
+  {
+    this.toggleVisibility(this.rolesTableContainer, this.rolesToolbar, this.roleDetailPanelElem, this.rolesTabContainer);
+    this.deleteRoleButton.disabled = (role === null);
+
+    const isCreation = role === null;
+    this.currentRoleData = isCreation ? null : role;
+    this.currentRoleId = isCreation ? null : role.id;
+
+    this.updateFields([
+      { field: this.roleIdField, value: role?.id, readOnly: !isCreation },
+      { field: this.roleDescriptionField, value: role?.description }
+    ]);
+
+    if (this.rolesTagsInput) 
+    {
+      this.rolesTagsInput.setTags(role?.roles || []);
+    }
+
+    if (this.allRoles) 
+    {
+      this.populateRolesSelect(this.allRoles);
+    }
+  }
+
   showProgressBar()
   {
     this.application.progressBar.message = "";
