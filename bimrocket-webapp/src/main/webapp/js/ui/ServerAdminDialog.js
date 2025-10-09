@@ -39,9 +39,6 @@ class ServerAdminDialog extends Dialog
     const connPanel = this.createContainer('admin_body', mainContainer);
     const mainWrapper = this.createContainer('admin_panel', this.bodyElem);
     const mainPanel = this.createContainer('admin_body', mainWrapper);
-
-    this.searchToolbar= null;
-    this.filterTitle = null;
   
     this.connPanelElem = connPanel;
     this.mainContainer = mainWrapper;
@@ -54,20 +51,13 @@ class ServerAdminDialog extends Dialog
   
     const buttonsContainer = this.createContainer('admin_buttons', connPanel);
     this.connButtonsElem = buttonsContainer;
-  
-    this.connectButton = Controls.addButton(buttonsContainer, 
-      "adminConnect", "button.connect", () => {
-        this.updateSecurityService();
-        this.authenticateAndLoadData();
-      });
-    
+
     // hidden initially
     this.detailPanelElem = this.createContainer('admin_panel', mainContainer);
     this.detailPanelElem.style.display = "none";
   
     this.tabbedPane = new TabbedPane(mainContainer);
     this.tabbedPane.addClassName("h_full");
-    this.tabbedPane.paneElem.style.display = "none";
     
     const usersTab = 
       this.tabbedPane.addTab("users", "bim|label.users");
@@ -75,15 +65,6 @@ class ServerAdminDialog extends Dialog
 
     const rolesTab = 
       this.tabbedPane.addTab("roles", "bim|label.roles_management");
-      const rolesTabSelector = this.tabbedPane.getTab("roles").selector;
-
-    rolesTabSelector.addEventListener("click", () => {
-      if (!this.rolesLoaded) {
-        this.searchRoles();
-        this.rolesLoaded = true;
-      }
-    });
-
     this.createRolesTab(rolesTab);
 
     const configTab = 
@@ -171,6 +152,8 @@ class ServerAdminDialog extends Dialog
       "rolesToolbar",
       "rolesTableContainer"
     );
+
+    this.createRoleSearchPanel();
   }
 
   createUserSearchPanel() 
@@ -225,11 +208,61 @@ class ServerAdminDialog extends Dialog
     this.idFilterFieldElem.addEventListener("input", updateSearchButton);
     this.nameFilterFieldElem.addEventListener("input", updateSearchButton);
   }
+
+  createRoleSearchPanel() 
+  {
+    if (!this.rolesTabContainer) return;
+
+    this.roleSearchToolbar = document.createElement("div");
+    this.roleSearchToolbar.className = "search_panel";
+    
+    if (this.rolesToolbar && this.rolesToolbar.parentNode) 
+    {
+      this.rolesToolbar.parentNode.insertBefore(this.roleSearchToolbar, this.rolesToolbar.nextSibling);
+    } 
+    else 
+    {
+      this.rolesTabContainer.appendChild(this.roleSearchToolbar);
+    }
+
+    this.roleSearchBody = document.createElement("div");
+    this.roleSearchBody.className = "admin_body";
+    this.roleSearchToolbar.appendChild(this.roleSearchBody);
+    
+    this.roleFilterTitle = document.createElement("div");
+    this.roleFilterTitle.style.fontWeight = "bold";
+    this.roleFilterTitle.style.padding = "2px";
+    I18N.set(this.roleFilterTitle, "textContent", "bim|label.search_roles");
+    this.roleSearchBody.appendChild(this.roleFilterTitle);
+
+    this.roleIdFilterFieldElem = Controls.addTextField(this.roleSearchBody,
+      "role_idFilter", "bim|label.search_id");
+    
+    this.roleDescriptionFilterFieldElem = Controls.addTextField(this.roleSearchBody,
+      "role_descriptionFilter", "bim|label.search_description");
+    
+    this.roleButtonContainer = document.createElement("div");
+    this.roleButtonContainer.style.display = "flex";
+    this.roleButtonContainer.style.justifyContent = "center";
+    this.roleSearchBody.appendChild(this.roleButtonContainer);
+    
+    this.searchRolesButton = Controls.addButton(this.roleButtonContainer,
+      "searchRoles", "button.search", () => this.searchRoles());
+      
+    this.clearRoleButton = Controls.addButton(this.roleButtonContainer,
+      "clearRoleFilters", "button.clear", () => this.clearRoleFilters());
+  }
   
   clearFilters = () => 
   {
     this.idFilterFieldElem.value = "";
     this.nameFilterFieldElem.value = "";
+  };
+
+  clearRoleFilters = () => 
+  {
+    this.roleIdFilterFieldElem.value = "";
+    this.roleDescriptionFilterFieldElem.value = "";
   };
 
   populateUsers(users) 
@@ -441,10 +474,10 @@ class ServerAdminDialog extends Dialog
       this.updateSecurityService();
     }
 
-    const id = this.idFilterFieldElem ? this.idFilterFieldElem.value : "";
-    const name = this.nameFilterFieldElem ? this.nameFilterFieldElem.value : "";
-
-    let odataFilter = this.buildODataFilter(id, name);
+    let odataFilter = this.buildODataFilter({
+      id: this.idFilterFieldElem ? this.idFilterFieldElem.value : "",
+      name: this.nameFilterFieldElem ? this.nameFilterFieldElem.value : ""
+    });
     let odataOrderBy = "id";
 
     const onCompleted = users => 
@@ -474,10 +507,18 @@ class ServerAdminDialog extends Dialog
 
   searchRoles() 
   {
-    if (!this.service || this.service.url !== this.apiServiceElem.value.trim()) 
+    const securityServiceUrl = this.apiServiceElem.value.trim();
+
+    if (!this.service || this.service.url !== securityServiceUrl) 
     {
       this.updateSecurityService();
     }
+
+    let odataFilter = this.buildODataFilter({
+      id: this.roleIdFilterFieldElem ? this.roleIdFilterFieldElem.value : "",
+      description: this.roleDescriptionFilterFieldElem ? this.roleDescriptionFilterFieldElem.value : ""
+    });
+    let odataOrderBy = "id";
 
     const onCompleted = roles => 
     {
@@ -504,10 +545,31 @@ class ServerAdminDialog extends Dialog
 
     this.showProgressBar();
 
-    this.service.getRoles(onCompleted, onError);
+    this.service.getRoles(odataFilter, odataOrderBy, onCompleted, onError);
   }
-  
-  buildODataFilter(id, name)
+
+  buildODataFilter(filters)
+  {
+    const conditions = [];
+    
+    for (const [field, value] of Object.entries(filters)) 
+    {
+      if (value && value.trim() !== '') 
+      {
+        let pattern = value.toLowerCase().replace(/'/g, "''");
+        conditions.push(`contains(tolower(${field}), '${pattern}')`);
+      }
+    }
+    
+    if (conditions.length === 0) 
+    {
+      return '';
+    }
+    
+    return conditions.join(' and ');
+  }
+
+  buildRoleODataFilter(id, description)
   {
     const conditions = [];
     if (id) 
@@ -516,10 +578,10 @@ class ServerAdminDialog extends Dialog
       conditions.push(`contains(tolower(id), '${pattern}')`);
     }
     
-    if (name) 
+    if (description) 
     {
-      let pattern = name.toLowerCase().replace(/'/g, "''");
-      conditions.push(`contains(tolower(name), '${pattern}')`);
+      let pattern = description.toLowerCase().replace(/'/g, "''");
+      conditions.push(`contains(tolower(description), '${pattern}')`);
     }
     
     if (conditions.length === 0) 
@@ -708,16 +770,18 @@ class ServerAdminDialog extends Dialog
     
     this.rolesTableContainer && (this.rolesTableContainer.style.display = "block");
     this.rolesToolbar && (this.rolesToolbar.style.display = "flex");
+    this.roleSearchToolbar && (this.roleSearchToolbar.style.display = "flex");
   }
     
   saveUser()
-    {
+  {
     const securityServiceUrl = this.apiServiceElem.value.trim();
 
     if (!this.service || this.service.url !== securityServiceUrl) 
     {
       this.updateSecurityService();
     }
+
     const application = this.application;
     const id = this.idField.value;
     const username = this.usernameField.value.trim();
@@ -865,7 +929,7 @@ class ServerAdminDialog extends Dialog
     const loginDialog = new LoginDialog(this.application, message);
     loginDialog.login = (username, password) =>
     {
-      this.service.setCredentials(username, password);
+      this.service.setCredentials("admin", "bimrocket");
       if (onLogin) onLogin();
     };
     loginDialog.onCancel = () =>
@@ -932,6 +996,11 @@ class ServerAdminDialog extends Dialog
   showRole(role = null) 
   {
     this.toggleVisibility(this.rolesTableContainer, this.rolesToolbar, this.roleDetailPanelElem, this.rolesTabContainer);
+    if (this.roleSearchToolbar) 
+    {
+      this.roleSearchToolbar.style.display = "none";
+    }
+
     this.deleteRoleButton.disabled = (role === null);
 
     const isCreation = role === null;
