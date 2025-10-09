@@ -76,4 +76,24 @@ public class TextUtils
       return 0;
     }
   }
+
+  public static String addTime(String isoDate, int amount, String unit)
+  {
+    DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    LocalDateTime date = LocalDateTime.parse(isoDate, df);
+
+    switch (unit.toLowerCase())
+    {
+      case "minutes":
+        date = date.plusMinutes(amount);
+        break;
+      case "hours":
+        date = date.plusHours(amount);
+        break;
+      case "days":
+        date = date.plusDays(amount);
+    }
+
+    return df.format(date);
+  }
 }

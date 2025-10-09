@@ -113,6 +113,9 @@ public class SecurityService
     "SEC009: Access token expired. Use refresh token.";
   static final String REFRESH_TOKEN_EXPIRED =
     "SEC010: REFRESH token expired.";
+  static final String MINUTES = "minutes";
+  static final String HOURS = "hours";
+  static final String DAYS = "days";
 
   @Inject
   Instance<HttpServletRequest> requestInstance;
@@ -279,6 +282,12 @@ public class SecurityService
       }
       String dateString = getISODate();
       user.setModifyDate(dateString);
+
+      if (userUpdate.getAccessToken() != null) user.setAccessToken(userUpdate.getAccessToken());
+      if (userUpdate.getAccessTokenExpiresAt() != null) user.setAccessTokenExpiresAt(userUpdate.getAccessTokenExpiresAt());
+      if (userUpdate.getRefreshToken() != null) user.setRefreshToken(userUpdate.getRefreshToken());
+      if (userUpdate.getRefreshTokenExpiresAt() != null)user.setRefreshTokenExpiresAt(userUpdate.getRefreshTokenExpiresAt());
+
       user = userDao.update(user);
       return user;
     }
@@ -530,16 +539,18 @@ public class SecurityService
 
         User user = users.get(0);
 
-        // Validate if refresh_token_expires_at has been expired
+        // Validate if refresh_token_expires_at has expired
         if (TextUtils.compareDates(user.getRefreshTokenExpiresAt(), getISODate()) == 1)
         {
           throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
         }
 
-        // Validate if access_token_expires_at has been expired
+        // Validate if access_token_expires_at has expired.
+        // If expired update access_token_expires_at 5 min more
         if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 1)
         {
-            throw new NotAuthorizedException(TOKEN_EXPIRED);
+            user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, MINUTES));
+            user = updateUser(user);
         }
 
         return user;
