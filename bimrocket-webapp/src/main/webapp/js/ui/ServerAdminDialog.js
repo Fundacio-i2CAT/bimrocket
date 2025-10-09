@@ -569,29 +569,6 @@ class ServerAdminDialog extends Dialog
     return conditions.join(' and ');
   }
 
-  buildRoleODataFilter(id, description)
-  {
-    const conditions = [];
-    if (id) 
-    {
-      let pattern = id.toLowerCase().replace(/'/g, "''");
-      conditions.push(`contains(tolower(id), '${pattern}')`);
-    }
-    
-    if (description) 
-    {
-      let pattern = description.toLowerCase().replace(/'/g, "''");
-      conditions.push(`contains(tolower(description), '${pattern}')`);
-    }
-    
-    if (conditions.length === 0) 
-    {
-      return '';
-    }
-    
-    return conditions.join(' and ');
-  }
-
   createUserForm() 
   {
     if (!this.detailPanelElem) 
