@@ -30,7 +30,7 @@ class ServerAdminDialog extends Dialog
     this.tableContainer = null;
     this.usersLoaded = false;
     this.rolesTableElem = null;
-    this.rolesLoaded = false; 
+    this.rolesLoaded = false;
     this.rolesTabContainer = null;
     
     this.service = this.application.services[this.group];
@@ -323,7 +323,7 @@ class ServerAdminDialog extends Dialog
 
   populateRoles(roles) 
   {
-    this.allRoles = roles;
+    this.filteredRoles = roles;
     if (!this.rolesTableContainer) 
     {
       return;
@@ -524,7 +524,7 @@ class ServerAdminDialog extends Dialog
     {
       this.hideProgressBar();
       this.roles = roles;
-      this.allRoles = roles;
+      this.filteredRoles = roles;
       this.rolesLoaded = true;
       this.populateRoles(roles);
       this.hideRoleForm();
