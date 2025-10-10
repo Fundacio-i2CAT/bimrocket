@@ -529,7 +529,7 @@ public class SecurityService
         String[] parts = token.split("\\.");
         if (parts.length != 3) throw new IllegalArgumentException("Token invalid");
 
-        // find User by token
+        // find User by access token
         ODataParser parser = new ODataParser(userFieldMap);
         Expression filter = parser.parseFilter("access_token eq '" + token + "'");
         List<OrderByExpression> orderBy = parser.parseOrderBy("name");
@@ -541,18 +541,17 @@ public class SecurityService
 
         User user = users.get(0);
 
-        // Validate if refresh_token_expires_at has expired
-        if (TextUtils.compareDates(user.getRefreshTokenExpiresAt(), getISODate()) == 1)
-        {
-          throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
-        }
-
-        // Validate if access_token_expires_at has expired.
-        // If expired update access_token_expires_at 5 min more
+        // exist access token and is expired
         if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 1)
         {
-            user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, MINUTES));
-            user = updateUser(user);
+          // if refresh token is expired throws exception
+          if (TextUtils.compareDates(user.getRefreshTokenExpiresAt(), getISODate()) == 1)
+          {
+            throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
+          }
+          // if refresh token not expired, reset access token expiration 5 minutes more
+          user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, MINUTES));
+          user = updateUser(user);
         }
 
         return user;
