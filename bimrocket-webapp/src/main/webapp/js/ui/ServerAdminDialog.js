@@ -30,7 +30,6 @@ class ServerAdminDialog extends Dialog
     this.tableContainer = null;
     this.usersLoaded = false;
     this.rolesTableElem = null;
-    this.rolesLoaded = false;
     this.rolesTabContainer = null;
     
     this.service = this.application.services[this.group];
@@ -147,7 +146,7 @@ class ServerAdminDialog extends Dialog
       "admin_toolbar",
       "newRole",
       "bim|button.new_role",
-      () => this.initRoleForm(),
+      () => this.newRoleForm(),
       "rolesTabContainer",
       "rolesToolbar",
       "rolesTableContainer"
@@ -388,7 +387,8 @@ class ServerAdminDialog extends Dialog
 
     const filteredRoles = roles.filter(role => role.id !== this.currentRoleId);
     
-    filteredRoles.forEach((role) => {
+    filteredRoles.forEach((role) =>
+    {
       const option = document.createElement("option");
       option.value = role.id;
       option.textContent = role.id;
@@ -523,9 +523,7 @@ class ServerAdminDialog extends Dialog
     const onCompleted = roles => 
     {
       this.hideProgressBar();
-      this.roles = roles;
       this.filteredRoles = roles;
-      this.rolesLoaded = true;
       this.populateRoles(roles);
       this.hideRoleForm();
 
@@ -1000,7 +998,7 @@ class ServerAdminDialog extends Dialog
     }
   }
 
-  initRoleForm()
+  newRoleForm()
   {
     if (this.allRoles && this.allRoles.length > 0)
     {
@@ -1019,7 +1017,6 @@ class ServerAdminDialog extends Dialog
     {
       this.hideProgressBar();
       this.allRoles = roles;
-      this.rolesLoaded = true;
       this.populateRolesSelect(roles);
       this.showRole();
     };
@@ -1027,7 +1024,7 @@ class ServerAdminDialog extends Dialog
     const onError = (error) =>
     {
       this.hideProgressBar();
-      this.handleError(error, () => this.initRoleForm());
+      this.handleError(error, () => this.newRoleForm());
     };
 
     this.showProgressBar();
