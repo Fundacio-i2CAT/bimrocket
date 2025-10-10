@@ -421,12 +421,11 @@ class BCFPanel extends Panel
       
       label += " " + status;
 
-      let className = "BCFProject";
+      let className = "Group IfcProject";
       
       let node = this.projectTree.addNode(label, event => 
       {
-        this.selectedProjectId = project.id;
-        console.log(this.selectedProjectId);  
+        this.selectedProjectId = project.id;  
         this.changeProject();
       }, className);
 
@@ -1263,8 +1262,6 @@ class BCFPanel extends Panel
   {
     const application = this.application;
     const projectName = this.projectNameElem.value;
-    const index = this.projectElem.selectedIndex;
-    const options = this.projectElem.options;
 
     const onCompleted = project =>
     {
@@ -2073,7 +2070,7 @@ class ShowProjectSetupAction extends BCFContextAction
   isEnabled()
   {
     const project = this.getSelectedProject();
-    return project && project.persistent;
+    return project;
   }
 
   perform()
