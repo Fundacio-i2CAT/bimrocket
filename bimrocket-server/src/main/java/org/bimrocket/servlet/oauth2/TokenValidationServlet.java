@@ -90,6 +90,28 @@ public class TokenValidationServlet extends HttpServlet
 
   }
 
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
+          throws ServletException, IOException
+  {
+    String pathInfo = request.getPathInfo();
+
+    // Obtain code from the server authorizationr and call to obtain token
+    if ("/authCode".equals(pathInfo))
+    {
+      System.out.println("authCode");
+    }
+    // Recevives token from the server authorization
+    else if ("/tokenGen".equals(pathInfo))
+    {
+      System.out.println("tokenGen");
+    }
+    else
+    {
+      response.sendError(HttpServletResponse.SC_NOT_FOUND, "Path not found");
+    }
+  }
+
   // internal methods
 
   void logParameters(HttpServletRequest request, Object parameters)
