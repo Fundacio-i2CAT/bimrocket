@@ -4,9 +4,9 @@ import org.bimrocket.service.security.SecurityService;
 
 public interface AuthenticationManager {
 
-    public String getAuthenticationToken(String code);
+    public void getAuthenticationToken(String code);
 
-    public UserToken getUseridFromToken(UserToken userToken);
+    public UserToken getUseridFromToken(String accessToken, String refreshToken);
 
     public boolean checkUseridDB(UserToken userToken, SecurityService securityService);
 
