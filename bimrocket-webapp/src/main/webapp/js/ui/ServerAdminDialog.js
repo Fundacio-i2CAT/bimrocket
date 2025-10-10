@@ -147,7 +147,7 @@ class ServerAdminDialog extends Dialog
       "admin_toolbar",
       "newRole",
       "bim|button.new_role",
-      () => this.showRole(),
+      () => this.initRoleForm(),
       "rolesTabContainer",
       "rolesToolbar",
       "rolesTableContainer"
@@ -998,6 +998,40 @@ class ServerAdminDialog extends Dialog
     {
       this.populateRolesSelect(this.allRoles);
     }
+  }
+
+  initRoleForm()
+  {
+    if (this.allRoles && this.allRoles.length > 0)
+    {
+      this.showRole();
+      return;
+    }
+
+    const securityServiceUrl = this.apiServiceElem.value.trim();
+
+    if (!this.service || this.service.url !== securityServiceUrl)
+    {
+      this.updateSecurityService();
+    }
+
+    const onCompleted = (roles) =>
+    {
+      this.hideProgressBar();
+      this.allRoles = roles;
+      this.rolesLoaded = true;
+      this.populateRolesSelect(roles);
+      this.showRole();
+    };
+
+    const onError = (error) =>
+    {
+      this.hideProgressBar();
+      this.handleError(error, () => this.initRoleForm());
+    };
+
+    this.showProgressBar();
+    this.service.getRoles("", "id", onCompleted, onError);
   }
 
   showProgressBar()
