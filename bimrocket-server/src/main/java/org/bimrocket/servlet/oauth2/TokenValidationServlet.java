@@ -94,9 +94,12 @@ public class TokenValidationServlet extends HttpServlet
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
           throws ServletException, IOException
   {
+    String scheme = request.getScheme();               // Ex: http o https
+    String contextPath = request.getContextPath();     // Ex: /bimrocket-server
+    String hostHeader = request.getHeader("Host");  // Ex Host: localhost:9090
     String pathInfo = request.getPathInfo();
 
-    // Obtain code from the server authorizationr and call to obtain token
+    // Get code from the server authorization and call to obtain token
     if ("/authCode".equals(pathInfo))
     {
       System.out.println("authCode");
