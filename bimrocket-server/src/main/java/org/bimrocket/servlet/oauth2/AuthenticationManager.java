@@ -6,7 +6,7 @@ public interface AuthenticationManager {
 
     public void getAuthenticationToken(String code);
 
-    public UserToken getUseridFromToken(String accessToken, String refreshToken);
+    public UserToken getUseridFromToken(String jsonToken);
 
     public boolean checkUseridDB(UserToken userToken, SecurityService securityService);
 
