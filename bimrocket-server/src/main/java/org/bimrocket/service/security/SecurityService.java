@@ -448,7 +448,9 @@ public class SecurityService
 
     userId = authorizationCache.get(authorization);
 
-    if (userId != null)
+    // Only checks timeout user cache if authorization is Basic, otherwise we need to
+    // check authentication Bearer for each call to the endpoints
+    if (userId != null && authorization.contains("Basic"))
     {
       user = userCache.get(userId);
       if (user != null) return user;
