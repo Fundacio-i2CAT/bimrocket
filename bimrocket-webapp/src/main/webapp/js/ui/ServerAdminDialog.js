@@ -985,7 +985,7 @@ class ServerAdminDialog extends Dialog
     });
   }
 
-  showUser(user = null, role = null) 
+  showUser(user = null) 
   {
     this.toggleVisibility(this.tableContainer, this.toolbar, this.detailPanelElem, this.usersTabContainer);
 
