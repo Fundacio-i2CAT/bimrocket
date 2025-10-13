@@ -633,7 +633,7 @@ class ServerAdminDialog extends Dialog
     this.userRolesSelectElem = Controls.addSelectField(
       this.detailBodyElem,
       "userRolesSelect",
-      "bim|label.inherited_roles",
+      "bim|label.roles",
       []
     );
 
@@ -1048,12 +1048,6 @@ class ServerAdminDialog extends Dialog
 
   newRoleForm()
   {
-    if (this.allRoles && this.allRoles.length > 0)
-    {
-      this.showRole();
-      return;
-    }
-
     const securityServiceUrl = this.apiServiceElem.value.trim();
 
     if (!this.service || this.service.url !== securityServiceUrl)
