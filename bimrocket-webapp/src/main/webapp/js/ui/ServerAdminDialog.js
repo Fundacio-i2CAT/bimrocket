@@ -375,25 +375,44 @@ class ServerAdminDialog extends Dialog
   }
 
   populateRolesSelect(roles) 
-  { 
-    if (!this.rolesSelectElem) return;
-    
-    this.rolesSelectElem.innerHTML = "";
-
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = this.application.i18n.get("bim|label.select_role");
-    this.rolesSelectElem.appendChild(defaultOption);
-
-    const filteredRoles = roles.filter(role => role.id !== this.currentRoleId);
-    
-    filteredRoles.forEach((role) =>
+  {
+    if (this.userRolesSelectElem) 
     {
-      const option = document.createElement("option");
-      option.value = role.id;
-      option.textContent = role.id;
-      this.rolesSelectElem.appendChild(option);
-    });
+      this.userRolesSelectElem.innerHTML = "";
+
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = this.application.i18n.get("bim|label.select_role");
+      this.userRolesSelectElem.appendChild(defaultOption);
+
+      roles.forEach((role) =>
+      {
+        const option = document.createElement("option");
+        option.value = role.id;
+        option.textContent = role.id;
+        this.userRolesSelectElem.appendChild(option);
+      });
+    }
+
+    if (this.rolesSelectElem) 
+    {
+      this.rolesSelectElem.innerHTML = "";
+
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = this.application.i18n.get("bim|label.select_role");
+      this.rolesSelectElem.appendChild(defaultOption);
+
+      const filteredRoles = roles.filter(role => role.id !== this.currentRoleId);
+      
+      filteredRoles.forEach((role) =>
+      {
+        const option = document.createElement("option");
+        option.value = role.id;
+        option.textContent = role.id;
+        this.rolesSelectElem.appendChild(option);
+      });
+    }
   }
 
   showUserDetails(user, index) 
@@ -611,8 +630,29 @@ class ServerAdminDialog extends Dialog
       "passwordConfirm", "bim|label.confirm_password");
     this.passwordConfirmField.type = "password";
 
-    this.tagsInput = Controls.addTagsInput(this.detailBodyElem,
-      "roles", "bim|label.roles", "bim|placeholder.add_tags", [], "", true);
+    this.userRolesSelectElem = Controls.addSelectField(
+      this.detailBodyElem,
+      "userRolesSelect",
+      "bim|label.inherited_roles",
+      []
+    );
+
+    this.userRolesSelectElem.addEventListener("change", (event) => {
+      const selectedRoleId = this.userRolesSelectElem.value;
+
+      if (selectedRoleId && this.rolesTagsInput) 
+      {
+        const currentTags = this.rolesTagsInput.getTags();
+        if (!currentTags.includes(selectedRoleId)) 
+        {
+          this.rolesTagsInput.addTag(selectedRoleId);
+        }
+        this.userRolesSelectElem.value = "";
+      }
+    });
+
+    this.rolesTagsInput = Controls.addTagsInput(this.detailBodyElem, 
+      "roles", "", "bim|placeholder.add_tags", [], "", false);
 
     this.detailButtonsElem = document.createElement("div");
     this.detailButtonsElem.className = "admin_buttons";
@@ -683,9 +723,11 @@ class ServerAdminDialog extends Dialog
     this.rolesSelectElem.addEventListener("change", (event) => {
       const selectedRoleId = this.rolesSelectElem.value;
 
-      if (selectedRoleId && this.rolesTagsInput) {
+      if (selectedRoleId && this.rolesTagsInput) 
+      {
         const currentTags = this.rolesTagsInput.getTags();
-        if (!currentTags.includes(selectedRoleId)) {
+        if (!currentTags.includes(selectedRoleId)) 
+        {
           this.rolesTagsInput.addTag(selectedRoleId);
         }
         this.rolesSelectElem.value = "";
@@ -904,7 +946,7 @@ class ServerAdminDialog extends Dialog
     const loginDialog = new LoginDialog(this.application, message);
     loginDialog.login = (username, password) =>
     {
-      this.service.setCredentials("admin", "bimrocket");
+      this.service.setCredentials(username, password);
       if (onLogin) onLogin();
     };
     loginDialog.onCancel = () =>
@@ -943,11 +985,12 @@ class ServerAdminDialog extends Dialog
     });
   }
 
-  showUser(user = null) 
+  showUser(user = null, role = null) 
   {
     this.toggleVisibility(this.tableContainer, this.toolbar, this.detailPanelElem, this.usersTabContainer);
 
-    if (this.searchToolbar) {
+    if (this.searchToolbar)
+    {
       this.searchToolbar.style.display = "none";
     }
 
@@ -965,13 +1008,18 @@ class ServerAdminDialog extends Dialog
       { field: this.passwordConfirmField, value: "", placeholder: isCreation ? "" : this.application.i18n.get("bim|placeholder.confirm_password"), required: isCreation }
     ]);    
   
-    this.tagsInput.setTags(user?.roles || []);
+    if (this.rolesTagsInput) 
+    {
+      this.rolesTagsInput.setTags(user?.roles || []);
+    }
+
+    this.newRoleForm();
   }
 
   showRole(role = null) 
   {
     this.toggleVisibility(this.rolesTableContainer, this.rolesToolbar, this.roleDetailPanelElem, this.rolesTabContainer);
-    if (this.roleSearchToolbar) 
+    if (this.roleSearchToolbar)
     {
       this.roleSearchToolbar.style.display = "none";
     }
@@ -987,12 +1035,12 @@ class ServerAdminDialog extends Dialog
       { field: this.roleDescriptionField, value: role?.description }
     ]);
 
-    if (this.rolesTagsInput) 
+    if (this.rolesTagsInput)
     {
       this.rolesTagsInput.setTags(role?.roles || []);
     }
 
-    if (this.allRoles) 
+    if (this.allRoles)
     {
       this.populateRolesSelect(this.allRoles);
     }
