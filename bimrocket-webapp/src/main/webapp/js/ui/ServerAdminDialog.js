@@ -640,18 +640,18 @@ class ServerAdminDialog extends Dialog
     this.userRolesSelectElem.addEventListener("change", (event) => {
       const selectedRoleId = this.userRolesSelectElem.value;
 
-      if (selectedRoleId && this.rolesTagsInput) 
+      if (selectedRoleId && this.userRolesTagsInput) 
       {
-        const currentTags = this.rolesTagsInput.getTags();
+        const currentTags = this.userRolesTagsInput.getTags();
         if (!currentTags.includes(selectedRoleId)) 
         {
-          this.rolesTagsInput.addTag(selectedRoleId);
+          this.userRolesTagsInput.addTag(selectedRoleId);
         }
         this.userRolesSelectElem.value = "";
       }
     });
 
-    this.rolesTagsInput = Controls.addTagsInput(this.detailBodyElem, 
+    this.userRolesTagsInput = Controls.addTagsInput(this.detailBodyElem, 
       "roles", "", "bim|placeholder.add_tags", [], "", false);
 
     this.detailButtonsElem = document.createElement("div");
@@ -804,7 +804,7 @@ class ServerAdminDialog extends Dialog
     const username = this.usernameField.value.trim();
     const newPassword = this.passwordField.value;
     const email = this.emailField.value.trim();
-    const roles = this.tagsInput.getTags();
+    const roles = this.userRolesTagsInput.getTags();
 
     if (!username || !email) 
     {
@@ -1008,9 +1008,9 @@ class ServerAdminDialog extends Dialog
       { field: this.passwordConfirmField, value: "", placeholder: isCreation ? "" : this.application.i18n.get("bim|placeholder.confirm_password"), required: isCreation }
     ]);    
   
-    if (this.rolesTagsInput) 
+    if (this.userRolesTagsInput) 
     {
-      this.rolesTagsInput.setTags(user?.roles || []);
+      this.userRolesTagsInput.setTags(user?.roles || []);
     }
 
     this.newRoleForm();
