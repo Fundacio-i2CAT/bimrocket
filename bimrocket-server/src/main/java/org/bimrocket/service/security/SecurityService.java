@@ -109,8 +109,8 @@ public class SecurityService
     "SEC007: Password is required.";
   static final String TOKEN_MISSING =
     "SEC008: No access token provided.";
-  static final String TOKEN_EXPIRED =
-    "SEC009: Access token expired. Use refresh token.";
+  static final String TOKEN_INVALID =
+    "SEC009: Invalid Access Token.";
   static final String REFRESH_TOKEN_EXPIRED =
     "SEC010: REFRESH token expired.";
   static final String MINUTES = "minutes";
@@ -527,7 +527,7 @@ public class SecurityService
         String token = authoParts[1].trim();
 
         String[] parts = token.split("\\.");
-        if (parts.length != 3) throw new IllegalArgumentException("Token invalid");
+        if (parts.length != 3) throw new IllegalArgumentException(TOKEN_MISSING);
 
         // find User by access token
         ODataParser parser = new ODataParser(userFieldMap);
@@ -536,7 +536,7 @@ public class SecurityService
         List<User> users = getUsers(filter, orderBy);
         if (users.isEmpty()) // User not found
         {
-            throw new NotAuthorizedException(TOKEN_MISSING);
+            throw new NotAuthorizedException(TOKEN_INVALID);
         }
 
         User user = users.get(0);
