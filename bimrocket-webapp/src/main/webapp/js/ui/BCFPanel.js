@@ -1465,7 +1465,7 @@ class BCFPanel extends Panel
       return;
     }
 
-    const selectedProjectId = this.projectElem?.value;
+    const selectedProjectId = this.getProjectId();
 
     const topics = this.topics;
     if (topics.length === 0)
