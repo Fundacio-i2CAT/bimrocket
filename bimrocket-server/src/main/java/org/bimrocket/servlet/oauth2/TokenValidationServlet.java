@@ -33,6 +33,7 @@ package org.bimrocket.servlet.oauth2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -42,6 +43,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.bimrocket.service.file.*;
 import org.bimrocket.service.security.SecurityService;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
@@ -67,7 +70,52 @@ public class TokenValidationServlet extends HttpServlet
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException
   {
-    String token = request.getParameter("token");
+    String scheme = request.getScheme();               // Ex: http o https
+    String contextPath = request.getContextPath();     // Ex: /bimrocket-server
+    String hostHeader = request.getHeader("Host");  // Ex Host: localhost:9090
+    String pathInfo = request.getPathInfo();
+
+    String code = request.getParameter("code");
+    if (code == null || code.isBlank())
+    {
+      sendBadRequest(response, "Missing code parameter");
+      return;
+    }
+
+    URL url = new URL("http://localhost:8080/auth/realms/bim/protocol/openid-connect/token");
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("POST");
+    conn.setDoOutput(true);
+    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+    String params = "grant_type=authorization_code"
+            + "&client_id=bim-test"
+            + "&client_secret=QYtoLmYX25Q4yQzdz425yowdiC080AkX"
+            + "&redirect_uri=http://127.0.0.1:9090/bimrocket-server/api/oauth2/authCode"
+            + "&code=" + code;
+
+    try (OutputStream os = conn.getOutputStream()) {
+        os.write(params.getBytes(StandardCharsets.UTF_8));
+    }
+
+    InputStream responseStream = conn.getInputStream();
+    String json = new String(responseStream.readAllBytes(), StandardCharsets.UTF_8);
+
+    ObjectMapper mapper = new ObjectMapper();
+    Object jsonObject = mapper.readValue(json, Object.class);
+    ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
+    String prettyJson = writer.writeValueAsString(jsonObject);
+
+    response.setStatus(200);
+    response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
+    try (PrintWriter out = response.getWriter())
+    {
+      out.print(prettyJson);
+    }
+
+
+    /*String token = request.getParameter("token");
     if (token == null || token.isBlank())
     {
       sendBadRequest(response, "Missing token parameter");
@@ -86,7 +134,7 @@ public class TokenValidationServlet extends HttpServlet
     {
       sendDecodeException(response, "Invalid Token");
       return;
-    }
+    }*/
 
   }
 
@@ -94,7 +142,7 @@ public class TokenValidationServlet extends HttpServlet
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
           throws ServletException, IOException
   {
-    String scheme = request.getScheme();               // Ex: http o https
+    /*String scheme = request.getScheme();               // Ex: http o https
     String contextPath = request.getContextPath();     // Ex: /bimrocket-server
     String hostHeader = request.getHeader("Host");  // Ex Host: localhost:9090
     String pathInfo = request.getPathInfo();
@@ -112,7 +160,7 @@ public class TokenValidationServlet extends HttpServlet
     else
     {
       response.sendError(HttpServletResponse.SC_NOT_FOUND, "Path not found");
-    }
+    }*/
   }
 
   // internal methods
