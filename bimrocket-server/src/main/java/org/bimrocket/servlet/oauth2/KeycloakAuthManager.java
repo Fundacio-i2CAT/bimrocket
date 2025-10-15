@@ -23,18 +23,20 @@ public class KeycloakAuthManager implements AuthenticationManager
   @Override
   public String getAuthenticationToken(String code) throws Exception
   {
-      config.getValue(BASE + "keycloak.urlAuthenticationToken", String.class);
+      String urlAuthenticationToken = config.getValue(BASE + "keycloak.urlAuthenticationToken", String.class);
+      String clientId = config.getValue(BASE + "keycloak.clientId", String.class);
+      String secretId = config.getValue(BASE + "keycloak.secretId", String.class);
 
       String json = "";
-      URL url = new URL("https://iam.i2cat.net/auth/realms/SEG/protocol/openid-connect/token");
+      URL url = new URL(urlAuthenticationToken);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
       conn.setDoOutput(true);
       conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
       String params = "grant_type=authorization_code"
-              + "&client_id=bim"
-              + "&client_secret=SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL"
+              + "&client_id=" + clientId
+              + "&client_secret=" + secretId
               + "&redirect_uri=http://localhost:9090/bimrocket-server/api/oauth2/authCode"
               + "&code=" + code;
 

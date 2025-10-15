@@ -26,7 +26,7 @@ services:
         database: bimdb
     oauth2:
       keycloak:
-        urlAuthenticationToken: http://iam.i2cat.net/auth/realms/bim/protocol/openid-connect/token
+        urlAuthenticationToken: https://iam.i2cat.net/auth/realms/SEG/protocol/openid-connect/token
         clientId: bim
         secretId: SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL
 
