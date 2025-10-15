@@ -4,7 +4,7 @@ import org.bimrocket.service.security.SecurityService;
 
 public interface AuthenticationManager
 {
-  public String getAuthenticationToken(String code) throws Exception;
+  public String getAuthenticationToken(String code, String redirectUri) throws Exception;
 
   public UserToken getUseridFromToken(String jsonToken) throws Exception;
 

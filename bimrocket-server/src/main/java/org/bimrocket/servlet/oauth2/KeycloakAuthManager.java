@@ -21,7 +21,7 @@ public class KeycloakAuthManager implements AuthenticationManager
   static final String BASE = "services.security.oauth2.";
 
   @Override
-  public String getAuthenticationToken(String code) throws Exception
+  public String getAuthenticationToken(String code, String redirectUri) throws Exception
   {
       String urlAuthenticationToken = config.getValue(BASE + "keycloak.urlAuthenticationToken", String.class);
       String clientId = config.getValue(BASE + "keycloak.clientId", String.class);
@@ -37,7 +37,7 @@ public class KeycloakAuthManager implements AuthenticationManager
       String params = "grant_type=authorization_code"
               + "&client_id=" + clientId
               + "&client_secret=" + secretId
-              + "&redirect_uri=http://localhost:9090/bimrocket-server/api/oauth2/authCode"
+              + "&redirect_uri=" + redirectUri
               + "&code=" + code;
 
       try (OutputStream os = conn.getOutputStream()) {

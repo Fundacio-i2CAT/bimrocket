@@ -75,6 +75,8 @@ public class TokenValidationServlet extends HttpServlet
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException
   {
+
+    String redirectUri = request.getRequestURL().toString();
     String json = "";
     UserToken ut = null;
 
@@ -86,7 +88,7 @@ public class TokenValidationServlet extends HttpServlet
     }
 
     try {
-        json = keycloakAuthManager.getAuthenticationToken(code);
+        json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
 
         ut = keycloakAuthManager.getUseridFromToken(json);
     }
