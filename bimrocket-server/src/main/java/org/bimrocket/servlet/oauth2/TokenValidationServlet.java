@@ -66,77 +66,65 @@ public class TokenValidationServlet extends HttpServlet
   @Inject
   transient SecurityService securityService;
 
+  @Inject
+  transient KeycloakAuthManager keycloakAuthManager;
+
+  private static final String MISSING_CODE_PARAMETER = "Missing Code parameter";
+
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException
   {
-    String scheme = request.getScheme();               // Ex: http o https
-    String contextPath = request.getContextPath();     // Ex: /bimrocket-server
-    String hostHeader = request.getHeader("Host");  // Ex Host: localhost:9090
-    String pathInfo = request.getPathInfo();
+    String json = "";
+    UserToken ut = null;
 
     String code = request.getParameter("code");
     if (code == null || code.isBlank())
     {
-      sendBadRequest(response, "Missing code parameter");
+      sendBadRequest(response, MISSING_CODE_PARAMETER);
       return;
     }
-
-    URL url = new URL("http://localhost:8080/auth/realms/bim/protocol/openid-connect/token");
-    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    conn.setRequestMethod("POST");
-    conn.setDoOutput(true);
-    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-    String params = "grant_type=authorization_code"
-            + "&client_id=bim-test"
-            + "&client_secret=QYtoLmYX25Q4yQzdz425yowdiC080AkX"
-            + "&redirect_uri=http://127.0.0.1:9090/bimrocket-server/api/oauth2/authCode"
-            + "&code=" + code;
-
-    try (OutputStream os = conn.getOutputStream()) {
-        os.write(params.getBytes(StandardCharsets.UTF_8));
-    }
-
-    InputStream responseStream = conn.getInputStream();
-    String json = new String(responseStream.readAllBytes(), StandardCharsets.UTF_8);
-
-    ObjectMapper mapper = new ObjectMapper();
-    Object jsonObject = mapper.readValue(json, Object.class);
-    ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
-    String prettyJson = writer.writeValueAsString(jsonObject);
-
-    response.setStatus(200);
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
-    try (PrintWriter out = response.getWriter())
-    {
-      out.print(prettyJson);
-    }
-
-
-    /*String token = request.getParameter("token");
-    if (token == null || token.isBlank())
-    {
-      sendBadRequest(response, "Missing token parameter");
-      return;
-    }
-
-    logParameters(request, token);
 
     try {
-      //Decode token
-      JsonNode jsonNode = decodeJWTToken(token);
-      String username = jsonNode.get("preferred_username").asText();
-      String origin = jsonNode.get("iss").asText();
-    }
-    catch(Exception jp)
-    {
-      sendDecodeException(response, "Invalid Token");
-      return;
-    }*/
+        json = keycloakAuthManager.getAuthenticationToken(code);
 
+        ut = keycloakAuthManager.getUseridFromToken(json);
+    }
+    catch(Exception e)
+    {
+      sendBadRequest(response, e.getMessage());
+      return;
+    }
+
+      String targetOrigin = "*";
+
+      // 3️⃣ Generem l'HTML amb el JavaScript
+      response.setContentType("text/html; charset=UTF-8");
+      PrintWriter out = response.getWriter();
+
+      out.println("<!DOCTYPE html>");
+      out.println("<html lang='ca'>");
+      out.println("<head><meta charset='UTF-8'><title>Autenticació completada</title></head>");
+      out.println("<body>");
+      out.println("<script>");
+      out.println("  (function() {");
+      out.println("    const token = " + escapeJsString(ut.getAccessToken()) + ";");
+      out.println("    if (window.opener) {");
+      out.println("      window.opener.postMessage({ token: token }, '" + targetOrigin + "');");
+      out.println("      window.close();");
+      out.println("    } else {");
+      out.println("      document.body.textContent = 'No s’ha pogut retornar el token.';");
+      out.println("    }");
+      out.println("  })();");
+      out.println("</script>");
+      out.println("</body></html>");
   }
+
+    // 🔒 Petita funció per escapar el token dins de JS
+    private String escapeJsString(String value) {
+        if (value == null) return "\"\"";
+        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
