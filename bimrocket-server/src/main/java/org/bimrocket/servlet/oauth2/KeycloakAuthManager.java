@@ -2,8 +2,10 @@ package org.bimrocket.servlet.oauth2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.bimrocket.service.security.SecurityService;
+import org.eclipse.microprofile.config.Config;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,20 +15,27 @@ import java.nio.charset.StandardCharsets;
 
 public class KeycloakAuthManager implements AuthenticationManager
 {
+  @Inject
+  Config config;
+
+  static final String BASE = "services.security.oauth2.";
+
   @Override
   public String getAuthenticationToken(String code) throws Exception
   {
+      config.getValue(BASE + "keycloak.urlAuthenticationToken", String.class);
+
       String json = "";
-      URL url = new URL("http://localhost:8080/auth/realms/bim/protocol/openid-connect/token");
+      URL url = new URL("https://iam.i2cat.net/auth/realms/SEG/protocol/openid-connect/token");
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
       conn.setDoOutput(true);
       conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
       String params = "grant_type=authorization_code"
-              + "&client_id=bim-test"
-              + "&client_secret=QYtoLmYX25Q4yQzdz425yowdiC080AkX"
-              + "&redirect_uri=http://127.0.0.1:9090/bimrocket-server/api/oauth2/authCode"
+              + "&client_id=bim"
+              + "&client_secret=SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL"
+              + "&redirect_uri=http://localhost:9090/bimrocket-server/api/oauth2/authCode"
               + "&code=" + code;
 
       try (OutputStream os = conn.getOutputStream()) {
