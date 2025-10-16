@@ -1,5 +1,6 @@
 package org.bimrocket.servlet.oauth2;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.bimrocket.service.security.SecurityService;
 
 public interface AuthenticationManager
@@ -10,5 +11,5 @@ public interface AuthenticationManager
 
   public boolean checkUseridDB(UserToken userToken, SecurityService securityService) throws Exception;
 
-  public void generateHTMLResponse(UserToken userToken) throws Exception;
+  public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception;
 }

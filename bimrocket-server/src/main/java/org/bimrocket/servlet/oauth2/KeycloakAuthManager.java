@@ -3,12 +3,14 @@ package org.bimrocket.servlet.oauth2;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.bimrocket.service.security.SecurityService;
 import org.eclipse.microprofile.config.Config;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -76,7 +78,28 @@ public class KeycloakAuthManager implements AuthenticationManager
   }
 
   @Override
-  public void generateHTMLResponse(UserToken userToken) throws Exception
+  public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception
   {
+    String targetOrigin = "*";
+
+    response.setContentType("text/html; charset=UTF-8");
+    PrintWriter out = response.getWriter();
+
+    out.println("<!DOCTYPE html>");
+    out.println("<html lang='ca'>");
+    out.println("<head><meta charset='UTF-8'><title>Authentication completed</title></head>");
+    out.println("<body>");
+    out.println("<script>");
+    out.println("  (function() {");
+    out.println("    const token = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
+    out.println("    if (window.opener) {");
+    out.println("      window.opener.postMessage({ token: token }, '" + targetOrigin + "');");
+    out.println("      window.close();");
+    out.println("    } else {");
+    out.println("      document.body.textContent = 'Unable to return access token.';");
+    out.println("    }");
+    out.println("  })();");
+    out.println("</script>");
+    out.println("</body></html>");
   }
 }

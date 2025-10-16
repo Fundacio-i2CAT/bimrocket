@@ -18,4 +18,10 @@ public class Utils
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readTree(payloadJson);
     }
+
+    public static String escapeJsString(String value)
+    {
+      if (value == null) return "\"\"";
+      return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
 }
