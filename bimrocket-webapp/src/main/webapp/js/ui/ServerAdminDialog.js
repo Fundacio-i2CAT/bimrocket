@@ -198,14 +198,6 @@ class ServerAdminDialog extends Dialog
     this.clearButton = Controls.addButton(this.buttonContainer,
       "clearFilters", "button.clear", () => this.clearFilters());
 
-    const updateSearchButton = () => 
-    {
-      const hasId = this.idFilterFieldElem.value.trim() !== "";
-      const hasName = this.nameFilterFieldElem.value.trim() !== "";
-    };
-  
-    this.idFilterFieldElem.addEventListener("input", updateSearchButton);
-    this.nameFilterFieldElem.addEventListener("input", updateSearchButton);
   }
 
   createRoleSearchPanel() 
