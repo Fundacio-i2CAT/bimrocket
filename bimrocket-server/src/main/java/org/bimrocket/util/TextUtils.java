@@ -41,6 +41,10 @@ import java.util.Date;
  */
 public class TextUtils
 {
+  public static final String MINUTES = "minutes";
+  public static final String HOURS = "hours";
+  public static final String DAYS = "days";
+
   public static String getISODate()
   {
     return getISODate(new Date());

@@ -113,9 +113,6 @@ public class SecurityService
     "SEC009: Invalid Access Token.";
   static final String REFRESH_TOKEN_EXPIRED =
     "SEC010: REFRESH token expired.";
-  static final String MINUTES = "minutes";
-  static final String HOURS = "hours";
-  static final String DAYS = "days";
 
   @Inject
   Instance<HttpServletRequest> requestInstance;
@@ -550,7 +547,7 @@ public class SecurityService
             throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
           }
           // if refresh token not expired, reset access token expiration 5 minutes more
-          user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, MINUTES));
+          user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
           user = updateUser(user);
         }
 

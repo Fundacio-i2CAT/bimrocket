@@ -90,6 +90,9 @@ public class TokenValidationServlet extends HttpServlet
       // Get userid, access token and refresh token from the json token
       ut = keycloakAuthManager.getUseridFromToken(json);
 
+      // Manage userid
+      keycloakAuthManager.checkUseridDB(ut);
+
       // Generate response HTML with the access token
       keycloakAuthManager.generateHTMLResponse(ut, response);
     }

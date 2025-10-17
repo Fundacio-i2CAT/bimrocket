@@ -9,7 +9,7 @@ public interface AuthenticationManager
 
   public UserToken getUseridFromToken(String jsonToken) throws Exception;
 
-  public boolean checkUseridDB(UserToken userToken, SecurityService securityService) throws Exception;
+  public void checkUseridDB(UserToken userToken) throws Exception;
 
   public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception;
 }
