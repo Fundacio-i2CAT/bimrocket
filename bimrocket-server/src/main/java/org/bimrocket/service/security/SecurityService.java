@@ -447,10 +447,22 @@ public class SecurityService
 
     // Only checks timeout user cache if authorization is Basic, otherwise we need to
     // check authentication Bearer for each call to the endpoints
-    if (userId != null && authorization.contains("Basic"))
+    //if (userId != null && authorization.contains("Basic"))
+    if (userId != null)
     {
       user = userCache.get(userId);
-      if (user != null) return user;
+      if (user != null)
+      {
+        if (authorization.contains("Basic")) return user;
+        if (authorization.contains("Bearer"))
+        {
+          // If access token has not expired returns current user
+          if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 2)
+          {
+            return user;
+          }
+        }
+      }
     }
 
     user = getUserFromAuthorization(authorization);
