@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
-import org.bimrocket.service.security.SecurityService;
 import org.eclipse.microprofile.config.Config;
 
 import java.io.InputStream;

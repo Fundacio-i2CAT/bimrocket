@@ -72,6 +72,7 @@ public class TokenValidationServlet extends HttpServlet
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException
   {
+    // Get redirect uri specified in the request to be used after when call to get token from code
     String redirectUri = request.getRequestURL().toString();
     String json = "";
     UserToken ut = null;
@@ -83,7 +84,8 @@ public class TokenValidationServlet extends HttpServlet
       return;
     }
 
-    try {
+    try
+    {
       // Get authentication token from the code received
       json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
 
@@ -107,8 +109,8 @@ public class TokenValidationServlet extends HttpServlet
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
           throws ServletException, IOException
   {
-      response.setContentType("application/text");
-      response.getWriter().write("POST method");
+    response.setContentType("application/text");
+    response.getWriter().write("POST method");
   }
 
   // internal methods
