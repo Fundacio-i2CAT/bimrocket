@@ -455,7 +455,7 @@ public class SecurityService
       {
         if (authorization.contains("Basic")) return user;
 
-          // If access token has not expired returns current user
+        // If access token has not expired returns current user
         if (authorization.contains("Bearer") &&
             TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 2) return user;
       }

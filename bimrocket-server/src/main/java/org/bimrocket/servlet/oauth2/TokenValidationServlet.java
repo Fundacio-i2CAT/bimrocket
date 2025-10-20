@@ -30,22 +30,23 @@
  */
 package org.bimrocket.servlet.oauth2;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.bimrocket.api.security.User;
 import org.bimrocket.service.file.*;
 import org.bimrocket.service.security.SecurityService;
+import org.bimrocket.util.TextUtils;
+
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.bimrocket.util.TextUtils.getISODate;
 
 /**
  *
@@ -69,9 +70,8 @@ public class TokenValidationServlet extends HttpServlet
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException
+    throws IOException
   {
-
     String redirectUri = request.getRequestURL().toString();
     String json = "";
     UserToken ut = null;
@@ -91,10 +91,10 @@ public class TokenValidationServlet extends HttpServlet
       ut = keycloakAuthManager.getUseridFromToken(json);
 
       // Manage userid
-      keycloakAuthManager.checkUseridDB(ut);
+      checkUseridDB(ut);
 
       // Generate response HTML with the access token
-      keycloakAuthManager.generateHTMLResponse(ut, response);
+      generateHTMLResponse(ut, response);
     }
     catch(Exception e)
     {
@@ -143,21 +143,59 @@ public class TokenValidationServlet extends HttpServlet
     resp.getWriter().write("{\"error\":\"" + error + "\"}");
   }
 
-  private void sendDecodeException(HttpServletResponse resp, String error) throws IOException
+  public void checkUseridDB(UserToken userToken) throws Exception
   {
-    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    resp.setContentType("application/json");
-    resp.getWriter().write("{\"error\":\"" + error + "\"}");
+    Set<String> rols = new HashSet<>();
+    List<String> valors = Arrays.asList(Utils.PROJECTISTA, Utils.VECTOR_UT_OGE);
+    rols.addAll(valors);
+
+    User user = securityService.getUser(userToken.getUserId());
+    if (user == null)
+    {
+      User newUser = new User();
+      newUser.setAccessToken(userToken.getAccessToken());
+      newUser.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+      newUser.setId(userToken.getUserId());
+      newUser.setName(userToken.getUserId());
+      newUser.setPassword(Utils.generatePassword());
+      newUser.setRefreshToken(userToken.getRefreshToken());
+      newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+      newUser.setRoleIds(rols);
+      securityService.createUser(newUser);
+    }
+    else
+    {
+      user.setAccessToken(userToken.getAccessToken());
+      user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+      user.setRefreshToken(userToken.getRefreshToken());
+      user.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+      securityService.updateUser(user);
+    }
   }
 
-  private JsonNode decodeJWTToken(String token) throws JsonProcessingException
+  public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception
   {
-    String[] parts = token.split("\\.");
+    String targetOrigin = "*";
 
-    String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+    response.setContentType("text/html; charset=UTF-8");
+    PrintWriter out = response.getWriter();
 
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.readTree(payloadJson);
+    out.println("<!DOCTYPE html>");
+    out.println("<html lang='ca'>");
+    out.println("<head><meta charset='UTF-8'><title>Authentication completed</title></head>");
+    out.println("<body>");
+    out.println("<script>");
+    out.println("  (function() {");
+    out.println("    const token = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
+    out.println("    if (window.opener) {");
+    out.println("      window.opener.postMessage({ token: token }, '" + targetOrigin + "');");
+    out.println("      window.close();");
+    out.println("    } else {");
+    out.println("      document.body.textContent = 'Unable to return access token.';");
+    out.println("    }");
+    out.println("  })();");
+    out.println("</script>");
+    out.println("</body></html>");
   }
 
 }
