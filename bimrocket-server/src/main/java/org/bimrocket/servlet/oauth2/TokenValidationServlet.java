@@ -148,7 +148,7 @@ public class TokenValidationServlet extends HttpServlet
   public void checkUseridDB(UserToken userToken) throws Exception
   {
     Set<String> rols = new HashSet<>();
-    List<String> valors = Arrays.asList(Utils.PROJECTISTA, Utils.VECTOR_UT_OGE);
+    List<String> valors = Arrays.asList(Utils.PROJECTISTA);
     rols.addAll(valors);
 
     User user = securityService.getUser(userToken.getUserId());
