@@ -67,11 +67,19 @@ public class TokenValidationServlet extends HttpServlet
   transient KeycloakAuthManager keycloakAuthManager;
 
   private static final String MISSING_CODE_PARAMETER = "Missing Code parameter";
+  private static final String INVALID_PATH_REDIRECT_URL = "Invalid path for redirect url";
+  private static final String ISSUER_KEYCLOAK = "keycloak";
+  private static final String ISSUER_VALID = "valid";
+  private static final String ISSUER_GICAR = "gicar";
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException
   {
+
+    // PathInfo to select for keycloak, valid or gicar issuer
+    String pathInfo = request.getPathInfo();
+
     // Get redirect uri specified in the request to be used after when call to get token from code
     String redirectUri = request.getRequestURL().toString();
     String json = "";
@@ -86,11 +94,25 @@ public class TokenValidationServlet extends HttpServlet
 
     try
     {
-      // Get authentication token from the code received
-      json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
+      if (pathInfo.contains(ISSUER_KEYCLOAK)) {
+        // Get authentication token from the code received by keycloak
+        json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
 
-      // Get userid, access token and refresh token from the json token
-      ut = keycloakAuthManager.getUseridFromToken(json);
+        // Get userid, access token and refresh token from the json token received by keycloak
+        ut = keycloakAuthManager.getUseridFromToken(json);
+      }
+      else if (pathInfo.contains(ISSUER_VALID))
+      {
+        return;
+      }
+      else if (pathInfo.contains(ISSUER_GICAR))
+      {
+        return;
+      }
+      else
+      {
+        sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
+      }
 
       // Manage userid
       checkUseridDB(ut);
