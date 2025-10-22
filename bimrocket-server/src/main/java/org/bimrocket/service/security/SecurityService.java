@@ -53,11 +53,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.bimrocket.api.security.Role;
 import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
+import org.bimrocket.dao.expression.io.odata.ODataParser;
 import org.bimrocket.exception.InvalidRequestException;
 import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
 import org.bimrocket.service.security.store.SecurityDaoStore;
 import org.bimrocket.service.security.store.empty.SecurityEmptyDaoStore;
+import org.bimrocket.util.TextUtils;
 import org.eclipse.microprofile.config.Config;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 import org.bimrocket.util.ExpiringCache;
@@ -105,6 +107,12 @@ public class SecurityService
     "SEC006: Invalid password format.";
   static final String PASSWORD_IS_REQUIRED =
     "SEC007: Password is required.";
+  static final String TOKEN_MISSING =
+    "SEC008: No access token provided.";
+  static final String TOKEN_INVALID =
+    "SEC009: Invalid Access Token.";
+  static final String REFRESH_TOKEN_EXPIRED =
+    "SEC010: REFRESH token expired.";
 
   @Inject
   Instance<HttpServletRequest> requestInstance;
@@ -271,6 +279,12 @@ public class SecurityService
       }
       String dateString = getISODate();
       user.setModifyDate(dateString);
+
+      if (userUpdate.getAccessToken() != null) user.setAccessToken(userUpdate.getAccessToken());
+      if (userUpdate.getAccessTokenExpiresAt() != null) user.setAccessTokenExpiresAt(userUpdate.getAccessTokenExpiresAt());
+      if (userUpdate.getRefreshToken() != null) user.setRefreshToken(userUpdate.getRefreshToken());
+      if (userUpdate.getRefreshTokenExpiresAt() != null)user.setRefreshTokenExpiresAt(userUpdate.getRefreshTokenExpiresAt());
+
       user = userDao.update(user);
       return user;
     }
@@ -431,10 +445,20 @@ public class SecurityService
 
     userId = authorizationCache.get(authorization);
 
+    // Only checks timeout user cache if authorization is Basic, otherwise we need to
+    // check authentication Bearer for each call to the endpoints
+    //if (userId != null && authorization.contains("Basic"))
     if (userId != null)
     {
       user = userCache.get(userId);
-      if (user != null) return user;
+      if (user != null)
+      {
+        if (authorization.contains("Basic")) return user;
+
+        // If access token has not expired returns current user
+        if (authorization.contains("Bearer") &&
+            TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 2) return user;
+      }
     }
 
     user = getUserFromAuthorization(authorization);
@@ -506,7 +530,36 @@ public class SecurityService
       else if ("bearer".equalsIgnoreCase(authoType))
       {
         String token = authoParts[1].trim();
-        //TODO: find User by token
+
+        String[] parts = token.split("\\.");
+        if (parts.length != 3) throw new IllegalArgumentException(TOKEN_MISSING);
+
+        // find User by access token
+        ODataParser parser = new ODataParser(userFieldMap);
+        Expression filter = parser.parseFilter("access_token eq '" + token + "'");
+        List<OrderByExpression> orderBy = parser.parseOrderBy("name");
+        List<User> users = getUsers(filter, orderBy);
+        if (users.isEmpty()) // User not found
+        {
+            throw new NotAuthorizedException(TOKEN_INVALID);
+        }
+
+        User user = users.get(0);
+
+        // exist access token and is expired
+        if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 1)
+        {
+          // if refresh token is expired throws exception
+          if (TextUtils.compareDates(user.getRefreshTokenExpiresAt(), getISODate()) == 1)
+          {
+            throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
+          }
+          // if refresh token not expired, reset access token expiration 5 minutes more
+          user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+          user = updateUser(user);
+        }
+
+        return user;
       }
     }
     return anonymousUser;

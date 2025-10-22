@@ -17,8 +17,9 @@
   "components" :
   {
     "securitySchemes" : {
-      "basicAuth" : { "type" : "http", "scheme" : "basic" }
+      "basicAuth" : { "type" : "http", "scheme" : "basic" },
+      "bearerAuth" : { "type" : "http", "scheme" : "bearer", "bearerFormat": "JWT" }
     }
   },
-  "security" : [{ "basicAuth" : [] }]
+  "security" : [{ "basicAuth" : [] }, { "bearerAuth" : [] }]
 }

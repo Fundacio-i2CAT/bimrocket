@@ -24,6 +24,11 @@ services:
       class: org.bimrocket.service.security.store.orient.SecurityOrientDaoStore
       orient:
         database: bimdb
+    oauth2:
+      keycloak:
+        urlAuthenticationToken: https://iam.i2cat.net/auth/realms/SEG/protocol/openid-connect/token
+        clientId: bim
+        secretId: SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL
 
   # file service
   file:

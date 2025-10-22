@@ -72,6 +72,18 @@ public class User
   @JsonProperty("modify_date")
   String modifyDate;
 
+  @JsonProperty("access_token")
+  String accessToken;
+
+  @JsonProperty("access_token_expires_at")
+  String accessTokenExpiresAt;
+
+  @JsonProperty("refresh_token")
+  String refreshToken;
+
+  @JsonProperty("refresh_token_expires_at")
+  String refreshTokenExpiresAt;
+
   public String getId()
   {
     return id;
@@ -161,4 +173,42 @@ public class User
   {
     this.modifyDate = modifyDate;
   }
+
+  public String getAccessToken()
+    {
+        return accessToken;
+    }
+
+  public void setAccessToken(String accessToken)
+    {
+        this.accessToken = accessToken;
+    }
+
+  public String getAccessTokenExpiresAt()
+    {
+        return accessTokenExpiresAt;
+    }
+
+  public void setAccessTokenExpiresAt(String accessTokenExpiresAt)
+    {
+        this.accessTokenExpiresAt = accessTokenExpiresAt;
+    }
+
+  public String getRefreshToken()
+    {
+        return refreshToken;
+    }
+
+  public void setRefreshToken(String refreshToken)
+    {
+        this.refreshToken = refreshToken;
+    }
+
+  public String getRefreshTokenExpiresAt()
+    {
+        return refreshTokenExpiresAt;
+    }
+
+  public void setRefreshTokenExpiresAt(String refreshTokenExpiresAt)  {this.refreshTokenExpiresAt = refreshTokenExpiresAt; }
+
 }
