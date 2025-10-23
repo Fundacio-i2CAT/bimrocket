@@ -75,7 +75,7 @@ public class ValidAuthManager implements AuthenticationManager
     {
       try (InputStream inputStream = connection.getInputStream())
       {
-        String jsonResponse = IOUtils.toString(inputStream, "UTF-8");
+        String jsonResponse = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 
         mapper = new ObjectMapper();
         JsonNode jsonUser = mapper.readTree(jsonResponse);
