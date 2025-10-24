@@ -106,6 +106,9 @@ public class TokenValidationServlet extends HttpServlet
 
         // Get userid, access token and refresh token from the json token received by keycloak
         ut = keycloakAuthManager.getUseridFromToken(json);
+
+        // Manage userid
+        checkUseridDB(ut, ISSUER_KEYCLOAK);
       }
       else if (pathInfo.contains(ISSUER_VALID))
       {
@@ -114,6 +117,9 @@ public class TokenValidationServlet extends HttpServlet
 
         // Get userid, access token and refresh token from the json token received by valid
         ut = validAuthManager.getUseridFromToken(json);
+
+        // Manage userid
+        checkUseridDB(ut, ISSUER_VALID);
       }
       else if (pathInfo.contains(ISSUER_GICAR))
       {
@@ -122,14 +128,14 @@ public class TokenValidationServlet extends HttpServlet
 
         // Get userid, access token and refresh token from the json token received by gicar
         ut = gicarAuthManager.getUseridFromToken(json);
+
+        // Manage userid
+        checkUseridDB(ut, ISSUER_GICAR);
       }
       else
       {
         sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
       }
-
-      // Manage userid
-      checkUseridDB(ut);
 
       // Generate response HTML with the access token
       generateHTMLResponse(ut, response);
@@ -181,11 +187,17 @@ public class TokenValidationServlet extends HttpServlet
     resp.getWriter().write("{\"error\":\"" + error + "\"}");
   }
 
-  public void checkUseridDB(UserToken userToken) throws Exception
+  public void checkUseridDB(UserToken userToken, String issuer) throws Exception
   {
-    Set<String> rols = new HashSet<>();
-    List<String> valors = Arrays.asList(Utils.PROJECTISTA);
-    rols.addAll(valors);
+    Set<String> rolsKeycloak = new HashSet<>();
+    Set<String> rolsValid = new HashSet<>();
+    Set<String> rolsGicar = new HashSet<>();
+    List<String> valorsKeycloak = Arrays.asList(Utils.PROJECTISTA);
+    List<String> valorsValid = Arrays.asList(Utils.PROJECTISTA);
+    List<String> valorsGicar = Arrays.asList(Utils.VECTOR_UT_OGE);
+    rolsKeycloak.addAll(valorsKeycloak);
+    rolsValid.addAll(valorsValid);
+    rolsGicar.addAll(valorsGicar);
 
     User user = securityService.getUser(userToken.getUserId());
     if (user == null)
@@ -198,7 +210,12 @@ public class TokenValidationServlet extends HttpServlet
       newUser.setPassword(Utils.generatePassword());
       newUser.setRefreshToken(userToken.getRefreshToken());
       newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
-      newUser.setRoleIds(rols);
+      switch (issuer)
+      {
+        case ISSUER_KEYCLOAK -> newUser.setRoleIds(rolsKeycloak);
+        case ISSUER_VALID -> newUser.setRoleIds(rolsValid);
+        case ISSUER_GICAR -> newUser.setRoleIds(rolsGicar);
+      }
       securityService.createUser(newUser);
     }
     else
