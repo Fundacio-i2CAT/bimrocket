@@ -66,6 +66,12 @@ public class TokenValidationServlet extends HttpServlet
   @Inject
   transient KeycloakAuthManager keycloakAuthManager;
 
+  @Inject
+  transient ValidAuthManager validAuthManager;
+
+  @Inject
+  transient GicarAuthManager gicarAuthManager;
+
   private static final String MISSING_CODE_PARAMETER = "Missing Code parameter";
   private static final String INVALID_PATH_REDIRECT_URL = "Invalid path for redirect url";
   private static final String ISSUER_KEYCLOAK = "keycloak";
@@ -103,11 +109,19 @@ public class TokenValidationServlet extends HttpServlet
       }
       else if (pathInfo.contains(ISSUER_VALID))
       {
-        return;
+        // Get authentication token from the code received by valid
+        json = validAuthManager.getAuthenticationToken(code, redirectUri);
+
+        // Get userid, access token and refresh token from the json token received by valid
+        ut = validAuthManager.getUseridFromToken(json);
       }
       else if (pathInfo.contains(ISSUER_GICAR))
       {
-        return;
+        // Get authentication token from the code received by gicar
+        json = gicarAuthManager.getAuthenticationToken(code, redirectUri);
+
+        // Get userid, access token and refresh token from the json token received by gicar
+        ut = gicarAuthManager.getUseridFromToken(json);
       }
       else
       {
