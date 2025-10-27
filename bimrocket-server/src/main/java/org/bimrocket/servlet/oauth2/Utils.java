@@ -12,7 +12,7 @@ import java.util.Locale;
 public class Utils
 {
     public static final String PROJECTISTA = "PROJECTISTA";
-    public static final String VECTOR_UT_OGE = "VECTOR_UT_OGE";
+    public static final String VECTOR_UT_OGE = "VECTOR-UT-OGE";
 
     public static JsonNode decodeJWTToken(String token) throws JsonProcessingException
     {

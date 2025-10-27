@@ -153,14 +153,6 @@ public class TokenValidationServlet extends HttpServlet
 
   }
 
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException
-  {
-    response.setContentType("application/text");
-    response.getWriter().write("POST method");
-  }
-
   // internal methods
 
   void logParameters(HttpServletRequest request, Object parameters)
@@ -177,51 +169,38 @@ public class TokenValidationServlet extends HttpServlet
 
   public void checkUseridDB(UserToken userToken, String issuer) throws Exception
   {
-    Set<String> rols = new HashSet<>();
-    List<String> valorsKeycloak = Arrays.asList(Utils.PROJECTISTA);
-    List<String> valorsValid = Arrays.asList(Utils.PROJECTISTA);
-    List<String> valorsGicar = Arrays.asList(Utils.VECTOR_UT_OGE);
+     Map<String, List<String>> issuerRoles = Map.of(
+       ISSUER_KEYCLOAK, List.of(Utils.PROJECTISTA),
+       ISSUER_VALID, List.of(Utils.PROJECTISTA),
+       ISSUER_GICAR, List.of(Utils.VECTOR_UT_OGE)
+     );
 
-    User user = securityService.getUser(userToken.getUserId());
-    if (user == null)
-    {
-      User newUser = new User();
-      newUser.setAccessToken(userToken.getAccessToken());
-      newUser.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
-      newUser.setId(userToken.getUserId());
-      newUser.setName(userToken.getUserId());
-      newUser.setPassword(Utils.generatePassword());
-      newUser.setRefreshToken(userToken.getRefreshToken());
-      newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
-      switch (issuer)
-      {
-        case ISSUER_KEYCLOAK ->
-        {
-          rols.addAll(valorsKeycloak);
-          newUser.setRoleIds(rols);
-        }
-        case ISSUER_VALID ->
-        {
-          rols.addAll(valorsValid);
-          newUser.setRoleIds(rols);
-        }
-        case ISSUER_GICAR ->
-        {
-          rols.addAll(valorsGicar);
-          newUser.setRoleIds(rols);
-        }
-      }
-      securityService.createUser(newUser);
-    }
-    else
-    {
-      user.setAccessToken(userToken.getAccessToken());
-      user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
-      user.setRefreshToken(userToken.getRefreshToken());
-      user.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
-      securityService.updateUser(user);
-    }
+     User user = securityService.getUser(userToken.getUserId());
+     if (user == null)
+     {
+       User newUser = new User();
+       newUser.setId(userToken.getUserId());
+       newUser.setName(userToken.getUserId());
+       newUser.setPassword(Utils.generatePassword());
+       newUser.setAccessToken(userToken.getAccessToken());
+       newUser.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+       newUser.setRefreshToken(userToken.getRefreshToken());
+       newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+       // Roles by issuer
+       List<String> roles = issuerRoles.getOrDefault(issuer, List.of());
+       newUser.setRoleIds(new HashSet<>(roles));
+       securityService.createUser(newUser);
+     }
+     else
+     {
+       user.setAccessToken(userToken.getAccessToken());
+       user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+       user.setRefreshToken(userToken.getRefreshToken());
+       user.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+       securityService.updateUser(user);
+     }
   }
+
 
   public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception
   {
