@@ -91,6 +91,7 @@ public class TokenValidationServlet extends HttpServlet
     String json = "";
     UserToken ut = null;
 
+    // Cocde received by keycloak in the redirect uri
     String code = request.getParameter("code");
     if (code == null || code.isBlank())
     {
@@ -100,41 +101,45 @@ public class TokenValidationServlet extends HttpServlet
 
     try
     {
-      if (pathInfo.contains(ISSUER_KEYCLOAK)) {
-        // Get authentication token from the code received by keycloak
-        json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
+      String issuer = null;
 
-        // Get userid, access token and refresh token from the json token received by keycloak
-        ut = keycloakAuthManager.getUseridFromToken(json);
-
-        // Manage userid
-        checkUseridDB(ut, ISSUER_KEYCLOAK);
-      }
-      else if (pathInfo.contains(ISSUER_VALID))
+      if (pathInfo.contains(ISSUER_KEYCLOAK))
       {
-        // Get authentication token from the code received by valid
-        json = validAuthManager.getAuthenticationToken(code, redirectUri);
-
-        // Get userid, access token and refresh token from the json token received by valid
-        ut = validAuthManager.getUseridFromToken(json);
-
-        // Manage userid
-        checkUseridDB(ut, ISSUER_VALID);
-      }
-      else if (pathInfo.contains(ISSUER_GICAR))
+        issuer = ISSUER_KEYCLOAK;
+      } else if (pathInfo.contains(ISSUER_VALID))
       {
-        // Get authentication token from the code received by gicar
-        json = gicarAuthManager.getAuthenticationToken(code, redirectUri);
-
-        // Get userid, access token and refresh token from the json token received by gicar
-        ut = gicarAuthManager.getUseridFromToken(json);
-
-        // Manage userid
-        checkUseridDB(ut, ISSUER_GICAR);
+        issuer = ISSUER_VALID;
+      } else if (pathInfo.contains(ISSUER_GICAR))
+      {
+        issuer = ISSUER_GICAR;
       }
-      else
+
+      if (issuer == null)
       {
         sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
+        return;
+      }
+
+      switch (issuer)
+      {
+        case ISSUER_KEYCLOAK:
+          json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
+          ut = keycloakAuthManager.getUseridFromToken(json);
+          checkUseridDB(ut, issuer);
+          break;
+        case ISSUER_VALID:
+          json = validAuthManager.getAuthenticationToken(code, redirectUri);
+          ut = validAuthManager.getUseridFromToken(json);
+          checkUseridDB(ut, issuer);
+          break;
+        case ISSUER_GICAR:
+          json = gicarAuthManager.getAuthenticationToken(code, redirectUri);
+          ut = gicarAuthManager.getUseridFromToken(json);
+          checkUseridDB(ut, issuer);
+          break;
+        default:
+          sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
+          return;
       }
 
       // Generate response HTML with the access token
