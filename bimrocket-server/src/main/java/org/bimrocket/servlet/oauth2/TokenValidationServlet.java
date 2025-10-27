@@ -189,15 +189,10 @@ public class TokenValidationServlet extends HttpServlet
 
   public void checkUseridDB(UserToken userToken, String issuer) throws Exception
   {
-    Set<String> rolsKeycloak = new HashSet<>();
-    Set<String> rolsValid = new HashSet<>();
-    Set<String> rolsGicar = new HashSet<>();
+    Set<String> rols = new HashSet<>();
     List<String> valorsKeycloak = Arrays.asList(Utils.PROJECTISTA);
     List<String> valorsValid = Arrays.asList(Utils.PROJECTISTA);
     List<String> valorsGicar = Arrays.asList(Utils.VECTOR_UT_OGE);
-    rolsKeycloak.addAll(valorsKeycloak);
-    rolsValid.addAll(valorsValid);
-    rolsGicar.addAll(valorsGicar);
 
     User user = securityService.getUser(userToken.getUserId());
     if (user == null)
@@ -212,9 +207,21 @@ public class TokenValidationServlet extends HttpServlet
       newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
       switch (issuer)
       {
-        case ISSUER_KEYCLOAK -> newUser.setRoleIds(rolsKeycloak);
-        case ISSUER_VALID -> newUser.setRoleIds(rolsValid);
-        case ISSUER_GICAR -> newUser.setRoleIds(rolsGicar);
+        case ISSUER_KEYCLOAK ->
+        {
+          rols.addAll(valorsKeycloak);
+          newUser.setRoleIds(rols);
+        }
+        case ISSUER_VALID ->
+        {
+          rols.addAll(valorsValid);
+          newUser.setRoleIds(rols);
+        }
+        case ISSUER_GICAR ->
+        {
+          rols.addAll(valorsGicar);
+          newUser.setRoleIds(rols);
+        }
       }
       securityService.createUser(newUser);
     }
