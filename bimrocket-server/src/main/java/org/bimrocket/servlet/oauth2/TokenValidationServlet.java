@@ -82,7 +82,6 @@ public class TokenValidationServlet extends HttpServlet
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException
   {
-
     // PathInfo to select for keycloak, valid or gicar issuer
     String pathInfo = request.getPathInfo();
 
@@ -98,6 +97,8 @@ public class TokenValidationServlet extends HttpServlet
       sendBadRequest(response, MISSING_CODE_PARAMETER);
       return;
     }
+
+    logParameters(request, pathInfo);
 
     try
     {
@@ -165,24 +166,6 @@ public class TokenValidationServlet extends HttpServlet
   void logParameters(HttpServletRequest request, Object parameters)
   {
     request.setAttribute("log.parameters", parameters.toString());
-  }
-
-  void log(HttpServletRequest request, HttpServletResponse response)
-  {
-    String method = request.getMethod();
-    String parameters = (String)request.getAttribute("log.parameters");
-    int status = response.getStatus();
-
-    if (parameters == null)
-    {
-      LOGGER.log(Level.INFO, "{0} -> {1}",
-       new Object[] { method, status });
-    }
-    else
-    {
-      LOGGER.log(Level.INFO, "{0} {1} -> {2}",
-       new Object[] { method, parameters, status });
-    }
   }
 
   private void sendBadRequest(HttpServletResponse resp, String error) throws IOException
@@ -253,9 +236,9 @@ public class TokenValidationServlet extends HttpServlet
     out.println("<body>");
     out.println("<script>");
     out.println("  (function() {");
-    out.println("    const token = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
+    out.println("    const accessToken = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
     out.println("    if (window.opener) {");
-    out.println("      window.opener.postMessage({ token: token }, '" + targetOrigin + "');");
+    out.println("      window.opener.postMessage({ accessToken: accessToken }, '" + targetOrigin + "');");
     out.println("      window.close();");
     out.println("    } else {");
     out.println("      document.body.textContent = 'Unable to return access token.';");
