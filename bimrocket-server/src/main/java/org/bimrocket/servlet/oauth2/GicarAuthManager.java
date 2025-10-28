@@ -22,9 +22,9 @@ public class GicarAuthManager implements AuthenticationManager
   @Override
   public String getAuthenticationToken(String code, String redirectUri) throws Exception
   {
-    String urlAuthenticationToken = config.getValue(BASE + "valid.urlAuthenticationToken", String.class);
-    String clientId = config.getValue(BASE + "valid.clientId", String.class);
-    String secretId = config.getValue(BASE + "valid.secretId", String.class);
+    String urlAuthenticationToken = config.getValue(BASE + "gicar.urlAuthenticationToken", String.class);
+    String clientId = config.getValue(BASE + "gicar.clientId", String.class);
+    String secretId = config.getValue(BASE + "gicar.secretId", String.class);
 
     String json = "";
     URL url = new URL(urlAuthenticationToken);
@@ -58,10 +58,10 @@ public class GicarAuthManager implements AuthenticationManager
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.readTree(jsonToken);
 
-    String identifier = "";
+    String preferred_username = "";
     String accessToken = node.get("access_token").asText();
     String refreshToken = node.get("refresh_token").asText();
-    String urlGetUserInfo = config.getValue(BASE + "valid.urlGetUserInfo"+ "?AccessToken=" + accessToken, String.class);
+    String urlGetUserInfo = config.getValue(BASE + "gicar.urlGetUserInfo", String.class);
 
     // Call again to get identifier
     HttpURLConnection connection = null;
@@ -69,6 +69,7 @@ public class GicarAuthManager implements AuthenticationManager
     connection = (HttpURLConnection) url.openConnection();
     connection.setRequestMethod("GET");
     connection.setRequestProperty("Accept", "application/json");
+    connection.setRequestProperty("Authorization", "Bearer " + accessToken);
 
     int responseCode = connection.getResponseCode();
     if (responseCode == HttpURLConnection.HTTP_OK)
@@ -79,13 +80,13 @@ public class GicarAuthManager implements AuthenticationManager
 
         mapper = new ObjectMapper();
         JsonNode jsonUser = mapper.readTree(jsonResponse);
-        if (jsonUser.has("identifier"))
+        if (jsonUser.has("preferred_username"))
         {
-          identifier = jsonUser.get("identifier").asText();
+          preferred_username = jsonUser.get("preferred_username").asText();
         }
         else
         {
-          throw new Exception("getUserInfo do not contains identifier");
+          throw new Exception("getUserInfo do not contains preferred_username");
         }
       }
     }
@@ -94,7 +95,7 @@ public class GicarAuthManager implements AuthenticationManager
       throw new Exception("Unable to get User Info");
     }
 
-    return  new UserToken(identifier, accessToken, refreshToken);
+    return  new UserToken(preferred_username, accessToken, refreshToken);
   }
 
 }
