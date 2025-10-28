@@ -14,10 +14,12 @@ import { SVGExporterTool } from "../tools/SVGExporterTool.js";
 import { SelectTool } from "../tools/SelectTool.js";
 import { SelectFacesTool } from "../tools/SelectFacesTool.js";
 import { SelectParentTool } from "../tools/SelectParentTool.js";
+import { SelectByBoxTool } from "../tools/SelectByBoxTool.js";
 import { SelectByNameTool } from "../tools/SelectByNameTool.js";
 import { SelectByPropertyTool } from "../tools/SelectByPropertyTool.js";
 import { SelectByQRCodeTool } from "../tools/SelectByQRCodeTool.js";
 import { ExportSelectionTool } from "../tools/ExportSelectionTool.js";
+import { CameraTool } from "../tools/CameraTool.js";
 import { OrbitTool } from "../tools/OrbitTool.js";
 import { FlyTool } from "../tools/FlyTool.js";
 import { ViewTool } from "../tools/ViewTool.js";
@@ -276,6 +278,7 @@ export function load(application)
   const selectTool = new SelectTool(application);
   const selectFacesTool = new SelectFacesTool(application);
   const selectParentTool = new SelectParentTool(application);
+  const selectByBoxTool = new SelectByBoxTool(application);
   const selectByPropertyTool = new SelectByPropertyTool(application);
   const selectByQRCodeTool = new SelectByQRCodeTool(application);
   const selectReprTool = new SelectByNameTool(application,
@@ -473,6 +476,9 @@ export function load(application)
   const startControllersTool = new StartControllersTool(application);
   const stopControllersTool = new StopControllersTool(application);
   const aboutTool = new AboutTool(application);
+  const websiteTool = new OpenLinkTool(application,
+  { name : "website", label: "tool.website.label", url: "https://bimrocket.github.io",
+    target : "_blank"});
   const githubTool = new OpenLinkTool(application,
   { name : "github", label: "GitHub", url: "https://github.com/bimrocket/bimrocket",
     target : "_blank"});
@@ -524,6 +530,7 @@ export function load(application)
 
   const selectMenu = menuBar.addMenu("menu.select");
   selectMenu.addMenuItem(selectTool);
+  selectMenu.addMenuItem(selectByBoxTool);
   selectMenu.addMenuItem(selectByPropertyTool);
   selectMenu.addMenuItem(selectByQRCodeTool);
   const selectContextMenu = selectMenu.addMenu("menu.select_context");
@@ -618,6 +625,7 @@ export function load(application)
 
   const helpMenu = menuBar.addMenu("menu.help");
   helpMenu.addMenuItem(aboutTool);
+  helpMenu.addMenuItem(websiteTool);
   helpMenu.addMenuItem(githubTool);
 
   // add tools to toolbar
@@ -719,6 +727,15 @@ export function load(application)
 
   // select baseObject
   application.selection.set(application.baseObject);
+
+  // init camera tools
+  CameraTool.init(application,
+  {
+    defaultCameraToolName : "orbit",
+    activateOnStartUp : true,
+    activateOnAltKey : true,
+    activateOnClear : true
+  });
 
   // globals
   const GLOBALS =

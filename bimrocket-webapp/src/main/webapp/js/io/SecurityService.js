@@ -15,9 +15,64 @@ class SecurityService extends Service
     super(parameters);
   }
 
-  getUsers(onCompleted, onError)
+  getRoles(odataFilter, odataOrderBy, onCompleted, onError)
   {
-    this.invoke("GET", "users", null, onCompleted, onError);
+    let query = "";
+    if (odataFilter || odataOrderBy)
+    {
+      query = "?";
+      if (odataFilter)
+      {
+        query += "$filter=" + odataFilter;
+      }
+      if (odataOrderBy)
+      {
+        if (!query.endsWith("?")) query += "&";
+        query += "$orderBy=" + odataOrderBy;
+      }
+    }
+
+    this.invoke("GET", "roles" + query, null, onCompleted, onError);
+  }
+
+  getRole(roleId, onCompleted, onError)
+  {
+    this.invoke("GET", "roles/" + roleId, null, onCompleted, onError);
+  }
+
+  createRole(role, onCompleted, onError)
+  {
+    this.invoke("POST", "roles", role, onCompleted, onError);
+  }
+
+  updateRole(role, onCompleted, onError)
+  {
+    this.invoke("PUT", "roles/", role, onCompleted, onError);
+  }
+
+  deleteRole(roleId, onCompleted, onError)
+  {
+    this.invoke("DELETE", "roles/" + roleId, null, onCompleted, onError);
+  }
+
+  getUsers(odataFilter, odataOrderBy, onCompleted, onError)
+  {
+    let query = "";
+    if (odataFilter || odataOrderBy)
+    {
+      query = "?";
+      if (odataFilter)
+      {
+        query += "$filter=" + odataFilter;
+      }
+      if (odataOrderBy)
+      {
+        if (!query.endsWith("?")) query += "&";
+        query += "$orderBy=" + odataOrderBy;
+      }
+    }
+    
+    this.invoke("GET", "users" + query, null, onCompleted, onError);
   }
 
   getUser(userId, onCompleted, onError)

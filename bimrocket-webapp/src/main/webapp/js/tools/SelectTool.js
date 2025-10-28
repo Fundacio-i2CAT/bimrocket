@@ -51,11 +51,11 @@ class SelectTool extends Tool
     this.panel = this.application.createPanel(this.label, "left");
     this.panel.preferredHeight = 140;
 
-    this.panel.onHide = () => this.application.useTool(null);
+    this.panel.onClose = () => this.application.useTool(null);
 
     const helpElem = document.createElement("div");
     I18N.set(helpElem, "textContent", this.help);
-    helpElem.style.marginBottom = "4px";
+    helpElem.style.margin = "4px 0 4px 0";
     this.panel.bodyElem.appendChild(helpElem);
 
     this.selectModeElem = Controls.addRadioButtons(this.panel.bodyElem,
