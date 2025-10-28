@@ -33,12 +33,12 @@ services:
         urlAuthenticationToken: https://accounts-dev.aoc.cat/o/oauth2/token
         urlGetUserInfo: https://identitats-pre.aoc.cat/serveis-rest/getUserInfo
         clientId: serveis.aoc.cat
-        secretId: SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL
+        secretId: secret_id
       gicar:
         urlAuthenticationToken: https://preproduccio.endpointma.autenticaciogicar4.extranet.gencat.cat/realms/gicarcpd4/protocol/openid-connect/token
         urlGetUserInfo: https://preproduccio.endpointma.autenticaciogicar4.extranet.gencat.cat/realms/gicarcpd4/protocol/openid-connect/userinfo
         clientId: client_id
-        secretId: client_secret
+        secretId: secret_id
 
   # file service
   file:
