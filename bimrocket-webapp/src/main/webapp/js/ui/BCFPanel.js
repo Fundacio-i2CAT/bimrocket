@@ -486,6 +486,7 @@ class BCFPanel extends Panel
     let projectId = this.getProjectId();
     if (projectId === null) return;
 
+    
     const onCompleted = topics =>
     {
       this.hideProgressBar();
@@ -498,14 +499,34 @@ class BCFPanel extends Panel
       this.handleError(error, () => this.searchTopics());
     };
 
-    let filter = {
-      "topic_type" : this.typeFilterElem.value,
-      "topic_status" : this.statusFilterElem.value,
-      "priority" : this.priorityFilterElem.value,
-      "assigned_to" : this.assignedToFilterElem.value
-    };
+    let type = this.typeFilterElem.value;
+    let status = this.statusFilterElem.value;
+    let priority = this.priorityFilterElem.value;
+    let assignedTo = this.assignedToFilterElem.value;
+    
+    let filters = [];
+    if (type)
+    {
+      filters.push(`topic_type eq '${type}'`);
+    }
+    if (status)
+    {
+      filters.push(`topic_status eq '${status}'`);
+    }
+    if (priority)
+    {
+      filters.push(`priority eq '${priority}'`);
+    }
+    if (assignedTo)
+    {
+      filters.push(`assigned_to eq '${assignedTo}'`);
+    }
+    
+    let odataFilter = filters.join(" and ");
+    let odataOrderBy = "creation_date,index";
+
     this.showProgressBar();
-    this.service.getTopics(projectId, filter, onCompleted, onError);
+    this.service.getTopics(projectId, odataFilter, odataOrderBy, onCompleted, onError);
   }
 
   saveTopic()
