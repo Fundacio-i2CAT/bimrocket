@@ -15,11 +15,11 @@ class BCFService extends Service
     super(parameters);
   }
 
-  getProjects(filter, odataOrderBy, onCompleted, onError) 
+  getProjects(odataFilter, odataOrderBy, onCompleted, onError) 
   {
     let query = "";
 
-    const nameFilter = filter ? filter.nameFilter : null;
+    const nameFilter = odataFilter ? odataFilter.nameFilter : null;
     const conditions = [];
 
     if (nameFilter && nameFilter.trim()) 
