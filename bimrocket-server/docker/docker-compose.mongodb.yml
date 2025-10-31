@@ -26,13 +26,15 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: mongodb
     volumes:
-      - mongodb_data:/db:/data/db
+      - mongodb_databases:/data/db
+      - mongodb_config:/data/configdb
     networks:
       - bimrocket_network
 
 volumes: 
   bimrocket_data: 
-  mongodb_data:
+  mongodb_databases:
+  mongodb_config:
 
 networks:
   bimrocket_network:
