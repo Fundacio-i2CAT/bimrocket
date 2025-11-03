@@ -1184,11 +1184,12 @@ class BCFPanel extends Panel
 
   refreshProjects()
   {
-    const nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
+    let nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
 
-    const filter = {
+    let odataFilter = {
       nameFilter: nameFilter
     };
+    let odataOrderBy = "name";
 
     const onCompleted = serverProjects =>
     {
@@ -1276,7 +1277,7 @@ class BCFPanel extends Panel
 
     this.clearTopics();
     this.showProgressBar();
-    this.service.getProjects(filter, onCompleted, onError);
+    this.service.getProjects(odataFilter, odataOrderBy, onCompleted, onError);
   }
 
   saveProject()
