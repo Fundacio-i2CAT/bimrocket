@@ -63,8 +63,8 @@ class WMSController extends Controller
   {
     if (event.type === "nodeChanged" && this.hasChanged(event))
     {
-      if (this.url !== this._lastUrl || 
-          this.layers !== this._lastLayers || 
+      if (this.url !== this._lastUrl ||
+          this.layers !== this._lastLayers ||
           this.useMapboxHeight !== this._lastUseMapboxHeight ||
           this.useIcgcHeight !== this._lastUseIcgcHeight ||
           this.mapboxApiKey !== this._lastMapboxApiKey)
@@ -101,10 +101,10 @@ class WMSController extends Controller
       const application = this.application;
       const camera = application.camera;
       const provider = new WMSProvider(this.url, this.layers, CRS);
-      
+
       let heightProvider = null;
       let mapView = null;
-      
+
       if (this.useMapboxHeight) {
         heightProvider = new MapBoxProvider(
           this.mapboxApiKey,
@@ -116,9 +116,9 @@ class WMSController extends Controller
       } else {
         mapView = new MapView(MapView.PLANAR, provider, camera);
       }
-      
+
       const renderer = new THREE.WebGLRenderer();
-      
+
       provider.minZoom = 13;
       camera.position.z += 0.00001;
       mapView.name = "MapView";
@@ -131,9 +131,9 @@ class WMSController extends Controller
           mapView.updateMatrixWorld(camera);
           renderer.render(application.scene, camera);
       }
-            
+
       animate();
-      
+
       this._mapView = mapView;
 
       this.object.add(this._mapView);
