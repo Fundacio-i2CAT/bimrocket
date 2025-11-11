@@ -5,7 +5,6 @@
  */
 
 import { Controller } from "./Controller.js";
-import { MessageDialog } from "../ui/MessageDialog.js";
 import { WMSProvider } from "../io/gis/WMSProvider.js";
 import * as THREE from "three";
 import { MapView, MapBoxProvider } from "geo-three";
@@ -21,6 +20,8 @@ if (!proj4.defs["EPSG:25831"]) {
   proj4.defs("EPSG:25831", "+proj=utm +zone=31 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 }
 
+const CRS = "EPSG:3857";
+
 class WMSController extends Controller
 {
   constructor(object, name)
@@ -28,18 +29,18 @@ class WMSController extends Controller
     super(object, name);
     this.url = "";
     this.layers = "";
-    this.crs = "EPSG:3857";
     this.useMapboxHeight = false;
     this.useIcgcHeight = false;
+    this.mapboxApiKey = "";
 
     this._mapView = null;
     this._onNodeChanged = this.onNodeChanged.bind(this);
 
     this._lastUrl = null;
     this._lastLayers = null;
-    this._lastCrs = null;
     this._lastUseMapboxHeight = false;
     this._lastUseIcgcHeight = false;
+    this._lastMapboxApiKey = null;
     this._lastOrigin = new THREE.Vector2();
 
     this.autoStart = true;
@@ -64,9 +65,9 @@ class WMSController extends Controller
     {
       if (this.url !== this._lastUrl || 
           this.layers !== this._lastLayers || 
-          this.crs !== this._lastCrs ||
           this.useMapboxHeight !== this._lastUseMapboxHeight ||
-          this.useIcgcHeight !== this._lastUseIcgcHeight)
+          this.useIcgcHeight !== this._lastUseIcgcHeight ||
+          this.mapboxApiKey !== this._lastMapboxApiKey)
       {
         if (this.layers !== this._lastLayers && this.layers)
         {
@@ -82,18 +83,13 @@ class WMSController extends Controller
   {
     this.removeMap();
 
-    if (!this.url || !this.layers || !this.crs) return;
-    if (this.crs.toUpperCase() !== "EPSG:3857")
-    {
-        MessageDialog.create("ERROR", "message.wms_controller_invalid_crs", { crs: this.crs }).setI18N(this.application.i18n).show();
-        return;
-    }
+    if (!this.url || !this.layers) return;
 
     this._lastUrl = this.url;
     this._lastLayers = this.layers;
-    this._lastCrs = this.crs;
     this._lastUseMapboxHeight = this.useMapboxHeight;
     this._lastUseIcgcHeight = this.useIcgcHeight;
+    this._lastMapboxApiKey = this.mapboxApiKey;
 
     if (this.layers)
     {
@@ -104,15 +100,14 @@ class WMSController extends Controller
     {
       const application = this.application;
       const camera = application.camera;
-      const provider = new WMSProvider(this.url, this.layers, this.crs);
+      const provider = new WMSProvider(this.url, this.layers, CRS);
       
       let heightProvider = null;
       let mapView = null;
       
       if (this.useMapboxHeight) {
-        const mapboxApiKey = "pk.eyJ1IjoiYXZhbGxzIiwiYSI6ImNtaDkzMm40NDBhYWMyanIxbnVraGFqY2oifQ.iFeS28_97GcOTB5tUutR-Q";
         heightProvider = new MapBoxProvider(
-          mapboxApiKey,
+          this.mapboxApiKey,
           "mapbox.terrain-rgb",
           MapBoxProvider.MAP_ID,
           "pngraw"
