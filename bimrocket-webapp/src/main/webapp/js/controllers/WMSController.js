@@ -6,7 +6,7 @@
 
 import { Controller } from "./Controller.js";
 import { MessageDialog } from "../ui/MessageDialog.js";
-import { WMSLoader } from "../io/gis/WMSLoader.js";
+import { WMSProvider } from "../io/gis/WMSProvider.js";
 import * as THREE from "three";
 import { MapView, MapBoxProvider } from "geo-three";
 import proj4 from 'proj4';
@@ -104,7 +104,7 @@ class WMSController extends Controller
     {
       const application = this.application;
       const camera = application.camera;
-      const provider = new WMSLoader(this.url, this.layers, this.crs);
+      const provider = new WMSProvider(this.url, this.layers, this.crs);
       
       let heightProvider = null;
       let mapView = null;
