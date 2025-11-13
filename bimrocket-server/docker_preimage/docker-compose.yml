@@ -7,6 +7,18 @@ services:
     restart: always
     environment:
       - BIMROCKET_DATA_PATH=/root/bimrocket
+      - bimrocket_services_security_oauth2_keycloak_urlAuthenticationToken=https://iam.i2cat.net/auth/realms/SEG/protocol/openid-connect/token
+      - bimrocket_services_security_oauth2_keycloak_clientId=bim
+      - bimrocket_services_security_oauth2_keycloak_secretId=SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL
+      - bimrocket_services_security_oauth2_valid_urlAuthenticationToken=https://accounts-dev.aoc.cat/o/oauth2/token
+      - bimrocket_services_security_oauth2_valid_urlGetUserInfo=https://identitats-pre.aoc.cat/serveis-rest/getUserInfo
+      - bimrocket_services_security_oauth2_valid_clientId=serveis.aoc.cat
+      - bimrocket_services_security_oauth2_valid_secretId=secret_id
+      - bimrocket_services_security_oauth2_gicar_urlAuthenticationToken=https://preproduccio.endpointma.autenticaciogicar4.extranet.gencat.cat/realms/gicarcpd4/protocol/openid-connect/token
+      - bimrocket_services_security_oauth2_gicar_urlGetUserInfo=https://preproduccio.endpointma.autenticaciogicar4.extranet.gencat.cat/realms/gicarcpd4/protocol/openid-connect/userinfo
+      - bimrocket_services_security_oauth2_gicar_clientId=client_id
+      - bimrocket_services_security_oauth2_gicar_secretId=secret_id
+
     ports:
       - "9090:8080"
     volumes:

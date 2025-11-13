@@ -66,6 +66,12 @@ public class TokenValidationServlet extends HttpServlet
   @Inject
   transient KeycloakAuthManager keycloakAuthManager;
 
+  @Inject
+  transient ValidAuthManager validAuthManager;
+
+  @Inject
+  transient GicarAuthManager gicarAuthManager;
+
   private static final String MISSING_CODE_PARAMETER = "Missing Code parameter";
   private static final String INVALID_PATH_REDIRECT_URL = "Invalid path for redirect url";
   private static final String ISSUER_KEYCLOAK = "keycloak";
@@ -76,7 +82,6 @@ public class TokenValidationServlet extends HttpServlet
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException
   {
-
     // PathInfo to select for keycloak, valid or gicar issuer
     String pathInfo = request.getPathInfo();
 
@@ -85,6 +90,7 @@ public class TokenValidationServlet extends HttpServlet
     String json = "";
     UserToken ut = null;
 
+    // Cocde received by keycloak in the redirect uri
     String code = request.getParameter("code");
     if (code == null || code.isBlank())
     {
@@ -92,30 +98,50 @@ public class TokenValidationServlet extends HttpServlet
       return;
     }
 
+    logParameters(request, pathInfo);
+
     try
     {
-      if (pathInfo.contains(ISSUER_KEYCLOAK)) {
-        // Get authentication token from the code received by keycloak
-        json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
+      String issuer = null;
 
-        // Get userid, access token and refresh token from the json token received by keycloak
-        ut = keycloakAuthManager.getUseridFromToken(json);
-      }
-      else if (pathInfo.contains(ISSUER_VALID))
+      if (pathInfo.contains(ISSUER_KEYCLOAK))
       {
-        return;
-      }
-      else if (pathInfo.contains(ISSUER_GICAR))
+        issuer = ISSUER_KEYCLOAK;
+      } else if (pathInfo.contains(ISSUER_VALID))
       {
-        return;
+        issuer = ISSUER_VALID;
+      } else if (pathInfo.contains(ISSUER_GICAR))
+      {
+        issuer = ISSUER_GICAR;
       }
-      else
+
+      if (issuer == null)
       {
         sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
+        return;
       }
 
-      // Manage userid
-      checkUseridDB(ut);
+      switch (issuer)
+      {
+        case ISSUER_KEYCLOAK:
+          json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
+          ut = keycloakAuthManager.getUseridFromToken(json);
+          checkUseridDB(ut, issuer);
+          break;
+        case ISSUER_VALID:
+          json = validAuthManager.getAuthenticationToken(code, redirectUri);
+          ut = validAuthManager.getUseridFromToken(json);
+          checkUseridDB(ut, issuer);
+          break;
+        case ISSUER_GICAR:
+          json = gicarAuthManager.getAuthenticationToken(code, redirectUri);
+          ut = gicarAuthManager.getUseridFromToken(json);
+          checkUseridDB(ut, issuer);
+          break;
+        default:
+          sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
+          return;
+      }
 
       // Generate response HTML with the access token
       generateHTMLResponse(ut, response);
@@ -127,37 +153,11 @@ public class TokenValidationServlet extends HttpServlet
 
   }
 
-  @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException
-  {
-    response.setContentType("application/text");
-    response.getWriter().write("POST method");
-  }
-
   // internal methods
 
   void logParameters(HttpServletRequest request, Object parameters)
   {
     request.setAttribute("log.parameters", parameters.toString());
-  }
-
-  void log(HttpServletRequest request, HttpServletResponse response)
-  {
-    String method = request.getMethod();
-    String parameters = (String)request.getAttribute("log.parameters");
-    int status = response.getStatus();
-
-    if (parameters == null)
-    {
-      LOGGER.log(Level.INFO, "{0} -> {1}",
-       new Object[] { method, status });
-    }
-    else
-    {
-      LOGGER.log(Level.INFO, "{0} {1} -> {2}",
-       new Object[] { method, parameters, status });
-    }
   }
 
   private void sendBadRequest(HttpServletResponse resp, String error) throws IOException
@@ -167,35 +167,40 @@ public class TokenValidationServlet extends HttpServlet
     resp.getWriter().write("{\"error\":\"" + error + "\"}");
   }
 
-  public void checkUseridDB(UserToken userToken) throws Exception
+  public void checkUseridDB(UserToken userToken, String issuer) throws Exception
   {
-    Set<String> rols = new HashSet<>();
-    List<String> valors = Arrays.asList(Utils.PROJECTISTA);
-    rols.addAll(valors);
+     Map<String, List<String>> issuerRoles = Map.of(
+       ISSUER_KEYCLOAK, List.of(Utils.PROJECTISTA),
+       ISSUER_VALID, List.of(Utils.PROJECTISTA),
+       ISSUER_GICAR, List.of(Utils.VECTOR_UT_OGE)
+     );
 
-    User user = securityService.getUser(userToken.getUserId());
-    if (user == null)
-    {
-      User newUser = new User();
-      newUser.setAccessToken(userToken.getAccessToken());
-      newUser.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
-      newUser.setId(userToken.getUserId());
-      newUser.setName(userToken.getUserId());
-      newUser.setPassword(Utils.generatePassword());
-      newUser.setRefreshToken(userToken.getRefreshToken());
-      newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
-      newUser.setRoleIds(rols);
-      securityService.createUser(newUser);
-    }
-    else
-    {
-      user.setAccessToken(userToken.getAccessToken());
-      user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
-      user.setRefreshToken(userToken.getRefreshToken());
-      user.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
-      securityService.updateUser(user);
-    }
+     User user = securityService.getUser(userToken.getUserId());
+     if (user == null)
+     {
+       User newUser = new User();
+       newUser.setId(userToken.getUserId());
+       newUser.setName(userToken.getUserId());
+       newUser.setPassword(Utils.generatePassword());
+       newUser.setAccessToken(userToken.getAccessToken());
+       newUser.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+       newUser.setRefreshToken(userToken.getRefreshToken());
+       newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+       // Roles by issuer
+       List<String> roles = issuerRoles.getOrDefault(issuer, List.of());
+       newUser.setRoleIds(new HashSet<>(roles));
+       securityService.createUser(newUser);
+     }
+     else
+     {
+       user.setAccessToken(userToken.getAccessToken());
+       user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+       user.setRefreshToken(userToken.getRefreshToken());
+       user.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+       securityService.updateUser(user);
+     }
   }
+
 
   public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception
   {
@@ -210,9 +215,9 @@ public class TokenValidationServlet extends HttpServlet
     out.println("<body>");
     out.println("<script>");
     out.println("  (function() {");
-    out.println("    const token = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
+    out.println("    const accessToken = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
     out.println("    if (window.opener) {");
-    out.println("      window.opener.postMessage({ token: token }, '" + targetOrigin + "');");
+    out.println("      window.opener.postMessage({ accessToken: accessToken }, '" + targetOrigin + "');");
     out.println("      window.close();");
     out.println("    } else {");
     out.println("      document.body.textContent = 'Unable to return access token.';");
