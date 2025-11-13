@@ -220,7 +220,7 @@ public class TokenValidationServlet extends HttpServlet
     out.println("      window.opener.postMessage({ accessToken: accessToken }, '" + targetOrigin + "');");
     out.println("      window.close();");
     out.println("    } else {");
-    out.println("      document.body.textContent = 'Unable to return access token.';");
+    out.println("      document.body.textContent = 'accessToken = ' + accessToken;");
     out.println("    }");
     out.println("  })();");
     out.println("</script>");
