@@ -37,8 +37,6 @@ class WFSController extends Controller
     this.version = "2.0.0";
     this.outputFormat = "";
     this.representationMode = WFSController.ADD_OBJECT_REPR_MODE;
-    this.mergeGeometries = false;
-    this.origin = new THREE.Vector3(420878, 4582247, 0);
 
     this._onLoad = this.onLoad.bind(this);
     this._onProgress = this.onProgress.bind(this);
@@ -82,7 +80,9 @@ class WFSController extends Controller
     {
       featureGroup = new THREE.Group();
       featureGroup.name = this.layer;
-      const features = this.flatFeatures(group.children)
+      featureGroup.position.copy(group.position);
+
+      const features = [...group.children]; // explode group
       group.clear();
 
       for (let feature of features)
@@ -115,23 +115,10 @@ class WFSController extends Controller
       featureGroup = group;
     }
 
-    if (this.mergeGeometries)
-    {
-      const mergeGroup = new THREE.Group();
-      mergeGroup.builder = new GeometryMerger();
-      mergeGroup.add(featureGroup);
-      ObjectUtils.setSelectionEnabled(featureGroup, true);
-      featureGroup = mergeGroup;
-      featureGroup.updateMatrix();
-    }
-
     this.object.add(featureGroup);
     featureGroup.name = WFSController.FEATURES_NAME;
     featureGroup.updateMatrix();
-
-    Formula.updateTree(featureGroup);
-
-    ObjectBuilder.build(featureGroup);
+    featureGroup.updateMatrixWorld(true);
 
     if (featureGroup.userData.export === undefined)
     {
@@ -139,6 +126,10 @@ class WFSController extends Controller
       featureGroup.userData.export.export = false;
     }
     featureGroup.userData.export.exportChildren = false;
+
+    Formula.updateTree(featureGroup);
+    ObjectBuilder.build(featureGroup);
+    ObjectUtils.reduceCoordinates(this.application.baseObject);
 
     this.application.notifyObjectsChanged(this.object, this, "structureChanged");
   }
@@ -151,8 +142,10 @@ class WFSController extends Controller
 
     if (featureRepr instanceof THREE.Group)
     {
-      // clone builder & formulas for Groups
+      // make children visible
+      featureRepr.children.forEach(child => child.visible = true);
 
+      // clone builder & formulas for Groups
       featureRepr.builder =
         representation.builder ? representation.builder.clone() : null;
 
@@ -240,7 +233,6 @@ class WFSController extends Controller
       name: layer || "wfs",
       username: this.username,
       password: this.password,
-      origin: this.origin,
       representation: this.object.getObjectByName("representation")
     };
 
