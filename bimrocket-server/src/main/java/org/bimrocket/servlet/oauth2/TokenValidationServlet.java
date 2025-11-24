@@ -216,11 +216,12 @@ public class TokenValidationServlet extends HttpServlet
     out.println("<script>");
     out.println("  (function() {");
     out.println("    const accessToken = " + Utils.escapeJsString(userToken.getAccessToken()) + ";");
+    out.println("    const username = " + Utils.escapeJsString(userToken.getUserId()) + ";");
     out.println("    if (window.opener) {");
-    out.println("      window.opener.postMessage({ accessToken: accessToken }, '" + targetOrigin + "');");
+    out.println("      window.opener.postMessage({ accessToken: accessToken, username: username }, '" + targetOrigin + "');");
     out.println("      window.close();");
     out.println("    } else {");
-    out.println("      document.body.textContent = 'accessToken = ' + accessToken;");
+    out.println("      document.body.textContent = 'accessToken = ' + accessToken + ', username = ' + username;");
     out.println("    }");
     out.println("  })();");
     out.println("</script>");
