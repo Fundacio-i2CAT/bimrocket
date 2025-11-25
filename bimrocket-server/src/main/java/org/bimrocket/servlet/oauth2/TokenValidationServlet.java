@@ -205,39 +205,37 @@ public class TokenValidationServlet extends HttpServlet
 
   public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception
   {
-      String targetOrigin = "*";
+    String targetOrigin = "*";
 
-      // Create JSON with Jackson
-      Map<String, Object> jsonMap = new HashMap<>();
-      jsonMap.put("accessToken", userToken.getAccessToken());
-      jsonMap.put("username", userToken.getUserId());
+    // Create JSON with Jackson
+    Map<String, Object> jsonMap = new HashMap<>();
+    jsonMap.put("accessToken", userToken.getAccessToken());
+    jsonMap.put("username", userToken.getUserId());
 
-      ObjectMapper mapper = new ObjectMapper();
-      String jsonString = mapper.writeValueAsString(jsonMap);
+    ObjectMapper mapper = new ObjectMapper();
+    String jsonString = mapper.writeValueAsString(jsonMap);
 
-      response.setContentType("text/html; charset=UTF-8");
-      PrintWriter out = response.getWriter();
+    response.setContentType("text/html; charset=UTF-8");
+    PrintWriter out = response.getWriter();
 
-      out.println("<!DOCTYPE html>");
-      out.println("<html lang='ca'>");
-      out.println("<head><meta charset='UTF-8'><title>Authentication completed</title></head>");
-      out.println("<body>");
-      out.println("<script>");
-      out.println("  (function() {");
+    out.println("<!DOCTYPE html>");
+    out.println("<html lang='ca'>");
+    out.println("<head><meta charset='UTF-8'><title>Authentication completed</title></head>");
+    out.println("<body>");
+    out.println("<script>");
+    out.println("  (function() {");
 
-      // JSON
-      out.println("    const message = " + mapper.writeValueAsString(jsonString) + ";");
-
-      out.println("    if (window.opener) {");
-      out.println("      window.opener.postMessage(JSON.parse(message), '" + targetOrigin + "');");
-      out.println("      window.close();");
-      out.println("    } else {");
-      out.println("      document.body.textContent = message;");
-      out.println("    }");
-
-      out.println("  })();");
-      out.println("</script>");
-      out.println("</body></html>");
+    // JSON
+    out.println("    const message = " + mapper.writeValueAsString(jsonString) + ";");
+    out.println("    if (window.opener) {");
+    out.println("      window.opener.postMessage(JSON.parse(message), '" + targetOrigin + "');");
+    out.println("      window.close();");
+    out.println("    } else {");
+    out.println("      document.body.textContent = message;");
+    out.println("    }");
+    out.println("  })();");
+    out.println("</script>");
+    out.println("</body></html>");
   }
 
 }
