@@ -300,16 +300,10 @@ class GMLLoader extends GISLoader
       const gmlFormat = new GMLFormat(gmlOptions);
 
       let features = [];
-      //For reprojections, set this.options.targetProjection to featureProjection
-      const readOptions =
-      {
-        dataProjection: sourceProjection,
-        featureProjection: sourceProjection
-      };
 
       try
       {
-        features = gmlFormat.readFeatures(xmlDoc, readOptions);
+        features = gmlFormat.readFeatures(xmlDoc);
 
         if ((!features || features.length === 0) && isGML32 && gmlOptions.featureNS && gmlOptions.featureType)
         {            
@@ -320,7 +314,7 @@ class GMLLoader extends GISLoader
             for (let i = 0; i < featureNodes.length; i++)
             {
               const node = featureNodes[i];              
-              let olFeature = gmlFormat.readFeature(node, readOptions);
+              let olFeature = gmlFormat.readFeature(node);
 
               if (!olFeature && gmlOptions.geometryName)
               {
