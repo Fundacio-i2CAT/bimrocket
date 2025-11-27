@@ -300,10 +300,11 @@ class GMLLoader extends GISLoader
       const gmlFormat = new GMLFormat(gmlOptions);
 
       let features = [];
+      //For reprojections, set this.options.targetProjection to featureProjection
       const readOptions =
       {
         dataProjection: sourceProjection,
-        featureProjection: this.options.targetProjection
+        featureProjection: sourceProjection
       };
 
       try
