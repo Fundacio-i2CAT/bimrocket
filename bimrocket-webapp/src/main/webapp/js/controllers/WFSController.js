@@ -197,10 +197,27 @@ class WFSController extends Controller
     {
       url += "&";
     }
-    const isGML = format === "GML";
-    loader = isGML ? new GMLLoader() : new GeoJSONLoader();
-    
-    const version = isGML ? "1.1.0" : this.version;
+    const isGML = format.startsWith("GML");
+    if (isGML)
+    {
+      const mimeType = (format === "GML32" || format === "GML321") ? "gml32" : "gml3";
+      loader = new GMLLoader(mimeType);
+    }
+    else
+    {
+      loader = new GeoJSONLoader();
+    }
+
+    let version = this.version;
+    if (format === "GeoJSON")
+    {
+      version = "1.1.0";
+    }
+    else if (format === "GML32" || format === "GML321")
+    {
+      version = "2.0.0";
+    }
+
     const outputFormat = this.outputFormat?.length ? this.outputFormat : loader.mimeType;
     
     url += "service=wfs&version=" + version + 
