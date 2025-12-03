@@ -24,7 +24,7 @@ function extent3857(z, x, y)
 
 export class WMSProvider extends MapProvider
 {
-  constructor(baseUrl, layers, crs, format = "image/png", transparent = true)
+  constructor(baseUrl, layers, crs, format = "image/png", transparent = true, onTileLoaded = null)
   {
     super();
     this.baseUrl = baseUrl;
@@ -32,6 +32,7 @@ export class WMSProvider extends MapProvider
     this.crs = crs;
     this.format = format;
     this.transparent = transparent;
+    this.onTileLoaded = onTileLoaded;
     this.tileSize = 256;
     this.minZoom = 0;
     this.maxZoom = 19;
@@ -81,7 +82,10 @@ export class WMSProvider extends MapProvider
     {
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        resolve(img);
+        if (this.onTileLoaded) this.onTileLoaded();
+      };
       img.onerror = (err) => reject(err);
       img.src = url.toString();
     });

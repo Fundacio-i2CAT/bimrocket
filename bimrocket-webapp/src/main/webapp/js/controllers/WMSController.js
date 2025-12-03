@@ -34,6 +34,7 @@ class WMSController extends Controller
 
     this._mapView = null;
     this._onNodeChanged = this.onNodeChanged.bind(this);
+    this._onChange = this.onChange.bind(this);
 
     this._lastUrl = null;
     this._lastLayers = null;
@@ -48,13 +49,35 @@ class WMSController extends Controller
   onStart()
   {
     this.application.addEventListener("scene", this._onNodeChanged);
+    this.application.addEventListener("change", this._onChange);
     this.updateMap();
   }
 
   onStop()
   {
     this.application.removeEventListener("scene", this._onNodeChanged);
+    this.application.removeEventListener("change", this._onChange);
     this.removeMap();
+  }
+
+  onChange(event)
+  {
+    const application = this.application;
+    const camera = application.camera;
+
+    if (event.type === "nodeChanged" &&
+        event.objects.includes(camera))
+    {
+      this.updateTiles(camera);
+    }
+  }
+
+  updateTiles(camera)
+  {
+    if (this._mapView)
+    {
+      this._mapView.updateMatrixWorld(camera);
+    }
   }
 
   onNodeChanged(event)
@@ -96,7 +119,7 @@ class WMSController extends Controller
     {
       const application = this.application;
       const camera = application.camera;
-      const provider = new WMSProvider(this.url, this.layers, CRS);
+      const provider = new WMSProvider(this.url, this.layers, CRS, "image/png", true, () => application.repaint());
 
       let heightProvider = null;
       let mapView = null;
@@ -113,22 +136,10 @@ class WMSController extends Controller
         mapView = new MapView(MapView.PLANAR, provider, camera);
       }
 
-      const renderer = new THREE.WebGLRenderer();
-
       provider.minZoom = 13;
       camera.position.z += 0.00001;
       mapView.name = "MapView";
       mapView.subDivisionsRays = 64;
-      renderer.render(application.scene, camera);
-
-      function animate() 
-      {
-          requestAnimationFrame(animate);
-          mapView.updateMatrixWorld(camera);
-          renderer.render(application.scene, camera);
-      }
-
-      animate();
 
       this._mapView = mapView;
 
