@@ -99,9 +99,6 @@ class GISLoader extends THREE.Loader
       {
         if (featureGroup)
         {
-          featureGroup.position.copy(this.getOrigin());
-          featureGroup.updateMatrix();
-
           if (onLoad) onLoad(featureGroup);
           if (this.manager) this.manager.itemEnd(itemName);
         }

@@ -392,6 +392,10 @@ class GMLLoader extends GISLoader
       if(loadCompleted){
         loadCompleted(featureGroup);
       }
+      
+      featureGroup.position.copy(this.getOrigin());
+      featureGroup.updateMatrix();
+
       return featureGroup;
     });
   }
