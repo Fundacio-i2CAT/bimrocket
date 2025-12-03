@@ -30,7 +30,6 @@ class WMSController extends Controller
     this.url = "";
     this.layers = "";
     this.useMapboxHeight = false;
-    this.useIcgcHeight = false;
     this.mapboxApiKey = "";
 
     this._mapView = null;
@@ -39,7 +38,6 @@ class WMSController extends Controller
     this._lastUrl = null;
     this._lastLayers = null;
     this._lastUseMapboxHeight = false;
-    this._lastUseIcgcHeight = false;
     this._lastMapboxApiKey = null;
     this._lastOrigin = new THREE.Vector2();
 
@@ -66,7 +64,6 @@ class WMSController extends Controller
       if (this.url !== this._lastUrl ||
           this.layers !== this._lastLayers ||
           this.useMapboxHeight !== this._lastUseMapboxHeight ||
-          this.useIcgcHeight !== this._lastUseIcgcHeight ||
           this.mapboxApiKey !== this._lastMapboxApiKey)
       {
         if (this.layers !== this._lastLayers && this.layers)
@@ -88,7 +85,6 @@ class WMSController extends Controller
     this._lastUrl = this.url;
     this._lastLayers = this.layers;
     this._lastUseMapboxHeight = this.useMapboxHeight;
-    this._lastUseIcgcHeight = this.useIcgcHeight;
     this._lastMapboxApiKey = this.mapboxApiKey;
 
     if (this.layers)
