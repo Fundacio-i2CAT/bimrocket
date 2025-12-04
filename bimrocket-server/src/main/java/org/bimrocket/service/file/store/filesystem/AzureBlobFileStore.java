@@ -372,7 +372,7 @@ public class AzureBlobFileStore implements FileStore
             ? ACLFile.ANY_FILENAME
             : path.getName();
 
-    // Read current ACL actual if found
+    // Read current ACL if found
     ACLFile.FileMap fileMap = new ACLFile.FileMap();
 
     if (blobClient.exists())
