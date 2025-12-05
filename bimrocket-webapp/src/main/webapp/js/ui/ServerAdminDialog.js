@@ -38,9 +38,6 @@ class ServerAdminDialog extends Dialog
     const connPanel = this.createContainer('admin_body', mainContainer);
     const mainWrapper = this.createContainer('admin_panel', this.bodyElem);
     const mainPanel = this.createContainer('admin_body', mainWrapper);
-
-    this.searchToolbar= null;
-    this.filterTitle = null;
   
     this.connPanelElem = connPanel;
     this.mainContainer = mainWrapper;
