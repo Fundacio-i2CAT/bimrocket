@@ -1,8 +1,5 @@
 package org.bimrocket.service.bcf;
 
-import jakarta.inject.Inject;
-import org.bimrocket.api.bcf.BcfExtensions;
-import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
