@@ -88,7 +88,7 @@ public class ACLXMLDeserializerTest
           "</D:acl>";
 
   @Test
-  public void testDeserialize_privileges_admin()
+  public void testDeserializePrivilegesAdmin()
   {
     Object[] arrayResult = null;
 
@@ -107,26 +107,58 @@ public class ACLXMLDeserializerTest
             findStringInArray(arrayResult, Privilege.READ_ACL.toString()) &&
             findStringInArray(arrayResult, Privilege.WRITE_ACL.toString())
             );
-
-
   }
 
-/*  @Test
-  public void testDeserialize_privileges_admin()
+  @Test
+  public void testDeserializePrivilegesProjectista()
   {
+    Object[] listRolesIdPrivileges = null;
+
+    // PROJECTISTA es l'unic amb privilegis de WRITE
     try {
       ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
-      Object[] listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
-      System.out.println(">>>>>>>>>>>>>>> Role Id for privilege WRITE " +  listRolesIdPrivileges[0]);
-      System.out.println(">>>>>>>>>>>>>>> Privileges for ADMIN " + acl.getPrivilegesForRoleId("ADMIN").toString());
-    } catch (IOException e) {
+      listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
+    } catch (IOException e)
+    {
       throw new RuntimeException(e);
     }
-    // ADMIN ha de tenir privilegis de READ_ACL i WRITE_ACL
 
+    assertTrue(findStringInArray(listRolesIdPrivileges, "PROJECTISTA"));
+  }
 
+  @Test
+  public void testDeserializePrivilegesVector()
+  {
+    Object[] listRolesIdPrivileges = null;
 
-  }*/
+    // VECTOR-UT-OGE no te privilegis de WRITE
+    try {
+      ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
+      listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
+    } catch (IOException e)
+    {
+      throw new RuntimeException(e);
+    }
+
+    assertFalse(findStringInArray(listRolesIdPrivileges, "VECTOR-UT-OGE"));
+  }
+
+  @Test
+  public void testDeserializeUnknownRole()
+  {
+    Object[] listRolesId = null;
+
+    // UNKNOWN Role no existeix
+    try {
+      ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
+      listRolesId = acl.getRoleIds().toArray();
+    } catch (IOException e)
+    {
+      throw new RuntimeException(e);
+    }
+
+    assertFalse(findStringInArray(listRolesId, "UNKNOWN"));
+  }
 
   boolean findStringInArray(Object[] listValues, String value)
   {
