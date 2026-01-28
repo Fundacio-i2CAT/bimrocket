@@ -12,81 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ACLXMLDeserializerTest
 {
-  private static String xmlSource = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>\n" +
-          "<D:acl xmlns:D=\"DAV:\">\n" +
-          "      \n" +
-          "    <!-- Access for ADMIN in .acl -->\n" +
-          "      \n" +
-          "    <D:ace>\n" +
-          "            \n" +
-          "        <D:principal>\n" +
-          "                  \n" +
-          "            <D:href>ADMIN</D:href>\n" +
-          "                \n" +
-          "        </D:principal>\n" +
-          "            \n" +
-          "        <D:grant>\n" +
-          "                  \n" +
-          "            <D:privilege>\n" +
-          "                <D:read-acl/>\n" +
-          "            </D:privilege>\n" +
-          "                  \n" +
-          "            <D:privilege>\n" +
-          "                <D:write-acl/>\n" +
-          "            </D:privilege>\n" +
-          "                \n" +
-          "        </D:grant>\n" +
-          "          \n" +
-          "    </D:ace>\n" +
-          "      \n" +
-          "  \n" +
-          "    <!-- Access for PROJECTISTA in .acl -->\n" +
-          "      \n" +
-          "    <D:ace>\n" +
-          "            \n" +
-          "        <D:principal>\n" +
-          "                  \n" +
-          "            <D:href>PROJECTISTA</D:href>\n" +
-          "                \n" +
-          "        </D:principal>\n" +
-          "            \n" +
-          "        <D:grant>\n" +
-          "                  \n" +
-          "            <D:privilege>\n" +
-          "                <D:read/>\n" +
-          "            </D:privilege>\n" +
-          "                  \n" +
-          "            <D:privilege>\n" +
-          "                <D:write/>\n" +
-          "            </D:privilege>\n" +
-          "                \n" +
-          "        </D:grant>\n" +
-          "          \n" +
-          "    </D:ace>\n" +
-          "      \n" +
-          "  \n" +
-          "    <!-- Access for VECTOR-UT-OGE in .acl -->\n" +
-          "      \n" +
-          "    <D:ace>\n" +
-          "            \n" +
-          "        <D:principal>\n" +
-          "                  \n" +
-          "            <D:href>VECTOR-UT-OGE</D:href>\n" +
-          "                \n" +
-          "        </D:principal>\n" +
-          "            \n" +
-          "        <D:grant>\n" +
-          "                  \n" +
-          "            <D:privilege>\n" +
-          "                <D:read/>\n" +
-          "            </D:privilege>\n" +
-          "                \n" +
-          "        </D:grant>\n" +
-          "          \n" +
-          "    </D:ace>\n" +
-          "    \n" +
-          "</D:acl>";
-
   @Test
   public void testDeserializePrivilegesAdmin()
   {
@@ -95,7 +20,7 @@ public class ACLXMLDeserializerTest
     // Privilegis per rol ADMIN han de ser READ-ACL i WRITE-ACL
     try
     {
-      ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
+      ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       arrayResult = acl.getPrivilegesForRoleId("ADMIN").toArray();
     }
     catch (IOException e)
@@ -116,7 +41,7 @@ public class ACLXMLDeserializerTest
 
     // PROJECTISTA es l'unic amb privilegis de WRITE
     try {
-      ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
+      ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
     } catch (IOException e)
     {
@@ -133,7 +58,7 @@ public class ACLXMLDeserializerTest
 
     // VECTOR-UT-OGE no te privilegis de WRITE
     try {
-      ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
+      ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
     } catch (IOException e)
     {
@@ -150,7 +75,7 @@ public class ACLXMLDeserializerTest
 
     // UNKNOWN Role no existeix
     try {
-      ACL acl = ACLXMLDeserializer.deserialize(xmlSource, "user");
+      ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       listRolesId = acl.getRoleIds().toArray();
     } catch (IOException e)
     {
@@ -171,6 +96,47 @@ public class ACLXMLDeserializerTest
       }
     }
     return foundValue;
+  }
+
+  String returnXMLSource() {
+    return """
+            <?xml version="1.0" encoding="utf-8"?>
+            <D:acl xmlns:D="DAV:">
+                        
+            <!-- Access for PROJECTISTA -->
+            <D:ace>
+                <D:principal>
+                    <D:href>PROJECTISTA</D:href>
+                </D:principal>
+                <D:grant>
+                    <D:privilege><D:read/></D:privilege>
+                    <D:privilege><D:write/></D:privilege>
+                </D:grant>
+            </D:ace>
+            
+            <!-- Access for VECTOR-UT-OGE -->
+            <D:ace>
+                <D:principal>
+                    <D:href>VECTOR-UT-OGE</D:href>
+                </D:principal>
+                <D:grant>
+                    <D:privilege><D:read/></D:privilege>
+                </D:grant>
+            </D:ace>
+                        
+            <!-- Access for ADMIN -->
+            <D:ace>
+                <D:principal>
+                    <D:href>ADMIN</D:href>
+                </D:principal>
+                <D:grant>
+                    <D:privilege><D:read-acl/></D:privilege>
+                    <D:privilege><D:write-acl/></D:privilege>
+                </D:grant>
+            </D:ace>
+            
+            </D:acl>
+            """;
   }
 
 }
