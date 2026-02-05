@@ -139,10 +139,7 @@ class WMSDialog extends Dialog
       return {};
     }
 
-    if (
-        provider === "MapBoxProvider" ||
-        provider === "MapBoxHeightProvider"
-      )
+    if (provider === "MapBoxProvider")
     {
       return { apiToken: providerKey };
     }
@@ -211,7 +208,6 @@ class WMSDialog extends Dialog
       "HereMapsProvider",
       "MapTilerProvider",
       "OpenMapTilesProvider",
-      "MapBoxHeightProvider",
       "BingMapsProvider"
     ].includes(provider);
 
