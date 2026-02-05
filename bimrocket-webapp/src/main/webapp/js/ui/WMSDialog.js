@@ -38,7 +38,6 @@ class WMSDialog extends Dialog
         ["HereMapsProvider", "option.wms.heremaps"],
         ["MapTilerProvider", "option.wms.maptiler"],
         ["OpenMapTilesProvider", "option.wms.openmaptiles"],
-        ["MapBoxHeightProvider", "option.wms.mapboxheight"],
         ["WMSProvider", "option.wms.wms"]
       ],
       "OpenStreetMapsProvider");
@@ -78,13 +77,6 @@ class WMSDialog extends Dialog
     this.utmZoneElem.style.padding = "6px";
     this.utmZoneElem.style.marginBottom = "6px";
 
-    this.heightProviderElem = Controls.addCheckBoxField(bodyElem, "wmsHeightProvider",
-      "label.wms.height_provider", false, "report_name");
-    const heightProviderGroup = this.heightProviderElem.parentNode;
-    heightProviderGroup.style.display = "flex";
-    heightProviderGroup.style.alignItems = "flex-start";
-    heightProviderGroup.style.marginBottom = "6px";
-
     this.heightProviderKeyElem = Controls.addTextField(bodyElem,
       "wmsHeightProviderKey", "label.wms.height_provider_key", "pk.eyJ1IjoiYXZhbGxzIiwiYSI6ImNtaDkzMm40NDBhYWMyanIxbnVraGFqY2oifQ.iFeS28_97GcOTB5tUutR-Q");
     this.heightProviderKeyElem.spellcheck = false;
@@ -92,8 +84,6 @@ class WMSDialog extends Dialog
     this.heightProviderKeyElem.parentNode.style.marginBottom = "6px";
     this.heightProviderKeyElem.parentNode.style.display = "none";
 
-    this.heightProviderElem.addEventListener("change", () =>
-      this.updateProviderKeyVisibility());
     this.providerElem.addEventListener("change", () =>
       this.updateProviderKeyVisibility());
     this.mapModeElem.addEventListener("change", () =>
@@ -225,20 +215,12 @@ class WMSDialog extends Dialog
       "BingMapsProvider"
     ].includes(provider);
 
-    const heightModes = ["HEIGHT", "HEIGHT_SHADER", "MARTINI"];
-    const heightModeEnabled = heightModes.includes(this.mapModeElem.value);
-
-    this.heightProviderElem.parentNode.style.display =
-      heightModeEnabled ? "flex" : "none";
-    if (!heightModeEnabled)
-    {
-      this.heightProviderElem.checked = false;
-    }
-
     this.providerKeyElem.parentNode.style.display =
       requiresKey ? "block" : "none";
+    const heightModes = ["HEIGHT", "HEIGHT_SHADER", "MARTINI"];
+    const heightModeEnabled = heightModes.includes(this.mapModeElem.value);
     this.heightProviderKeyElem.parentNode.style.display =
-      this.heightProviderElem.checked ? "block" : "none";
+      heightModeEnabled ? "block" : "none";
   }
 
   onAccept()
@@ -247,7 +229,8 @@ class WMSDialog extends Dialog
     const provider = this.providerElem.value;
     const mapMode = this.mapModeElem.value;
     const utmZoneValue = this.utmZoneElem.value;
-    const useHeightProvider = this.heightProviderElem.checked;
+    const useHeightProvider =
+      ["HEIGHT", "HEIGHT_SHADER", "MARTINI"].includes(mapMode);
     const providerKey = this.providerKeyElem.value;
     const heightProviderKey = this.heightProviderKeyElem.value;
 
