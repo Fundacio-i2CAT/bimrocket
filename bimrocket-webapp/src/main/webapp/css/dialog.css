@@ -204,6 +204,13 @@ div.dialog > .header > button:focus
   display: block;
 }
 
+.dialog .body label.required::after
+{
+  content: " *";
+  color: #ffb0b0;
+  font-weight: bold;
+}
+
 .dialog .body .checkbox_field label,
 .dialog .body .checkbox_field input
 {
