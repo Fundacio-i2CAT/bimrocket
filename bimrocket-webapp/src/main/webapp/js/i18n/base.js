@@ -129,8 +129,9 @@ export const translations =
   "option.wfs.geometry_polygon" : "Polygon",
   "option.wfs.geometry_line" : "Line",
   "label.wfs.limit_distance" : "Geometries load limit:",
-  "label.wfs.limit_distance_help" : "If there is no IFC (IfcSite), this value is ignored and the full model will be loaded.",
+  "label.wfs.limit_distance_help" : "Distance in 'm' or 'km' according to the existing IFC model. If there is no IFC, it does not apply.",
   "label.wfs.srs_name" : "Coordinate system:",
+  "label.wfs.srs_name_help" : "Ex. EPSG:3857",
   "label.wfs.extrusion" : "Extrusion",
   "label.wfs.extrusion_depth" : "Extrusion depth (meters):",
 

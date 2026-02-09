@@ -66,6 +66,16 @@ class WFSDialog extends Dialog
     this.limitDistanceElem = Controls.addTextField(bodyElem,
       "wfsLimitDistance", "label.wfs.limit_distance", null);
     this.limitDistanceElem.spellcheck = false;
+    this.limitDistanceElem.type = "number";
+    this.limitDistanceElem.parentElement.style.display = "flex";
+    this.limitDistanceElem.parentElement.style.flexDirection = "column";
+    const limitDistanceLabel = this.limitDistanceElem.parentElement
+      .querySelector("label");
+    if (limitDistanceLabel)
+    {
+      limitDistanceLabel.style.display = "block";
+      limitDistanceLabel.style.width = "100%";
+    }
     this.limitDistanceElem.style.padding = "6px";
     this.limitDistanceElem.style.marginBottom = "6px";
 
@@ -82,6 +92,13 @@ class WFSDialog extends Dialog
     this.srsNameElem.style.padding = "6px";
     this.srsNameElem.style.marginBottom = "6px";
 
+    const srsNameNote = Controls.addText(bodyElem,
+      "label.wfs.srs_name_help");
+    srsNameNote.style.display = "block";
+    srsNameNote.style.fontSize = "11px";
+    srsNameNote.style.color = "#9caded";
+    srsNameNote.style.marginBottom = "10px";
+
     this.extrusionElem = Controls.addCheckBoxField(bodyElem, "wfsExtrusion",
       "label.wfs.extrusion", false, "report_name");
     this.extrusionElem.style.marginBottom = "6px";
@@ -89,15 +106,25 @@ class WFSDialog extends Dialog
     this.extrusionDepthElem = Controls.addTextField(bodyElem, "wfsExtrusionDepth",
       "label.wfs.extrusion_depth", "1");
     this.extrusionDepthElem.spellcheck = false;
+    this.extrusionDepthElem.type = "number";
+    this.extrusionDepthElem.parentElement.style.display = "flex";
+    this.extrusionDepthElem.parentElement.style.flexDirection = "column";
+    const extrusionDepthLabel = this.extrusionDepthElem.parentElement
+      .querySelector("label");
+    if (extrusionDepthLabel)
+    {
+      extrusionDepthLabel.style.display = "block";
+      extrusionDepthLabel.style.width = "100%";
+    }
     this.extrusionDepthElem.style.padding = "6px";
-    this.srsNameElem.style.marginBottom = "6px";
+    this.extrusionDepthElem.style.marginBottom = "6px";
     this.extrusionDepthGroupElem = this.extrusionDepthElem.parentNode;
     this.extrusionDepthGroupElem.style.display = "none";
 
     this.extrusionElem.addEventListener("change", () =>
     {
       this.extrusionDepthGroupElem.style.display =
-        this.extrusionElem.checked ? "block" : "none";
+        this.extrusionElem.checked ? "flex" : "none";
     });
 
     this.acceptButton = this.addButton("accept", "button.accept",
