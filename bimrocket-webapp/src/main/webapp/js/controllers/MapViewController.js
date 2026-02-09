@@ -40,7 +40,7 @@ class MapViewController extends Controller
     this.heightProvider = "";
     this.utmZoneNumber = 0; // 0: web mercator
     this.utmZoneLetter = "";
-    this.maxRequestsPerSecond = 100;
+    this.maxRequestsPerSecond = 20;
 
     this._mapView = null;
     this._onNodeChanged = this.onNodeChanged.bind(this);
