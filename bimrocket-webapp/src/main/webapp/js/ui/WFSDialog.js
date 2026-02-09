@@ -8,9 +8,7 @@ import { Dialog } from "./Dialog.js";
 import { Controls } from "./Controls.js";
 import { WFSController } from "../controllers/WFSController.js";
 import { Solid } from "../core/Solid.js";
-import { Profile } from "../core/Profile.js";
 import { Extruder } from "../builders/Extruder.js";
-import { RectangleBuilder } from "../builders/RectangleBuilder.js";
 import { Formula } from "../formula/Formula.js";
 import * as THREE from "three";
 
@@ -20,7 +18,7 @@ class WFSDialog extends Dialog
   {
     super("tool.wfs.label");
     this.application = application;
-    this.setSize(420, 460);
+    this.setSize(420, 470);
     this.setI18N(application.i18n);
     this.setClassName("wfs_container");
 
@@ -49,17 +47,6 @@ class WFSDialog extends Dialog
     this.wfsTypeElem.style.marginBottom = "6px";
 
     bodyElem.appendChild(groupElem);
-
-    this.geometryTypeElem = Controls.addSelectField(bodyElem, "wfsGeometryType",
-      "label.wfs.geometry_type",
-      [["polygon", "option.wfs.geometry_polygon"],
-       ["line", "option.wfs.geometry_line"]],
-      "polygon");
-    this.geometryTypeElem.style.display = "flex";
-    this.geometryTypeElem.style.flexDirection = "column";
-    this.geometryTypeElem.style.width = "100%";
-    this.geometryTypeElem.style.padding = "6px";
-    this.geometryTypeElem.style.marginBottom = "6px";
 
     this.urlElem = Controls.addTextField(bodyElem, "wfsUrl",
       "label.wfs.url",
@@ -97,6 +84,21 @@ class WFSDialog extends Dialog
 
     this.extrusionElem = Controls.addCheckBoxField(bodyElem, "wfsExtrusion",
       "label.wfs.extrusion", false, "report_name");
+    this.extrusionElem.style.marginBottom = "6px";
+
+    this.extrusionDepthElem = Controls.addTextField(bodyElem, "wfsExtrusionDepth",
+      "label.wfs.extrusion_depth", "1");
+    this.extrusionDepthElem.spellcheck = false;
+    this.extrusionDepthElem.style.padding = "6px";
+    this.srsNameElem.style.marginBottom = "6px";
+    this.extrusionDepthGroupElem = this.extrusionDepthElem.parentNode;
+    this.extrusionDepthGroupElem.style.display = "none";
+
+    this.extrusionElem.addEventListener("change", () =>
+    {
+      this.extrusionDepthGroupElem.style.display =
+        this.extrusionElem.checked ? "block" : "none";
+    });
 
     this.acceptButton = this.addButton("accept", "button.accept",
       () => this.onAccept());
@@ -137,7 +139,6 @@ class WFSDialog extends Dialog
     const srsName = this.srsNameElem.value;
     const extrusionEnabled = this.extrusionElem.checked;
     const url = this.urlElem.value;
-    const geometryType = this.geometryTypeElem.value;
     const limitDistanceValue = Number.parseFloat(this.limitDistanceElem.value);
 
     const layerGroup = new THREE.Group();
@@ -199,23 +200,21 @@ class WFSDialog extends Dialog
     const representation = new Solid();
     representation.name = WFSController.REPRESENTATION_NAME;
     representation.builder = new Extruder();
-    representation.builder.depth = extrusionEnabled ? 1 : 0;
+
+    let extrusionDepth = 0;
+    if (extrusionEnabled)
+    {
+      const depthValue = Number.parseFloat(this.extrusionDepthElem.value);
+      extrusionDepth = Number.isFinite(depthValue) && depthValue > 0
+        ? depthValue : 1;
+    }
+    representation.builder.depth = extrusionDepth;
     Formula.create(
       representation,
       "material",
       "new THREE.MeshPhongMaterial({ color: 0x808080 })",
       false
     );
-
-    if (geometryType === "line")
-    {
-      const profile = new Profile();
-      profile.builder = new RectangleBuilder();
-      profile.builder.width = 4;
-      profile.builder.height = 1;
-      profile.rotation.x = 0;
-      application.addObject(profile, representation);
-    }
 
     application.addObject(representation, layerGroup);
 
