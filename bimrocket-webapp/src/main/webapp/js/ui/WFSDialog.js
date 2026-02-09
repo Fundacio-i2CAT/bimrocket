@@ -49,8 +49,7 @@ class WFSDialog extends Dialog
     bodyElem.appendChild(groupElem);
 
     this.urlElem = Controls.addTextField(bodyElem, "wfsUrl",
-      "label.wfs.url",
-      "https://geoserver.nexusgeografics.com/geoserver/fires/ows");
+      "label.wfs.url", "");
     this.urlElem.spellcheck = false;
     this.urlElem.style.padding = "6px";
     this.urlElem.style.marginBottom = "6px";

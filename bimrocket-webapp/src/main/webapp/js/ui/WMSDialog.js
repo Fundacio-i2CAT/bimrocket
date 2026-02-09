@@ -78,7 +78,7 @@ class WMSDialog extends Dialog
     this.utmZoneElem.style.marginBottom = "6px";
 
     this.heightProviderKeyElem = Controls.addTextField(bodyElem,
-      "wmsHeightProviderKey", "label.wms.height_provider_key", "pk.eyJ1IjoiYXZhbGxzIiwiYSI6ImNtaDkzMm40NDBhYWMyanIxbnVraGFqY2oifQ.iFeS28_97GcOTB5tUutR-Q");
+      "wmsHeightProviderKey", "label.wms.height_provider_key", "");
     this.heightProviderKeyElem.spellcheck = false;
     this.heightProviderKeyElem.style.padding = "6px";
     this.heightProviderKeyElem.parentNode.style.marginBottom = "6px";
@@ -261,8 +261,6 @@ class WMSDialog extends Dialog
 
     controller.init(application);
     controller.start();
-
-    console.log("WMS Layer added and initialized:", provider);
 
     this.hide();
   }
