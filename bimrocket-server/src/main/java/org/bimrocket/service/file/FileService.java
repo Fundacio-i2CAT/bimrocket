@@ -156,7 +156,7 @@ public class FileService
 
     Metadata metadata = store.makeCollection(path);
 
-    /* No es crea automàticamnent cap ACL quan fem carpeta nova.
+    /* Whe do not create ACL automatically when create new directory.
     MutableACL acl = new MutableACL();
 
     acl.grant(securityService.getCurrentUser().getId(), List.of(READ, WRITE, READ_ACL, WRITE_ACL));
