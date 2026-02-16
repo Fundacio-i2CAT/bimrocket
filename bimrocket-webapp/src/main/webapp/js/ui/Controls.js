@@ -345,6 +345,17 @@ class Controls
       labelElem.appendChild(spanElem);
       groupElem.appendChild(labelElem);
     }
+
+    hiddenElem.getValue = () =>
+    {
+      return hiddenElem.value;
+    };
+
+    hiddenElem.setValue = value =>
+    {
+      let input = groupElem.querySelector(`input[type=radio][value=${value}]`);
+      if (input) input.checked = true;
+    };
     return hiddenElem;
   }
 
@@ -379,6 +390,10 @@ class Controls
     const groupElem = document.createElement("div");
     groupElem.className = "code_editor";
     parent.appendChild(groupElem);
+    if (options.className)
+    {
+      groupElem.classList.add(options.className);
+    }
 
     const labelElem = document.createElement("span");
     I18N.set(labelElem, "textContent", label);
@@ -409,11 +424,20 @@ class Controls
   {
     const { basicSetup } = CM["codemirror"];
     const { keymap, highlightSpecialChars, highlightActiveLine,
-            drawSelection, EditorView } = CM["@codemirror/view"];
+            drawSelection, EditorView, tooltips } = CM["@codemirror/view"];
     const { defaultKeymap } = CM["@codemirror/commands"];
     const { searchKeymap, highlightSelectionMatches } = CM["@codemirror/search"];
     const { indentOnInput } = CM["@codemirror/language"];
     const { EditorState } = CM["@codemirror/state"];
+
+    const tooltipContainerId = "cm-tooltip-container";
+    let tooltipContainer = document.getElementById(tooltipContainerId);
+    if (!tooltipContainer)
+    {
+      tooltipContainer = document.createElement("div");
+      tooltipContainer.id = tooltipContainerId;
+      document.body.appendChild(tooltipContainer);
+    }
 
     let theme = EditorView.theme({
       "&.cm-focused .cm-cursor" : {
@@ -440,6 +464,9 @@ class Controls
       "& .ͼm" : {
         "color" : "#808080"
       },
+      "& .cm-tooltip" : {
+        "z-index" : 100000
+      },
       "& .cm-wrap" : {
         "height" : "100%"
       },
@@ -456,6 +483,7 @@ class Controls
       indentOnInput(),
       highlightActiveLine(),
       highlightSelectionMatches(),
+      tooltips({ parent : tooltipContainer }),
       theme];
 
     const language = options?.language || "json";
@@ -509,11 +537,11 @@ class Controls
     const tagsContainer = document.createElement("div");
     tagsContainer.className = "tags-container";
 
-    if (!showInput) 
+    if (!showInput)
     {
       tagsContainer.classList.add("hidden-input");
     }
-    
+
     groupElem.appendChild(tagsContainer);
 
     const tagsInput = document.createElement("input");
