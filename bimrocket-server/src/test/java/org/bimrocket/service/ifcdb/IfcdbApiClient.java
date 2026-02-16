@@ -1,16 +1,18 @@
 package org.bimrocket.service.ifcdb;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Scanner;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class IfcdbApiClient
 {
   private final String baseUrl;
   private final String authorizationHeader;
+  private final HttpClient client = HttpClient.newHttpClient();
 
   public IfcdbApiClient(String baseUrl, String username, String password)
   {
@@ -21,127 +23,152 @@ public class IfcdbApiClient
 
   public ApiResponse getAllModels(String schema) throws IOException
   {
-    URL url = new URL(baseUrl + "/models/" + schema);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    String endpoint = baseUrl + "/models/" + schema;
 
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode =  connection.getResponseCode();
-
-    String body = "";
-    if (responseCode == 200)
+    try
     {
-      try (Scanner scanner = new Scanner(connection.getInputStream(), StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse uploadModel(String schema, File model) throws IOException
   {
     String endpoint = baseUrl + "/models/" + schema;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("POST");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/x-step");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/x-step")
+      .POST(HttpRequest.BodyPublishers.ofFile(model.toPath()))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream();
-    FileInputStream fis = new FileInputStream(model))
+    try
     {
-      fis.transferTo(os);
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    InputStream stream = (responseCode >= 400)
-            ? connection.getErrorStream()
-            : connection.getInputStream();
-
-    String body = "";
-
-    if (stream != null) {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8)) {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse putModel(String jsonPayload, String schema) throws IOException
   {
     String endpoint = baseUrl + "/models/" + schema;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("PUT");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .PUT(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    InputStream stream = (responseCode >= 400)
-            ? connection.getErrorStream()
-            : connection.getInputStream();
-
-    String body = "";
-
-    if (stream != null) {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8)) {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse deleteModel(String schema, String modelId, String version) throws IOException
   {
     String endpoint = baseUrl + "/models/" + schema + "/" + modelId + "/" + version;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("DELETE");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Accept", "application/json");
 
-    int responseCode = connection.getResponseCode();
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Authorization", authorizationHeader)
+      .header("Accept", "application/json")
+      .DELETE()
+      .build();
 
-    String body = "";
-    try (InputStream stream = (responseCode < 500) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
+  public ApiResponse getModelsVersions(String schema, String modelId) throws IOException
+  {
+    String endpoint = baseUrl + "/models/" + schema + "/" + modelId + "/versions";
+
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
+
+    try
+    {
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
+  }
+
+  // Auxiliary class to give formatted response
   public static class ApiResponse
   {
     private final int statusCode;
@@ -160,30 +187,6 @@ public class IfcdbApiClient
     public String getBody() {
       return body;
     }
-  }
-
-  public ApiResponse getModelsVersions(String schema, String modelId) throws IOException
-  {
-    URL url = new URL(baseUrl + "/models/" + schema + "/" + modelId + "/versions");
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-
-    int responseCode =  connection.getResponseCode();
-
-    String body = "";
-    if (responseCode == 200)
-    {
-      try (Scanner scanner = new Scanner(connection.getInputStream(), StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
-    }
-
-    return new ApiResponse(responseCode, body);
   }
 
 }
