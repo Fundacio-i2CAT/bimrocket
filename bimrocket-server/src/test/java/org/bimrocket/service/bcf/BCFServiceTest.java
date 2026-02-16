@@ -39,84 +39,84 @@ public class BCFServiceTest
     configureFor("localhost", 9191);
 
     stubFor(get(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects"))
-             .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody("[ { \"project_id\": \"100\", \"name\": \"Project A\" }, { \"project_id\": \"101\", \"name\": \"Project B\" } ]")));
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withHeader("Content-Type", "application/json")
+      .withBody("[ { \"project_id\": \"100\", \"name\": \"Project A\" }, { \"project_id\": \"101\", \"name\": \"Project B\" } ]")));
 
     stubFor(get(urlPathEqualTo("/bimrocket-server/api/bcf/2.1/projects"))
-            .withQueryParam("$filter", equalTo("project_id eq '100'"))
-            .withQueryParam("$orderBy", equalTo("name asc"))
-            .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody("[ { \"project_id\": \"100\", \"name\": \"Project A\" } ]")));
+      .withQueryParam("$filter", equalTo("project_id eq '100'"))
+      .withQueryParam("$orderBy", equalTo("name asc"))
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withHeader("Content-Type", "application/json")
+      .withBody("[ { \"project_id\": \"100\", \"name\": \"Project A\" } ]")));
 
     stubFor(put(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects/120"))
-            .withHeader("Content-Type", containing("application/json"))
-            .withRequestBody(matchingJsonPath("$.name", equalTo("string")))
-            .withRequestBody(matchingJsonPath("$.project_id", equalTo("string")))
-            .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody("{ \"status\": \"updated\" }")));
+      .withHeader("Content-Type", containing("application/json"))
+      .withRequestBody(matchingJsonPath("$.name", equalTo("string")))
+      .withRequestBody(matchingJsonPath("$.project_id", equalTo("string")))
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withHeader("Content-Type", "application/json")
+      .withBody("{ \"status\": \"updated\" }")));
 
     stubFor(get(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects/100"))
-            .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody("{ \"project_id\": \"100\", \"name\": \"Test Project\" }")));
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withHeader("Content-Type", "application/json")
+      .withBody("{ \"project_id\": \"100\", \"name\": \"Test Project\" }")));
 
     stubFor(get(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects/10"))
-            .willReturn(aResponse()
-            .withStatus(204)
-            .withHeader("Content-Type", "application/json")
-            .withBody("{ \"project_id\": \"10\", \"name\": \"Test Project\" }")));
+      .willReturn(aResponse()
+      .withStatus(204)
+      .withHeader("Content-Type", "application/json")
+      .withBody("{ \"project_id\": \"10\", \"name\": \"Test Project\" }")));
 
     stubFor(delete(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects/100"))
-            .willReturn(aResponse()
-            .withStatus(204))); // No Content
+      .willReturn(aResponse()
+      .withStatus(204))); // No Content
 
     stubFor(get(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects/100/extensions"))
-            .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody("""
-            {
-              "topic_type": [
-              "Incidencia-General-UT",
-              "Incidencia-Aigues",
-              "Incidencia-Residus",
-              "Incidencia-Atmosfera",
-              "Ponencia-ambiental",
-              "Parametres-Finals-Aigues",
-              "Parametres-Finals-Atmosfera",
-              "Parametres-Finals-Residus"
-              ],
-              "topic_status": ["Obert", "Resolt", "Reobert"],
-              "topic_label": [],
-              "snippet_type": [],
-              "priority": [],
-              "user_id_type": [
-              "",
-              "user@domain|mailto:user@domain",
-              "user@domain|mailto:user@doamin"
-              ],
-              "stage": [],
-              "read_roles": ["ADMIN"],
-              "comment_roles": ["ADMIN"],
-              "create_roles": ["ADMIN"],
-              "update_roles": [],
-              "delete_roles": []
-           }
-           """)));
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withHeader("Content-Type", "application/json")
+      .withBody("""
+      {
+         "topic_type": [
+         "Incidencia-General-UT",
+         "Incidencia-Aigues",
+         "Incidencia-Residus",
+         "Incidencia-Atmosfera",
+         "Ponencia-ambiental",
+         "Parametres-Finals-Aigues",
+         "Parametres-Finals-Atmosfera",
+         "Parametres-Finals-Residus"
+         ],
+         "topic_status": ["Obert", "Resolt", "Reobert"],
+         "topic_label": [],
+         "snippet_type": [],
+         "priority": [],
+         "user_id_type": [
+         "",
+         "user@domain|mailto:user@domain",
+         "user@domain|mailto:user@doamin"
+         ],
+         "stage": [],
+         "read_roles": ["ADMIN"],
+         "comment_roles": ["ADMIN"],
+         "create_roles": ["ADMIN"],
+         "update_roles": [],
+         "delete_roles": []
+         }
+      """)));
 
     stubFor(put(urlEqualTo("/bimrocket-server/api/bcf/2.1/projects/100/extensions"))
-           .withHeader("Content-Type", containing("application/json"))
-           .willReturn(aResponse()
-           .withStatus(200)
-           .withHeader("Content-Type", "application/json")
-           .withBody("{ \"status\": \"extensions updated\" }")));
+      .withHeader("Content-Type", containing("application/json"))
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withHeader("Content-Type", "application/json")
+      .withBody("{ \"status\": \"extensions updated\" }")));
   }
 
   @AfterEach
@@ -135,7 +135,6 @@ public class BCFServiceTest
     );
 
     BCFApiClient.ApiResponse response = client.getAllProjects();
-
     assertEquals(200, response.getStatusCode());
     assertTrue(response.getBody().contains("Project A"));
     assertTrue(response.getBody().contains("project_id"));
@@ -152,7 +151,6 @@ public class BCFServiceTest
     );
 
     BCFApiClient.ApiResponse response = client.getAllProjectsWithFilter("project_id eq '100'", "name asc");
-
     assertEquals(200, response.getStatusCode());
     assertTrue(response.getBody().contains("Project A"));
     assertTrue(response.getBody().contains("project_id"));
@@ -163,15 +161,13 @@ public class BCFServiceTest
   public void testUpdateProject() throws Exception
   {
     client = new BCFApiClient(
-            baseURL,
-            username,
-            password
+      baseURL,
+      username,
+      password
     );
 
     String jsonPayload = "{ \"name\": \"string\", \"project_id\": \"string\" }";
-
     BCFApiClient.ApiResponse response = client.updateProject("120", jsonPayload);
-
     assertEquals(200, response.getStatusCode());
     assertTrue(response.getBody().contains("updated"));
   }
@@ -181,13 +177,12 @@ public class BCFServiceTest
   public void testGetProject() throws Exception
   {
     client = new BCFApiClient(
-            baseURL,
-            username,
-            password
+      baseURL,
+      username,
+      password
     );
 
     BCFApiClient.ApiResponse response = client.getProject("100");
-
     assertEquals(200, response.getStatusCode());
     assertTrue(response.getBody().contains("Test Project"));
   }
@@ -197,13 +192,12 @@ public class BCFServiceTest
   public void testGetProjectNotFound() throws Exception
   {
     client = new BCFApiClient(
-            baseURL,
-            username,
-            password
+      baseURL,
+      username,
+      password
     );
 
     BCFApiClient.ApiResponse response = client.getProject("10");
-
     assertEquals(204, response.getStatusCode());
     assertFalse(response.getBody().contains("Test Project"));
   }
@@ -213,13 +207,12 @@ public class BCFServiceTest
   public void testDeleteProject() throws Exception
   {
     client = new BCFApiClient(
-            baseURL,
-            username,
-            password
+      baseURL,
+      username,
+      password
     );
 
     BCFApiClient.ApiResponse response = client.deleteProject("100");
-
     assertEquals(204, response.getStatusCode());
     assertTrue(response.getBody().isEmpty());
   }
@@ -229,13 +222,12 @@ public class BCFServiceTest
   public void testGetProjectExtensions() throws Exception
   {
     client = new BCFApiClient(
-            baseURL,
-            username,
-            password
+      baseURL,
+      username,
+      password
     );
 
     BCFApiClient.ApiResponse response = client.getProjectExtensions("100");
-
     assertEquals(200, response.getStatusCode());
     assertTrue(response.getBody().contains("topic_type"));
   }
@@ -245,9 +237,9 @@ public class BCFServiceTest
   public void testUpdateProjectExtensions() throws Exception
   {
     client = new BCFApiClient(
-            baseURL,
-            username,
-            password
+      baseURL,
+      username,
+      password
     );
 
     String jsonPayload = """
@@ -272,10 +264,8 @@ public class BCFServiceTest
     """;
 
     BCFApiClient.ApiResponse response = client.updateProjectExtensions("100", jsonPayload);
-
     assertEquals(200, response.getStatusCode());
     assertTrue(response.getBody().contains("extensions updated"));
   }
-
 
 }

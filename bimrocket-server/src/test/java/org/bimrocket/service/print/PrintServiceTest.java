@@ -32,7 +32,7 @@ class PrintServiceTest
 
     // Mock of base directory and configuration values
     when(config.getOptionalValue("services.print.directory", String.class))
-            .thenReturn(java.util.Optional.of(System.getProperty("java.io.tmpdir")));
+      .thenReturn(java.util.Optional.of(System.getProperty("java.io.tmpdir")));
     when(config.getValue("services.print.title", String.class)).thenReturn("Default Title");
     when(config.getValue("services.print.creator", String.class)).thenReturn("Test Creator");
 
@@ -66,13 +66,13 @@ class PrintServiceTest
     assertNotNull(printId);
 
     File file = new File(System.getProperty("java.io.tmpdir"), "print-" + printId + ".pdf");
-    assertTrue(file.exists(), "El fitxer PDF hauria de ser creat");
-    assertTrue(file.length() > 0, "El fitxer PDF no hauria d'estar buit");
+    assertTrue(file.exists(), "PDF file should be created");
+    assertTrue(file.length() > 0, "PDF file must not be empty");
 
     // check the copy
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     printService.copy(printId, baos);
-    assertTrue(baos.size() > 0, "El stream hauria de tenir dades");
+    assertTrue(baos.size() > 0, "Stream must have data");
 
     // Clean file after test
     file.delete();

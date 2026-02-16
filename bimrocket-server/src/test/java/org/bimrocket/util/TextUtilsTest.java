@@ -15,29 +15,32 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
-public class TextUtilsTest {
+public class TextUtilsTest
+{
 
-    @Test
-    public void testGetISODate_WithoutParameters() {
-        // Dado que la fecha actual puede variar, creamos una fecha con un formato conocido para comparación
-        String result = TextUtils.getISODate();
+  @Test
+  public void testGetISODate_WithoutParameters()
+  {
+    // Because current data can change, create one date with a known formato to be comnpared
+    String result = TextUtils.getISODate();
 
-        // Obtención de la fecha actual
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String expected = df.format(new Date());
+    // Get current date
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    String expected = df.format(new Date());
 
-        assertEquals(expected, result, "El formato de la fecha debe ser correcto.");
-    }
+    assertEquals(expected, result, "Datre format must be correct.");
+  }
 
-    @Test
-    public void testGetISODate_WithDateParameter() {
-        // Usamos una fecha conocida para asegurar que la conversión sea la esperada
-        Date date = new Date(1000000000000L); // Un ejemplo de fecha en milisegundos
-        String result = TextUtils.getISODate(date);
+  @Test
+  public void testGetISODate_WithDateParameter()
+  {
+    // Use a known date to ensure that conversion is correct
+    Date date = new Date(1000000000000L); // Date example in miliseconds
+    String result = TextUtils.getISODate(date);
 
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String expected = df.format(date);
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    String expected = df.format(date);
 
-        assertEquals(expected, result, "El formato de la fecha debe ser correcto.");
-    }
+    assertEquals(expected, result, "Date formar must be correct.");
+  }
 }

@@ -25,7 +25,7 @@ public class TaskApiClient
   public ApiResponse getTaskExecutions(String filter, String orderBy) throws IOException, InterruptedException
   {
     String queryParams = "?$filter=" + URLEncoder.encode(filter, StandardCharsets.UTF_8)
-            + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
+      + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
     String endpoint = baseUrl + "/executions" + queryParams;
 
     HttpRequest request = HttpRequest.newBuilder()
@@ -36,7 +36,6 @@ public class TaskApiClient
       .build();
 
     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
     return new ApiResponse(response.statusCode(), response.body());
   }
 
@@ -55,15 +54,11 @@ public class TaskApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
       int responseCode = response.statusCode();
-
       String body = responseCode < 204 && response.body() != null
         ? response.body()
         : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -87,15 +82,11 @@ public class TaskApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
       int responseCode = response.statusCode();
-
       String body = (responseCode == 200 || responseCode == 201)
         ? response.body()
         : response.body();
-
       return new ApiResponse(responseCode, body != null ? body : "");
-
     }
     catch (InterruptedException e)
     {
@@ -118,13 +109,9 @@ public class TaskApiClient
     try
     {
       HttpResponse<String> response =  client.send(request, HttpResponse.BodyHandlers.ofString());
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -148,13 +135,9 @@ public class TaskApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -177,13 +160,9 @@ public class TaskApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -206,13 +185,9 @@ public class TaskApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {

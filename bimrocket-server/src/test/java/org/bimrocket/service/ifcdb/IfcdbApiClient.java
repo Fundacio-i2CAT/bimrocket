@@ -35,13 +35,9 @@ public class IfcdbApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -65,13 +61,9 @@ public class IfcdbApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -95,13 +87,9 @@ public class IfcdbApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -124,13 +112,9 @@ public class IfcdbApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -153,13 +137,9 @@ public class IfcdbApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {

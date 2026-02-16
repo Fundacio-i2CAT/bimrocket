@@ -18,57 +18,63 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ExpiringCacheTest {
+public class ExpiringCacheTest
+{
 
-    private ExpiringCache<String> cache;
+  private ExpiringCache<String> cache;
 
-    @BeforeEach
-    public void setUp() {
-        // Inicializamos la caché con un tiempo de expiración de 1 segundo (1000ms)
-        cache = new ExpiringCache<>(1000);
-    }
+  @BeforeEach
+  public void setUp()
+  {
+    // Initialize caché with a 1 second of expiration time (1000ms)
+    cache = new ExpiringCache<>(1000);
+  }
 
-    @Test
-    public void testPutAndGet() {
-        cache.put("key1", "value1");
-        String value = cache.get("key1");
+  @Test
+  public void testPutAndGet()
+  {
+    cache.put("key1", "value1");
+    String value = cache.get("key1");
 
-        assertEquals("value1", value, "El valor almacenado debe ser 'value1'");
-    }
+    assertEquals("value1", value, "Stored value must be 'value1'");
+  }
 
-    @Test
-    public void testGetAfterExpiry() throws InterruptedException {
-        cache.put("key2", "value2");
+  @Test
+  public void testGetAfterExpiry() throws InterruptedException
+  {
+    cache.put("key2", "value2");
 
-        // Esperar más de 1 segundo para que expire el cache
-        TimeUnit.MILLISECONDS.sleep(1100);
-
-        String value = cache.get("key2");
-
-        assertNull(value, "El valor debe ser nulo ya que el elemento ha expirado");
-    }
-
-    @Test
-    public void testRemove() {
-        cache.put("key3", "value3");
-        cache.remove("key3");
-
-        String value = cache.get("key3");
-
-        assertNull(value, "El valor debe ser nulo después de eliminarlo");
-    }
-
-    @Test
-public void testPurgeExpiredItems() throws Exception {
-    cache.put("key4", "value4");
-
-    // Esperar a que el item expire
+    // Wait more than 1 second until cache expiration
     TimeUnit.MILLISECONDS.sleep(1100);
 
-    // Insertar otro valor para ver si el purgado no afecta a otros elementos
+    String value = cache.get("key2");
+
+    assertNull(value, "Value must be null because element has expired");
+  }
+
+  @Test
+  public void testRemove()
+  {
+    cache.put("key3", "value3");
+    cache.remove("key3");
+
+    String value = cache.get("key3");
+
+    assertNull(value, "Value must be null after to be removed");
+  }
+
+  @Test
+  public void testPurgeExpiredItems() throws Exception
+  {
+    cache.put("key4", "value4");
+
+    // Wait until item expires
+    TimeUnit.MILLISECONDS.sleep(1100);
+
+    // Insert another value to see if the purged value afect other elements
     cache.put("key5", "value5");
 
-    // Usar reflexión para invocar el método 'purge()' aunque es privado
+    // Use reflection to call 'purge()' method even is private
     Method purgeMethod = ExpiringCache.class.getDeclaredMethod("purge");
     purgeMethod.setAccessible(true);
     purgeMethod.invoke(cache);
@@ -76,25 +82,27 @@ public void testPurgeExpiredItems() throws Exception {
     String value4 = cache.get("key4");
     String value5 = cache.get("key5");
 
-    assertNull(value4, "El valor 'key4' debe haber expirado y ser purgado");
-    assertEquals("value5", value5, "El valor 'key5' debe seguir estando presente");
-}
+    assertNull(value4, "Value 'key4' must be expired and purged");
+    assertEquals("value5", value5, "Value 'key5' must persist");
+  }
 
-    @Test
-    public void testToString() {
-        cache.put("key6", "value6");
+  @Test
+  public void testToString()
+  {
+    cache.put("key6", "value6");
 
-        String cacheString = cache.toString();
+    String cacheString = cache.toString();
 
-        assertTrue(cacheString.contains("key6"), "La cadena debe contener la clave 'key6'");
-    }
+    assertTrue(cacheString.contains("key6"), "Chain must contain key 'key6'");
+  }
 
-    @Test
-    public void testMultiplePutAndGet() {
-        cache.put("key7", "value7");
-        cache.put("key8", "value8");
+  @Test
+  public void testMultiplePutAndGet()
+  {
+    cache.put("key7", "value7");
+    cache.put("key8", "value8");
 
-        assertEquals("value7", cache.get("key7"), "El valor de 'key7' debe ser 'value7'");
-        assertEquals("value8", cache.get("key8"), "El valor de 'key8' debe ser 'value8'");
-    }
+    assertEquals("value7", cache.get("key7"), "Value 'key7' must be 'value7'");
+    assertEquals("value8", cache.get("key8"), "Value 'key8' must be 'value8'");
+  }
 }

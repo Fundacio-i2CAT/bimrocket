@@ -17,7 +17,7 @@ public class ACLXMLDeserializerTest
   {
     Object[] arrayResult = null;
 
-    // Privilegis per rol ADMIN han de ser READ-ACL i WRITE-ACL
+    // Rol ADMIN privileges must be READ-ACL and WRITE-ACL
     try
     {
       ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
@@ -29,9 +29,9 @@ public class ACLXMLDeserializerTest
     }
 
     assertTrue(arrayResult.length == 2 &&
-            findStringInArray(arrayResult, Privilege.READ_ACL.toString()) &&
-            findStringInArray(arrayResult, Privilege.WRITE_ACL.toString())
-            );
+      findStringInArray(arrayResult, Privilege.READ_ACL.toString()) &&
+      findStringInArray(arrayResult, Privilege.WRITE_ACL.toString())
+      );
   }
 
   @Test
@@ -39,11 +39,12 @@ public class ACLXMLDeserializerTest
   {
     Object[] listRolesIdPrivileges = null;
 
-    // PROJECTISTA es l'unic amb privilegis de WRITE
+    // PROJECTISTA is the only one with WRITE privileges
     try {
       ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
-    } catch (IOException e)
+    }
+    catch (IOException e)
     {
       throw new RuntimeException(e);
     }
@@ -56,11 +57,12 @@ public class ACLXMLDeserializerTest
   {
     Object[] listRolesIdPrivileges = null;
 
-    // VECTOR-UT-OGE no te privilegis de WRITE
+    // VECTOR-UT-OGE have not WRITE privileges
     try {
       ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       listRolesIdPrivileges = acl.getRoleIdsForPrivilege(Privilege.WRITE).toArray();
-    } catch (IOException e)
+    }
+    catch (IOException e)
     {
       throw new RuntimeException(e);
     }
@@ -73,11 +75,12 @@ public class ACLXMLDeserializerTest
   {
     Object[] listRolesId = null;
 
-    // UNKNOWN Role no existeix
+    // UNKNOWN Role do not no exist
     try {
       ACL acl = ACLXMLDeserializer.deserialize(returnXMLSource(), "user");
       listRolesId = acl.getRoleIds().toArray();
-    } catch (IOException e)
+    }
+    catch (IOException e)
     {
       throw new RuntimeException(e);
     }
@@ -90,7 +93,8 @@ public class ACLXMLDeserializerTest
     boolean foundValue = false;
     for (Object o : listValues)
     {
-      if (value.equals(o.toString())) {
+      if (value.equals(o.toString()))
+      {
         foundValue = true;
         break;
       }
@@ -100,43 +104,43 @@ public class ACLXMLDeserializerTest
 
   String returnXMLSource() {
     return """
-            <?xml version="1.0" encoding="utf-8"?>
-            <D:acl xmlns:D="DAV:">
-                        
-            <!-- Access for PROJECTISTA -->
-            <D:ace>
-                <D:principal>
-                    <D:href>PROJECTISTA</D:href>
-                </D:principal>
-                <D:grant>
-                    <D:privilege><D:read/></D:privilege>
-                    <D:privilege><D:write/></D:privilege>
-                </D:grant>
-            </D:ace>
-            
-            <!-- Access for VECTOR-UT-OGE -->
-            <D:ace>
-                <D:principal>
-                    <D:href>VECTOR-UT-OGE</D:href>
-                </D:principal>
-                <D:grant>
-                    <D:privilege><D:read/></D:privilege>
-                </D:grant>
-            </D:ace>
-                        
-            <!-- Access for ADMIN -->
-            <D:ace>
-                <D:principal>
-                    <D:href>ADMIN</D:href>
-                </D:principal>
-                <D:grant>
-                    <D:privilege><D:read-acl/></D:privilege>
-                    <D:privilege><D:write-acl/></D:privilege>
-                </D:grant>
-            </D:ace>
-            
-            </D:acl>
-            """;
+    <?xml version="1.0" encoding="utf-8"?>
+    <D:acl xmlns:D="DAV:">
+                
+    <!-- Access for PROJECTISTA -->
+    <D:ace>
+        <D:principal>
+            <D:href>PROJECTISTA</D:href>
+        </D:principal>
+        <D:grant>
+            <D:privilege><D:read/></D:privilege>
+            <D:privilege><D:write/></D:privilege>
+        </D:grant>
+    </D:ace>
+    
+    <!-- Access for VECTOR-UT-OGE -->
+    <D:ace>
+        <D:principal>
+            <D:href>VECTOR-UT-OGE</D:href>
+        </D:principal>
+        <D:grant>
+            <D:privilege><D:read/></D:privilege>
+        </D:grant>
+    </D:ace>
+                
+    <!-- Access for ADMIN -->
+    <D:ace>
+        <D:principal>
+            <D:href>ADMIN</D:href>
+        </D:principal>
+        <D:grant>
+            <D:privilege><D:read-acl/></D:privilege>
+            <D:privilege><D:write-acl/></D:privilege>
+        </D:grant>
+    </D:ace>
+    
+    </D:acl>
+    """;
   }
 
 }

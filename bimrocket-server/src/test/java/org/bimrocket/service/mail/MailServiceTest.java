@@ -19,7 +19,6 @@ class MailServiceTest
   {
     config = mock(Config.class);
     mailService = new MailService();
-
     Field field = MailService.class.getDeclaredField("config");
     field.setAccessible(true);
     field.set(mailService, config);
@@ -29,8 +28,7 @@ class MailServiceTest
   void testIsEnabled_true()
   {
     when(config.getValue("services.mail.enabled", Boolean.class))
-             .thenReturn(true);
-
+      .thenReturn(true);
     assertTrue(mailService.isEnabled());
   }
 
@@ -38,8 +36,7 @@ class MailServiceTest
   void testIsEnabled_false()
   {
     when(config.getValue("services.mail.enabled", Boolean.class))
-            .thenReturn(false);
-
+      .thenReturn(false);
     assertFalse(mailService.isEnabled());
   }
 
@@ -47,16 +44,15 @@ class MailServiceTest
   void testSendMail_serviceDisabled_throwsException()
   {
     when(config.getValue("services.mail.enabled", Boolean.class))
-           .thenReturn(false);
-
+      .thenReturn(false);
     assertThrows(NullPointerException.class, () ->
-            mailService.sendMail(
-                    "from@test.com",
-                    "to@test.com",
-                    "Subject",
-                    "Body",
-                    "text/plain"
-            )
+      mailService.sendMail(
+              "from@test.com",
+              "to@test.com",
+              "Subject",
+              "Body",
+              "text/plain"
+      )
     );
   }
 
@@ -64,19 +60,17 @@ class MailServiceTest
   void testSendMail_missingRequiredConfig_throwsException()
   {
     when(config.getValue("services.mail.enabled", Boolean.class))
-           .thenReturn(true);
-
+      .thenReturn(true);
     when(config.getValue("services.mail.host", String.class))
-           .thenThrow(new IllegalStateException("Missing config"));
-
+      .thenThrow(new IllegalStateException("Missing config"));
     assertThrows(IllegalStateException.class, () ->
-            mailService.sendMail(
-                    "from@test.com",
-                    "to@test.com",
-                    "Subject",
-                    "Body",
-                    "text/plain"
-            )
+      mailService.sendMail(
+              "from@test.com",
+              "to@test.com",
+              "Subject",
+              "Body",
+              "text/plain"
+      )
     );
   }
 }

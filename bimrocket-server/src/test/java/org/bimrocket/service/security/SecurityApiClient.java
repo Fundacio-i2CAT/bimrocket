@@ -36,13 +36,10 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = responseCode == 200 && response.body() != null
         ? response.body()
         : "";
-
       return new ApiResponse(responseCode, body);
 
     }
@@ -56,8 +53,7 @@ public class SecurityApiClient
   public ApiResponse getRoles(String filter, String orderBy) throws IOException
   {
     String queryParams = "?$filter=" + URLEncoder.encode(filter, StandardCharsets.UTF_8)
-            + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
-
+      + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
     String endpoint = baseUrl + "/roles" + queryParams;
 
     HttpRequest request = HttpRequest.newBuilder()
@@ -70,15 +66,11 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = responseCode < 400 && response.body() != null
         ? response.body()
         : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -102,13 +94,10 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = responseCode < 204 && response.body() != null
         ? response.body()
         : "";
-
       return new ApiResponse(responseCode, body);
 
     }
@@ -133,15 +122,11 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = responseCode < 500 && response.body() != null
         ? response.body()
         : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -165,15 +150,11 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = responseCode < 400 && response.body() != null
         ? response.body()
         : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -197,13 +178,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -226,13 +203,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -258,13 +231,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -287,13 +256,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -317,13 +282,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -347,13 +308,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -377,13 +334,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {
@@ -407,13 +360,9 @@ public class SecurityApiClient
     try
     {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
       int responseCode = response.statusCode();
-
       String body = response.body() != null ? response.body() : "";
-
       return new ApiResponse(responseCode, body);
-
     }
     catch (InterruptedException e)
     {

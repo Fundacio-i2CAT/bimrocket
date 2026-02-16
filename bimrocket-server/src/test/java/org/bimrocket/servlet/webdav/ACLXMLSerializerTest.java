@@ -12,8 +12,7 @@ public class ACLXMLSerializerTest
   @Test
   public void testSerialize_privileges_admin()
   {
-    // ADMIN ha de tenir privilegis de READ_ACL i WRITE_ACL
-
+    // ADMIN must have READ_ACL and WRITE_ACL privileges
     MutableACL acl = new MutableACL();
     acl.grant("ADMIN", Privilege.READ_ACL);
     acl.grant("ADMIN", Privilege.WRITE_ACL);
@@ -22,15 +21,14 @@ public class ACLXMLSerializerTest
     String result = ACLXMLSerializer.serialize(acl);
 
     assertTrue((result.contains("read-acl") && result.contains("ADMIN")) ||
-                     (result.contains("write-acl") && result.contains("ADMIN"))
+      (result.contains("write-acl") && result.contains("ADMIN"))
     );
   }
 
   @Test
   public void testSerialize_error_privileges_admin()
   {
-    // ADMIN ha de tenir privilegis de READ_ACL i WRITE_ACL pero no WRITE
-
+    // ADMIN must have READ_ACL and WRITE_ACL privileges but not WRITE
     MutableACL acl = new MutableACL();
     acl.grant("ADMIN", Privilege.READ_ACL);
     acl.grant("ADMIN", Privilege.WRITE_ACL);
@@ -46,8 +44,7 @@ public class ACLXMLSerializerTest
   @Test
   public void testSerialize_error_privileges_projectista()
   {
-    // PROJECTISTA ha de tenir privilegis de READ i WRITE
-
+    // PROJECTISTA must have READ and WRITE privileges
     MutableACL acl = new MutableACL();
     acl.grant("ADMIN", Privilege.READ_ACL);
     acl.grant("ADMIN", Privilege.WRITE_ACL);
@@ -62,8 +59,7 @@ public class ACLXMLSerializerTest
   @Test
   public void testSerialize_unknown_role()
   {
-    // Role ha de ser ADMIN, PROJECTISTA o VECTOR-UT-OGE
-
+    // Role must be ADMIN, PROJECTISTA or VECTOR-UT-OGE
     MutableACL acl = new MutableACL();
     acl.grant("UNKNOWN", Privilege.READ_ACL);
     acl.grant("UNKNOWN", Privilege.WRITE_ACL);
@@ -79,8 +75,7 @@ public class ACLXMLSerializerTest
   @Test
   public void testSerialize_role_vector_not_found()
   {
-    // Role ha de ser ADMIN, PROJECTISTA o VECTOR-UT-OGE
-
+    // Role must be ADMIN, PROJECTISTA or VECTOR-UT-OGE
     MutableACL acl = new MutableACL();
     acl.grant("UNKNOWN", Privilege.READ_ACL);
     acl.grant("UNKNOWN", Privilege.WRITE_ACL);

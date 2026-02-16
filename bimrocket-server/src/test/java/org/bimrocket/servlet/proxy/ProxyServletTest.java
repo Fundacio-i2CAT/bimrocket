@@ -44,10 +44,8 @@ public class ProxyServletTest
   void setup() throws IOException
   {
     MockitoAnnotations.openMocks(this);
-
     responseBody = new StringWriter();
     writer = new PrintWriter(responseBody);
-
     when(response.getWriter()).thenReturn(writer);
   }
 
@@ -56,7 +54,6 @@ public class ProxyServletTest
   void testServiceOk() throws Exception
   {
     servlet.service(request, response);
-
     verify(proxyService, times(1)).service(request, response);
     verify(response, never()).setStatus(anyInt());
   }
@@ -67,9 +64,7 @@ public class ProxyServletTest
   {
     doThrow(new NotAuthorizedException("Unauthorized"))
             .when(proxyService).service(request, response);
-
     servlet.service(request, response);
-
     verify(response).setStatus(401);
     verify(response).setContentType("text/plain");
     assertEquals("Unauthorized",  responseBody.toString().trim());
@@ -81,9 +76,7 @@ public class ProxyServletTest
   {
     doThrow(new AccessDeniedException("Forbidden"))
             .when(proxyService).service(request, response);
-
     servlet.service(request, response);
-
     verify(response).setStatus(403);
     verify(response).setContentType("text/plain");
     assertEquals("Forbidden", responseBody.toString().trim());
@@ -94,11 +87,8 @@ public class ProxyServletTest
   void testServiceGenericException() throws Exception
   {
     Exception ex = new RuntimeException("Generic Exception");
-
     doThrow(ex).when(proxyService).service(request, response);
-
     servlet.service(request, response);
-
     verify(response).setStatus(500);
     verify(response).setContentType("text/plain");
     assertEquals(ex.toString(), responseBody.toString().trim());

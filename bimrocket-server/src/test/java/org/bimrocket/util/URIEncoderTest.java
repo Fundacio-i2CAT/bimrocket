@@ -7,58 +7,63 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-public class URIEncoderTest {
+public class URIEncoderTest
+{
 
-    @Test
-    public void testEncodeWithDefaultCharset() {
-        // Entrada y salida esperada
-        String input = "https://example.com/test?name=John Doe&age=25";
-        String expectedOutput = "https://example.com/test?name=John%20Doe&age=25";
+  @Test
+  public void testEncodeWithDefaultCharset()
+  {
+    // Input and output expected
+    String input = "https://example.com/test?name=John Doe&age=25";
+    String expectedOutput = "https://example.com/test?name=John%20Doe&age=25";
 
-        // Ejecutar el método encode
-        String result = URIEncoder.encode(input);
+    // Execute encode method
+    String result = URIEncoder.encode(input);
 
-        // Verificar que la salida sea la esperada
-        assertEquals(expectedOutput, result);
-    }
+    // Verify that is the expected output
+    assertEquals(expectedOutput, result);
+  }
 
-    @Test
-    public void testEncodeWithCustomCharset() {
-        // Entrada y salida esperada
-        String input = "https://example.com/test?name=John Doe&age=25";
-        String expectedOutput = "https://example.com/test?name=John%20Doe&age=25";
+  @Test
+  public void testEncodeWithCustomCharset()
+  {
+    // Entrada y salida esperada
+    String input = "https://example.com/test?name=John Doe&age=25";
+    String expectedOutput = "https://example.com/test?name=John%20Doe&age=25";
 
-        // Ejecutar el método encode con un charset diferente
-        String result = URIEncoder.encode(input, "UTF-8");
+    // Execute encode method with a diferent charset
+    String result = URIEncoder.encode(input, "UTF-8");
 
-        // Verificar que la salida sea la esperada
-        assertEquals(expectedOutput, result);
-    }
+    // Verify that is the expected output
+    assertEquals(expectedOutput, result);
+  }
 
-    @Test
-    public void testEncodeWithSpecialCharacters() {
-        // Entrada con caracteres especiales
-        String input = "https://example.com/test?param=hello world!&code=123/456";
-        String expectedOutput = "https://example.com/test?param=hello%20world!&code=123/456";
+  @Test
+  public void testEncodeWithSpecialCharacters()
+  {
+    // Input with special characters
+    String input = "https://example.com/test?param=hello world!&code=123/456";
+    String expectedOutput = "https://example.com/test?param=hello%20world!&code=123/456";
 
-        // Ejecutar el método encode
-        String result = URIEncoder.encode(input);
+    // Execute encode method
+    String result = URIEncoder.encode(input);
 
-        // Verificar que la salida sea la esperada
-        assertEquals(expectedOutput, result);
-    }
+    // Verify that is the expected output
+    assertEquals(expectedOutput, result);
+  }
 
-   @Test
-    public void testEncodeWithUnsupportedCharset() {
-        // Entrada con un charset no soportado
-        String input = "https://example.com";
+  @Test
+  public void testEncodeWithUnsupportedCharset()
+  {
+    // Input with a supported charset
+    String input = "https://example.com";
         
-        // Verificar que se lanza RuntimeException y la causa es UnsupportedEncodingException
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            URIEncoder.encode(input, "INVALID_CHARSET");
-        });
+    // Verify we are throwing RuntimeException and the reason is UnsupportedEncodingException
+    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+      URIEncoder.encode(input, "INVALID_CHARSET");
+    });
         
-        // Verificar que la causa es UnsupportedEncodingException
-        assertTrue(exception.getCause() instanceof UnsupportedEncodingException);
-    }
+    // Verify the reason is UnsupportedEncodingException
+    assertTrue(exception.getCause() instanceof UnsupportedEncodingException);
+  }
 }
