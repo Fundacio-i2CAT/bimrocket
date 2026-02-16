@@ -6,6 +6,7 @@
 
 import { Controller } from "./Controller.js";
 import { ObjectUtils } from "../utils/ObjectUtils.js";
+import { RateLimiter } from "../utils/RateLimiter.js";
 import { MapView, MapProvider, LODFrustum, LODRaycast, UnitsUtils,
          OpenStreetMapsProvider, GoogleMapsProvider, BingMapsProvider,
          MapBoxProvider, HereMapsProvider, MapTilerProvider,
@@ -39,6 +40,7 @@ class MapViewController extends Controller
     this.heightProvider = "";
     this.utmZoneNumber = 0; // 0: web mercator
     this.utmZoneLetter = "";
+    this.maxRequestsPerSecond = 20;
 
     this._mapView = null;
     this._onNodeChanged = this.onNodeChanged.bind(this);
@@ -48,6 +50,7 @@ class MapViewController extends Controller
   onStart()
   {
     this.application.addEventListener("scene", this._onNodeChanged);
+    this.startRateLimiter();
     this.updateMap();
   }
 
@@ -55,6 +58,7 @@ class MapViewController extends Controller
   {
     this.application.removeEventListener("scene", this._onNodeChanged);
     this.removeMap();
+    this.stopRateLimiter();
   }
 
   onNodeChanged(event)
@@ -133,6 +137,27 @@ class MapViewController extends Controller
       this.application.removeObject(this._mapView);
       this._mapView = null;
       this._lastParameters = null;
+    }
+  }
+
+  startRateLimiter()
+  {
+    if (!this._rateLimiter)
+    {
+      this._rateLimiter = new RateLimiter(this.maxRequestsPerSecond);
+    }
+    else
+    {
+      this._rateLimiter.maxPerSecond = this.maxRequestsPerSecond;
+    }
+    this._rateLimiter.start();
+  }
+
+  stopRateLimiter()
+  {
+    if (this._rateLimiter)
+    {
+      this._rateLimiter.stop();
     }
   }
 
@@ -262,17 +287,15 @@ class ControlMapProvider extends MapProvider
 
   fetchTile(zoom, x, y)
   {
-    return new Promise((resolve, reject) =>
-    {
-      const promise = this.provider.fetchTile(zoom, x, y);
-      promise
-        .then(result => {
-           resolve(result);
-           // repaint the scene to show the fetched tile
-           this.controller.application.repaint();
-         })
-        .catch(error => reject(error));
-    });
+    return this.controller._rateLimiter.schedule(() =>
+      this.provider.fetchTile(zoom, x, y)
+        .then(result =>
+        {
+          // repaint the scene to show the fetched tile
+          this.controller.application.repaint();
+          return result;
+        })
+    );
   }
 
   getMetaData()
