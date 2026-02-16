@@ -1,18 +1,19 @@
 package org.bimrocket.service.task;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
-import java.util.Scanner;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class TaskApiClient
 {
   private final String baseUrl;
   private final String authorizationHeader;
+  private final HttpClient client = HttpClient.newHttpClient();
 
   public TaskApiClient(String baseUrl, String username, String password)
   {
@@ -21,169 +22,206 @@ public class TaskApiClient
     this.authorizationHeader = "Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
   }
 
-  public ApiResponse getTaskExecutions(String filter, String orderBy) throws IOException
+  public ApiResponse getTaskExecutions(String filter, String orderBy) throws IOException, InterruptedException
   {
     String queryParams = "?$filter=" + URLEncoder.encode(filter, StandardCharsets.UTF_8)
             + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
     String endpoint = baseUrl + "/executions" + queryParams;
 
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode = connection.getResponseCode();
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-    String body = "";
-    try (InputStream stream = (responseCode < 400) ? connection.getInputStream() : connection.getErrorStream())
-    {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
-
-    return new ApiResponse(responseCode, body);
+    return new ApiResponse(response.statusCode(), response.body());
   }
 
   public ApiResponse getTaskExecutionById(String executionId, long waitMillis) throws IOException
   {
     String endpoint = baseUrl + "/executions/" + executionId + "?waitMillis=" + waitMillis;
 
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .timeout(Duration.ofMillis(waitMillis))
+      .build();
 
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    try (InputStream stream = (responseCode < 204) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = responseCode < 204 && response.body() != null
+        ? response.body()
+        : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse executeTask(String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/executions";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("PUT");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .PUT(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    // Body for PUT
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes());
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+      int responseCode = response.statusCode();
+
+      String body = (responseCode == 200 || responseCode == 201)
+        ? response.body()
+        : response.body();
+
+      return new ApiResponse(responseCode, body != null ? body : "");
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream;
-    if (responseCode == 200 || responseCode == 201)
+    catch (InterruptedException e)
     {
-      stream = connection.getInputStream();
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-    else
-    {
-      stream = connection.getErrorStream();
-    }
-
-    if (stream != null)
-    {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
-    }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse deleteTaskExecution(String executionId) throws IOException
   {
     String endpoint = baseUrl + "/executions/" + executionId;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("DELETE");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Accept", "application/json");
 
-    int responseCode = connection.getResponseCode();
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Authorization", authorizationHeader)
+      .header("Accept", "application/json")
+      .DELETE()
+      .build();
 
-    String body = "";
-    try (InputStream stream = (responseCode < 500) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response =  client.send(request, HttpResponse.BodyHandlers.ofString());
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse putTaskData(String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/data";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("PUT");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .PUT(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
+    catch (InterruptedException e)
     {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
+  public ApiResponse getTaskDataById(String dataId) throws IOException
+  {
+    String endpoint = baseUrl + "/data/" + dataId;
+
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
+
+    try
+    {
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
+  }
+
+  public ApiResponse deleteTaskDataById(String dataId) throws IOException
+  {
+    String endpoint = baseUrl + "/data/" + dataId;
+
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .DELETE()
+      .build();
+
+    try
+    {
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
+  }
+
+  // Auxiliary class to give formatted response
   public static class ApiResponse
   {
     private final int statusCode;
@@ -196,63 +234,11 @@ public class TaskApiClient
     }
 
     public int getStatusCode() {
-            return statusCode;
-        }
+      return statusCode;
+    }
 
     public String getBody() {
-            return body;
-        }
-  }
-
-  public ApiResponse getTaskDataById(String dataId) throws IOException
-  {
-    String endpoint = baseUrl + "/data/" + dataId;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 204 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
-    {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      return body;
     }
-
-    return new ApiResponse(responseCode, body);
-  }
-
-  public ApiResponse deleteTaskDataById(String dataId) throws IOException
-  {
-    String endpoint = baseUrl + "/data/" + dataId;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-    connection.setRequestMethod("DELETE");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
-    {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
-    }
-
-    return new ApiResponse(responseCode, body);
   }
 }

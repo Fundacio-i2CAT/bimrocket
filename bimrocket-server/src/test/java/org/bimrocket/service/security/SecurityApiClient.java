@@ -4,16 +4,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Scanner;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 
 public class SecurityApiClient
 {
   private final String baseUrl;
   private final String authorizationHeader;
+  private final HttpClient client = HttpClient.newHttpClient();
 
   public SecurityApiClient(String baseUrl, String username, String password)
   {
@@ -24,392 +31,405 @@ public class SecurityApiClient
 
   public ApiResponse getAllRoles() throws IOException
   {
-    URL url = new URL(baseUrl + "/roles");
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    String endpoint = baseUrl + "/roles";
 
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode =  connection.getResponseCode();
-
-    String body = "";
-    if (responseCode == 200)
+    try
     {
-      try (Scanner scanner = new Scanner(connection.getInputStream(), StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = responseCode == 200 && response.body() != null
+        ? response.body()
+        : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse getRoles(String filter, String orderBy) throws IOException
   {
     String queryParams = "?$filter=" + URLEncoder.encode(filter, StandardCharsets.UTF_8)
             + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
+
     String endpoint = baseUrl + "/roles" + queryParams;
 
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    try (InputStream stream = (responseCode < 400) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = responseCode < 400 && response.body() != null
+        ? response.body()
+        : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
+
 
   public ApiResponse getRoleById(String roleId) throws IOException
   {
     String endpoint = baseUrl + "/roles/" + roleId;
 
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    try (InputStream stream = (responseCode < 204) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = responseCode < 204 && response.body() != null
+        ? response.body()
+        : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse deleteRole(String roleId) throws IOException
   {
     String endpoint = baseUrl + "/roles/" + roleId;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("DELETE");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Accept", "application/json");
 
-    int responseCode = connection.getResponseCode();
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Authorization", authorizationHeader)
+      .header("Accept", "application/json")
+      .DELETE()
+      .build();
 
-    String body = "";
-    try (InputStream stream = (responseCode < 500) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = responseCode < 500 && response.body() != null
+        ? response.body()
+        : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse postRole(String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/roles";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("POST");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = responseCode < 400 && response.body() != null
+        ? response.body()
+        : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
+    catch (InterruptedException e)
     {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse putRole(String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/roles";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("PUT");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .PUT(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
+    catch (InterruptedException e)
     {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse getAllUsers() throws IOException
   {
-    URL url = new URL(baseUrl + "/users");
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    String endpoint = baseUrl + "/users";
 
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode =  connection.getResponseCode();
-
-    String body = "";
-    if (responseCode == 200)
+    try
     {
-      try (Scanner scanner = new Scanner(connection.getInputStream(), StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse getUsers(String filter, String orderBy) throws IOException
   {
     String queryParams = "?$filter=" + URLEncoder.encode(filter, StandardCharsets.UTF_8)
             + "&$orderBy=" + URLEncoder.encode(orderBy, StandardCharsets.UTF_8);
+
     String endpoint = baseUrl + "/users" + queryParams;
 
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    try (InputStream stream = (responseCode < 400) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
 
       return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse getUserById(String userId) throws IOException
   {
     String endpoint = baseUrl + "/users/" + userId;
 
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .GET()
+      .build();
 
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    try (InputStream stream = (responseCode < 204) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse deleteUser(String userId) throws IOException
   {
+
     String endpoint = baseUrl + "/users/" + userId;
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("DELETE");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Accept", "application/json");
 
-    int responseCode = connection.getResponseCode();
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Authorization", authorizationHeader)
+      .header("Accept", "application/json")
+      .DELETE()
+      .build();
 
-    String body = "";
-    try (InputStream stream = (responseCode < 500) ? connection.getInputStream() : connection.getErrorStream())
+    try
     {
-      if (stream != null)
-      {
-        try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-        {
-          scanner.useDelimiter("\\A");
-          body = scanner.hasNext() ? scanner.next() : "";
-        }
-      }
-    }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-    return new ApiResponse(responseCode, body);
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
+    }
+    catch (InterruptedException e)
+    {
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
+    }
   }
 
   public ApiResponse postUser(String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/users";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("POST");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
+    catch (InterruptedException e)
     {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse putUser(String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/users";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("PUT");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .PUT(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
+    catch (InterruptedException e)
     {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
   public ApiResponse changePassword(String userId, String jsonPayload) throws IOException
   {
     String endpoint = baseUrl + "/users/" + userId + "/password";
-    URL url = new URL(endpoint);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-    connection.setRequestMethod("POST");
-    connection.setRequestProperty("Accept", "application/json");
-    connection.setRequestProperty("Authorization", authorizationHeader);
-    connection.setRequestProperty("Content-Type", "application/json");
-    connection.setDoOutput(true);
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(endpoint))
+      .header("Accept", "application/json")
+      .header("Authorization", authorizationHeader)
+      .header("Content-Type", "application/json")
+      .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+      .build();
 
-    try (OutputStream os = connection.getOutputStream())
+    try
     {
-      os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
-      os.flush();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+      int responseCode = response.statusCode();
+
+      String body = response.body() != null ? response.body() : "";
+
+      return new ApiResponse(responseCode, body);
+
     }
-
-    int responseCode = connection.getResponseCode();
-
-    String body = "";
-    InputStream stream = responseCode < 400 ? connection.getInputStream() : connection.getErrorStream();
-    if (stream != null)
+    catch (InterruptedException e)
     {
-      try (Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
-      {
-        scanner.useDelimiter("\\A");
-        body = scanner.hasNext() ? scanner.next() : "";
-      }
+      Thread.currentThread().interrupt();
+      throw new IOException("Request interrupted", e);
     }
-
-    return new ApiResponse(responseCode, body);
   }
 
+  // Auxiliary class to give formatted response
   public static class ApiResponse
   {
     private final int statusCode;
