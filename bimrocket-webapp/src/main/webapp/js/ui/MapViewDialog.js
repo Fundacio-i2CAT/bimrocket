@@ -38,7 +38,7 @@ class MapViewDialog extends Dialog
         ["HereMapsProvider", "option.mapView.heremaps"],
         ["MapTilerProvider", "option.mapView.maptiler"],
         ["OpenMapTilesProvider", "option.mapView.openmaptiles"],
-        ["mapViewProvider", "option.mapView.wms"]
+        ["WMSProvider", "option.mapView.wms"]
       ],
       "OpenStreetMapsProvider");
 
@@ -84,16 +84,66 @@ class MapViewDialog extends Dialog
     this.heightProviderKeyElem.parentNode.style.marginBottom = "6px";
     this.heightProviderKeyElem.parentNode.style.display = "none";
 
-    this.providerElem.addEventListener("change", () =>
-      this.updateProviderKeyVisibility());
-    this.mapModeElem.addEventListener("change", () =>
-      this.updateProviderKeyVisibility());
-    this.updateProviderKeyVisibility();
+    this.wmsUrlElem = Controls.addTextField(bodyElem, "mapViewWmsUrl",
+      "label.mapView.wms_url", "");
+    this.wmsUrlElem.spellcheck = false;
+    this.wmsUrlElem.style.padding = "6px";
+    this.wmsUrlElem.parentNode.style.marginBottom = "6px";
+    this.wmsUrlElem.parentNode.style.display = "none";
+    this.markRequired(this.wmsUrlElem);
+
+     this.wmsLayerElem = Controls.addTextField(bodyElem, "mapViewWmsLayer",
+      "label.mapView.wms_layer", "");
+    this.wmsLayerElem.spellcheck = false;
+    this.wmsLayerElem.style.padding = "6px";
+    this.wmsLayerElem.parentNode.style.marginBottom = "6px";
+    this.wmsLayerElem.parentNode.style.display = "none";
+    this.markRequired(this.wmsLayerElem);
 
     this.acceptButton = this.addButton("accept", "button.accept",
       () => this.onAccept());
     this.cancelButton = this.addButton("cancel", "button.cancel",
       () => this.hide());
+
+    this.providerElem.addEventListener("change", () =>
+      this.updateProviderKeyVisibility());
+    this.mapModeElem.addEventListener("change", () =>
+      this.updateProviderKeyVisibility());
+    this.wmsUrlElem.addEventListener("input", () =>
+      this.updateAcceptButtonState());
+    this.wmsLayerElem.addEventListener("input", () =>
+      this.updateAcceptButtonState());
+    this.updateProviderKeyVisibility();
+    this.updateAcceptButtonState();
+   }
+
+  markRequired(inputElem)
+  {
+    const groupElem = inputElem.parentNode;
+    if (!groupElem) return;
+
+    const labelElem = groupElem.firstChild;
+    if (!labelElem) return;
+
+    labelElem.classList.add("required");
+  }
+
+  updateAcceptButtonState()
+  {
+    const provider = this.providerElem.value;
+    const isWMS = provider === "WMSProvider";
+    
+    if (isWMS)
+    {
+      const wmsUrlValue = this.wmsUrlElem.value.trim();
+      const wmsLayerValue = this.wmsLayerElem.value.trim();
+      this.acceptButton.disabled =
+        wmsUrlValue.length === 0 || wmsLayerValue.length === 0;
+    }
+    else
+    {
+      this.acceptButton.disabled = false;
+    }
   }
 
   parseUtmZone(value)
@@ -122,13 +172,13 @@ class MapViewDialog extends Dialog
     return { utmZoneNumber: parsedNumber, utmZoneLetter };
   }
 
-  buildProviderSetup(provider, providerKey)
+  buildProviderSetup(provider, providerKey, wmsUrl, wmsLayer)
   {
     if (provider === "WMSProvider")
     {
       return {
-        baseUrl: "https://geoserveis.icgc.cat/servei/catalunya/orto-territorial/wms",
-        layers: "ortofoto_gris_vigent",
+        baseUrl: wmsUrl || "https://geoserveis.icgc.cat/servei/catalunya/orto-territorial/wms",
+        layers: wmsLayer || "ortofoto_gris_vigent",
         format: "image/png",
         transparent: true
       };
@@ -202,6 +252,7 @@ class MapViewDialog extends Dialog
   updateProviderKeyVisibility()
   {
     const provider = this.providerElem.value;
+    const isWMS = provider === "WMSProvider";
     const requiresKey = [
       "GoogleMapsProvider",
       "MapBoxProvider",
@@ -217,6 +268,11 @@ class MapViewDialog extends Dialog
     const heightModeEnabled = heightModes.includes(this.mapModeElem.value);
     this.heightProviderKeyElem.parentNode.style.display =
       heightModeEnabled ? "block" : "none";
+    
+    this.wmsUrlElem.parentNode.style.display = isWMS ? "block" : "none";
+    this.wmsLayerElem.parentNode.style.display = isWMS ? "block" : "none";
+    
+    this.updateAcceptButtonState();
   }
 
   onAccept()
@@ -229,6 +285,8 @@ class MapViewDialog extends Dialog
       ["HEIGHT", "HEIGHT_SHADER", "MARTINI"].includes(mapMode);
     const providerKey = this.providerKeyElem.value;
     const heightProviderKey = this.heightProviderKeyElem.value;
+    const wmsUrl = this.wmsUrlElem.value.trim();
+    const wmsLayer = this.wmsLayerElem.value.trim();
 
     const { utmZoneNumber, utmZoneLetter } = this.parseUtmZone(utmZoneValue);
     const layerGroup = this.initLayerGroup(provider);
@@ -238,7 +296,9 @@ class MapViewDialog extends Dialog
     const setupName = controllerName + "_" + provider;
     layerGroup.userData[setupName] = this.buildProviderSetup(
       provider,
-      providerKey
+      providerKey,
+      wmsUrl,
+      wmsLayer
     );
 
     if (useHeightProvider)
