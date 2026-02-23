@@ -1,25 +1,25 @@
 /*
- * WMSTool.js
+ * MapViewTool.js
  *
  * @author nexus
  */
 
 import { Tool } from "./Tool.js";
-import { WMSDialog } from "../ui/WMSDialog.js";
+import { MapViewDialog } from "../ui/MapViewDialog.js";
 
-class WMSTool extends Tool
+class MapViewTool extends Tool
 {
   constructor(application, options)
   {
     super(application);
-    this.name = "wms";
-    this.label = "tool.wms.label";
-    this.help = "tool.wms.help";
-    this.className = "wms";
+    this.name = "mapView";
+    this.label = "tool.mapView.label";
+    this.help = "tool.mapView.help";
+    this.className = "mapView";
     this.setOptions(options);
     application.addTool(this);
 
-    const dialog = new WMSDialog(application);
+    const dialog = new MapViewDialog(application);
     this.dialog = dialog;
 
     dialog.onHide = () => this.application.useTool(null);
@@ -37,4 +37,4 @@ class WMSTool extends Tool
   }
 }
 
-export { WMSTool };
+export { MapViewTool };

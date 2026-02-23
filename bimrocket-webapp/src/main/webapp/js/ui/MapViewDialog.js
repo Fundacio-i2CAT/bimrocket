@@ -1,5 +1,5 @@
 /*
- * WMSDialog.js
+ * MapViewDialog.js
  *
  * @author nexus
  */
@@ -9,15 +9,15 @@ import { Controls } from "./Controls.js";
 import { MapViewController } from "../controllers/MapViewController.js";
 import * as THREE from "three";
 
-class WMSDialog extends Dialog
+class MapViewDialog extends Dialog
 {
   constructor(application)
   {
-    super("tool.wms.label");
+    super("tool.mapView.label");
     this.application = application;
     this.setSize(420, 380);
     this.setI18N(application.i18n);
-    this.setClassName("wms_container");
+    this.setClassName("mapView_container");
 
     this.createUI();
   }
@@ -28,17 +28,17 @@ class WMSDialog extends Dialog
     bodyElem.innerHTML = "";
     bodyElem.style.padding = "10px";
 
-    this.providerElem = Controls.addSelectField(bodyElem, "wmsProvider",
-      "label.wms.provider",
+    this.providerElem = Controls.addSelectField(bodyElem, "mapViewProvider",
+      "label.mapView.provider",
       [
-        ["OpenStreetMapsProvider", "option.wms.openstreetmap"],
-        ["GoogleMapsProvider", "option.wms.googlemaps"],
-        ["BingMapsProvider", "option.wms.bingmaps"],
-        ["MapBoxProvider", "option.wms.mapbox"],
-        ["HereMapsProvider", "option.wms.heremaps"],
-        ["MapTilerProvider", "option.wms.maptiler"],
-        ["OpenMapTilesProvider", "option.wms.openmaptiles"],
-        ["WMSProvider", "option.wms.wms"]
+        ["OpenStreetMapsProvider", "option.mapView.openstreetmap"],
+        ["GoogleMapsProvider", "option.mapView.googlemaps"],
+        ["BingMapsProvider", "option.mapView.bingmaps"],
+        ["MapBoxProvider", "option.mapView.mapbox"],
+        ["HereMapsProvider", "option.mapView.heremaps"],
+        ["MapTilerProvider", "option.mapView.maptiler"],
+        ["OpenMapTilesProvider", "option.mapView.openmaptiles"],
+        ["mapViewProvider", "option.mapView.wms"]
       ],
       "OpenStreetMapsProvider");
 
@@ -48,21 +48,21 @@ class WMSDialog extends Dialog
     this.providerElem.style.padding = "6px";
     this.providerElem.style.marginBottom = "6px";
 
-    this.providerKeyElem = Controls.addTextField(bodyElem, "wmsProviderKey",
-      "label.wms.provider_key", "");
+    this.providerKeyElem = Controls.addTextField(bodyElem, "mapViewProviderKey",
+      "label.mapView.provider_key", "");
     this.providerKeyElem.spellcheck = false;
     this.providerKeyElem.style.padding = "6px";
     this.providerKeyElem.parentNode.style.marginBottom = "6px";
     this.providerKeyElem.parentNode.style.display = "none";
 
-    this.mapModeElem = Controls.addSelectField(bodyElem, "wmsMapMode",
-      "label.wms.map_mode",
+    this.mapModeElem = Controls.addSelectField(bodyElem, "mapViewMapMode",
+      "label.mapView.map_mode",
       [
-        ["PLANAR", "option.wms.planar"],
-        ["SPHERICAL", "option.wms.spherical"],
-        ["HEIGHT", "option.wms.height"],
-        ["HEIGHT_SHADER", "option.wms.height_shader"],
-        ["MARTINI", "option.wms.martini"]
+        ["PLANAR", "option.mapView.planar"],
+        ["SPHERICAL", "option.mapView.spherical"],
+        ["HEIGHT", "option.mapView.height"],
+        ["HEIGHT_SHADER", "option.mapView.height_shader"],
+        ["MARTINI", "option.mapView.martini"]
       ],
       "PLANAR");
     this.mapModeElem.style.display = "flex";
@@ -71,14 +71,14 @@ class WMSDialog extends Dialog
     this.mapModeElem.style.padding = "6px";
     this.mapModeElem.style.marginBottom = "6px";
 
-    this.utmZoneElem = Controls.addTextField(bodyElem, "wmsUtmZone",
-      "label.wms.utm_zone", "0");
+    this.utmZoneElem = Controls.addTextField(bodyElem, "mapViewUtmZone",
+      "label.mapView.utm_zone", "0");
     this.utmZoneElem.spellcheck = false;
     this.utmZoneElem.style.padding = "6px";
     this.utmZoneElem.style.marginBottom = "6px";
 
     this.heightProviderKeyElem = Controls.addTextField(bodyElem,
-      "wmsHeightProviderKey", "label.wms.height_provider_key", "");
+      "mapViewHeightProviderKey", "label.mapView.height_provider_key", "");
     this.heightProviderKeyElem.spellcheck = false;
     this.heightProviderKeyElem.style.padding = "6px";
     this.heightProviderKeyElem.parentNode.style.marginBottom = "6px";
@@ -176,7 +176,7 @@ class WMSDialog extends Dialog
   initLayerGroup(provider)
   {
     const layerGroup = new THREE.Group();
-    layerGroup.name = "WMS Layer - " + provider;
+    layerGroup.name = "Map View Layer - " + provider;
     layerGroup.userData = {};
 
     if (!layerGroup.controllers)
@@ -234,7 +234,7 @@ class WMSDialog extends Dialog
     const layerGroup = this.initLayerGroup(provider);
     application.addObject(layerGroup, application.baseObject);
 
-    const controllerName = "wms_controller_" + Date.now();
+    const controllerName = "mapView_controller_" + Date.now();
     const setupName = controllerName + "_" + provider;
     layerGroup.userData[setupName] = this.buildProviderSetup(
       provider,
@@ -267,4 +267,4 @@ class WMSDialog extends Dialog
 
 }
 
-export { WMSDialog };
+export { MapViewDialog };

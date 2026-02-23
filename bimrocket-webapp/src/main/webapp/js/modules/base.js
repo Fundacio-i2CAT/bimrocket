@@ -76,7 +76,7 @@ import { AboutTool } from "../tools/AboutTool.js";
 import { OpenLinkTool } from "../tools/OpenLinkTool.js";
 import { ChatGPTTool } from "../tools/ChatGPTTool.js";
 import { WFSTool } from "../tools/WFSTool.js";
-import { WMSTool } from "../tools/WMSTool.js";
+import { MapViewTool } from "../tools/MapViewTool.js";
 import { BooleanOperator } from "../builders/BooleanOperator.js";
 import { GeometryMerger } from "../builders/GeometryMerger.js";
 import { RectangleBuilder } from "../builders/RectangleBuilder.js";
@@ -472,7 +472,7 @@ export function load(application)
   const chatGPTTool = new ChatGPTTool(application);
   const solarSimulatorTool = new SolarSimulatorTool(application);
   const wfsTool = new WFSTool(application);
-  const wmsTool = new WMSTool(application);
+  const mapViewTool = new MapViewTool(application);
 
   const outlinerTool = new OutlinerTool(application);
   const inspectorTool = new InspectorTool(application);
@@ -644,7 +644,7 @@ export function load(application)
   {
     const gisMenu = menuBar.addMenu("menu.gis");
     gisMenu.addMenuItem(wfsTool);
-    gisMenu.addMenuItem(wmsTool);
+    gisMenu.addMenuItem(mapViewTool);
   }
 
   const panelsMenu = menuBar.addMenu("menu.panels");
