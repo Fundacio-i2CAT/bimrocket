@@ -100,6 +100,19 @@ class MapViewDialog extends Dialog
     this.wmsLayerElem.parentNode.style.display = "none";
     this.markRequired(this.wmsLayerElem);
 
+    this.maxRequestsPerSecondElem = Controls.addTextField(bodyElem,
+      "mapViewMaxRequestsPerSecond", "label.mapView.max_requests_per_second", "20");
+    this.maxRequestsPerSecondElem.spellcheck = false;
+    this.maxRequestsPerSecondElem.type = "number";
+    this.maxRequestsPerSecondElem.min = "1";
+    this.maxRequestsPerSecondElem.parentElement.style.display = "flex";
+    this.maxRequestsPerSecondElem.parentElement.style.flexDirection = "column";
+    const maxRequestsPerSecondLabel = this.maxRequestsPerSecondElem.parentElement
+    maxRequestsPerSecondLabel.style.display = "block";
+    maxRequestsPerSecondLabel.style.width = "100%";
+    this.maxRequestsPerSecondElem.style.padding = "6px";
+    this.maxRequestsPerSecondElem.style.marginBottom = "6px";
+
     this.acceptButton = this.addButton("accept", "button.accept",
       () => this.onAccept());
     this.cancelButton = this.addButton("cancel", "button.cancel",
@@ -287,6 +300,8 @@ class MapViewDialog extends Dialog
     const heightProviderKey = this.heightProviderKeyElem.value;
     const wmsUrl = this.wmsUrlElem.value.trim();
     const wmsLayer = this.wmsLayerElem.value.trim();
+    const maxRequestsPerSecond = Number.parseInt(
+      this.maxRequestsPerSecondElem.value, 10) || 20;
 
     const { utmZoneNumber, utmZoneLetter } = this.parseUtmZone(utmZoneValue);
     const layerGroup = this.initLayerGroup(provider);
@@ -309,6 +324,7 @@ class MapViewDialog extends Dialog
     const controller = new MapViewController(layerGroup, controllerName);
 
     controller.provider = provider;
+    controller.maxRequestsPerSecond = maxRequestsPerSecond;
     this.configureController(
       controller,
       mapMode,

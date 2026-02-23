@@ -143,6 +143,7 @@ export const translations =
    "label.mapView.height_provider_key" : "Height provider key:",
    "label.mapView.wms_url" : "WMS URL:",
    "label.mapView.wms_layer" : "WMS Layer:",
+   "label.mapView.max_requests_per_second" : "Max requests per second:",
    "option.mapView.openstreetmap" : "OpenStreetMap",
   "option.mapView.googlemaps" : "Google Maps",
   "option.mapView.bingmaps" : "Bing Maps",
