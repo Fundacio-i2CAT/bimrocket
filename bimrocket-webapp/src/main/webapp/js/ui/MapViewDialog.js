@@ -108,7 +108,7 @@ class MapViewDialog extends Dialog
     this.maxRequestsPerSecondElem.parentElement.style.display = "flex";
     this.maxRequestsPerSecondElem.parentElement.style.flexDirection = "column";
     const maxRequestsPerSecondLabel = this.maxRequestsPerSecondElem.parentElement
-    maxRequestsPerSecondLabel.style.display = "block";
+    maxRequestsPerSecondLabel.style.display = "flex";
     maxRequestsPerSecondLabel.style.width = "100%";
     this.maxRequestsPerSecondElem.style.padding = "6px";
     this.maxRequestsPerSecondElem.style.marginBottom = "6px";
