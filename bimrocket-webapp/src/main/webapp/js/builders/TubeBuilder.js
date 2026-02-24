@@ -7,10 +7,12 @@ import { ObjectBuilder } from "./ObjectBuilder.js";
 import * as THREE from "three";
 
 class TubeBuilder extends ObjectBuilder {
-  constructor(radius = 6.0) {
+  constructor(radius = 6.0, zscale = 0.001, zoffset = -1) {
     super();
-    this.radius = radius;
     this.type = "tube";
+    this.radius = radius;
+    this.zscale = zscale;
+    this.zoffset = zoffset;
   }
 
   performBuild(object) {
@@ -50,9 +52,9 @@ class TubeBuilder extends ObjectBuilder {
         object.edgesVisible = false;
 
         //plain tube 
-        object.scale.set(1, 1, 0.001);
+        object.scale.set(1, 1, this.zscale);
         //avoid Z-fighting
-        object.position.z -= 0.02;
+        object.position.z -= this.zoffset;
 
         // if source is child (WFS ADD_OBJECT mode), we hidden it to avoid duplication
         if (source !== object) source.visible = false;
