@@ -25,18 +25,25 @@
 
     <link rel="stylesheet" href="./css/styles.css">
 
+    <script  type="text/javascript" src="/js/lib/martinez.umd.js"></script>
     <script type="importmap">
       {
         "imports": {
           "js/": "./js/",
           "three": "./js/lib/three.module.js",
-          "geo-three": "./js/lib/geo-three.module.js"
+          "manifold": "./js/lib/manifold.js",
+          "geo-three": "./js/lib/geo-three.module.js",
+          "earcut": "./js/lib/earcut.js"
         }
 			}
 		</script>
 
     <script type="module">
       import { Application } from "./js/ui/Application.js";
+      import { initApi } from "./js/core/Manifold.js";
+
+      // Load manifold api
+      await initApi();
 
       window.bimrocket = new Application();
     </script>

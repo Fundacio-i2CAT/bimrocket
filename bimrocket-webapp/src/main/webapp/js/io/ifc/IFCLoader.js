@@ -2222,7 +2222,6 @@ class IfcLineHelper extends IfcCurveHelper
 }
 registerIfcHelperClass(IfcLineHelper);
 
-
 class IfcPolylineHelper extends IfcCurveHelper
 {
   constructor(loader, entity)
@@ -2362,27 +2361,42 @@ class IfcTrimmedCurveHelper extends IfcCurveHelper
       const basisHelper = this.helper(basisCurve);
       const trim1 = curve.Trim1[0];
       const trim2 = curve.Trim2[0];
+      const sense = curve.SenseAgreement === true;
+
       if (basisCurve instanceof schema.IfcConic)
       {
-        let startAngle = (trim1 instanceof schema.IfcParameterValue) ?
+        const startAngle = (trim1 instanceof schema.IfcParameterValue) ?
           trim1.Value : trim1;
 
-        let endAngle = (trim2 instanceof schema.IfcParameterValue) ?
+        const endAngle = (trim2 instanceof schema.IfcParameterValue) ?
           trim2.Value : trim2;
 
-        let sense = curve.SenseAgreement === true;
         this.points =
           basisHelper.getTrimmedPoints(startAngle, endAngle, sense);
       }
       else if (basisCurve instanceof schema.IfcLine)
       {
-        this.points = basisHelper.getPoints();
+        if(trim1 instanceof schema.IfcCartesianPoint
+          && trim2 instanceof schema.IfcCartesianPoint){
+            let v1 =this.helper(trim1).getPoint();
+            let v2 =this.helper(trim2).getPoint();
+
+            this.points = [v1,v2];
+          }else{
+            this.points = basisHelper.getPoints();
+          }
         //console.warn("unsupported trimmming of IfcLine", curve);
       }
       else
       {
-        //console.warn("unsupported trimmed curve segment", curve);
+        console.warn("IfcTrimmedCurveHelper : unsupported trimmed curve segment", curve);
       }
+
+      /*if(isCartesionPoint === true){
+        if(sense === true){
+          this.points.reverse();
+        }
+      }*/
     }
     return this.points;
   }
@@ -2456,42 +2470,31 @@ class IfcConicHelper extends IfcCurveHelper
     return this.points;
   }
 
-  generatePoints(startAngle, endAngle, sense, segments, addPoint)
+ generatePoints(startAngle, endAngle, sense, segments, addPoint)
   {
     let angle;
     if (sense) // anti-clockwise
     {
       if (endAngle < startAngle) endAngle += 2 * Math.PI;
-      let dif = endAngle - startAngle;
-      let divs = Math.ceil(dif * segments / (2 * Math.PI));
-      let angleStep = dif / divs;
-
-      angle = startAngle;
-      while (divs > 0)
-      {
-        addPoint(angle);
-        angle += angleStep;
-        divs--;
-      }
-      addPoint(endAngle);
     }
     else // clockwise
     {
       if (endAngle > startAngle) startAngle += 2 * Math.PI;
-
-      let dif = startAngle - endAngle;
-      let divs = Math.ceil(dif * segments / (2 * Math.PI));
-      let angleStep = dif / divs;
-
-      angle = startAngle;
-      while (divs > 0)
-      {
-        addPoint(angle);
-        angle -= angleStep;
-        divs--;
-      }
-      addPoint(endAngle);
     }
+
+    const dif = (endAngle - startAngle);
+    let angleStep = dif/segments;
+    //let divs = Math.ceil(dif * segments / (2 * Math.PI));
+    //let angleStep = dif / divs;
+
+    angle = startAngle;
+    for (let s = 0; s < segments; s++)
+    {
+      addPoint(angle);
+      angle += angleStep;
+    }
+    addPoint(endAngle);    
+
   }
 };
 registerIfcHelperClass(IfcConicHelper);
@@ -2535,11 +2538,62 @@ class IfcCircleHelper extends IfcConicHelper
     let points = [];
     const circle = this.entity;
     const loader = this.loader;
+    const schema = circle.constructor.schema;
 
     const matrix = this.helper(circle.Position).getMatrix();
     const radius = circle.Radius;
-    const startAngle = THREE.MathUtils.degToRad(param1);
-    const endAngle = THREE.MathUtils.degToRad(param2);
+
+    let startAngle;
+    let endAngle;
+
+    const isCartesianPoint = param1 instanceof schema.IfcCartesianPoint
+     && param2 instanceof schema.IfcCartesianPoint;
+
+     if(isCartesianPoint === true){
+
+        const trim_start = this.helper(param1).getPoint();
+        const trim_end = this.helper(param2).getPoint();
+
+        if(  trim_start instanceof THREE.Vector3
+          && trim_end instanceof THREE.Vector3
+        ){
+
+          // Fixme : this block of code is repeated as same as IfcEllipseHelper.getTrimmedPoints  (move in a function to reuse)
+
+          const vecX = new THREE.Vector3();
+          const vecY = new THREE.Vector3();
+          const vecZ = new THREE.Vector3();
+          const position = new THREE.Vector3();
+
+          matrix.extractBasis(vecX,vecY,vecZ);
+          position.setFromMatrixPosition(matrix);
+
+          const v1 = trim_start.clone().sub(position);
+          const v2 = trim_end.clone().sub(position);
+
+          const dxS = vecX.x * v1.x + vecX.y * v1.y + vecX.z * v1.z;
+          const dyS = vecY.x * v1.x + vecY.y * v1.y + vecY.z * v1.z;
+
+          const dxE = vecX.x * v2.x + vecX.y * v2.y + vecX.z * v2.z;
+          const dyE = vecY.x * v2.x + vecY.y * v2.y + vecY.z * v2.z;
+
+          startAngle = (new THREE.Vector2(dxS,dyS)).angle();//-Math.PI+Math.PI/4;
+          endAngle = (new THREE.Vector2(dxE,dyE)).angle();//-Math.PI-Math.PI/4;  
+
+          //while(startAngle<0){startAngle+=2*Math.PI};
+          //while(endAngle<0){endAngle+=2*Math.PI};
+
+          //console.log(`start : ${startAngle} end : ${endAngle}`);
+        }else{
+           console.error("IfcCircleHelper.getTrimmedPoints : Angle cartesian point dimension not implemented")
+        }    
+
+    }else{
+      startAngle = THREE.MathUtils.degToRad(param1);
+      endAngle = THREE.MathUtils.degToRad(param2);
+    }
+
+
     const segments = loader.getCircleSegments(radius);
 
     const addPoint = angle =>
@@ -2553,6 +2607,25 @@ class IfcCircleHelper extends IfcConicHelper
     };
 
     this.generatePoints(startAngle, endAngle, sense, segments, addPoint);
+
+    // Control: Set start/end point as the original values to get closed boundary
+    if(isCartesianPoint === true){
+      const trim_start = this.helper(param1).getPoint();
+      const trim_end = this.helper(param2).getPoint();
+
+      let end  = points[points.length-1];
+      let start =  points[0];
+     
+
+      start.x = trim_start.x;
+      start.y = trim_start.y;
+      start.z = trim_start.z;
+
+      end.x = trim_end.x;
+      end.y = trim_end.y;
+      end.z = trim_end.z;
+
+    }
 
     return points;
   }
@@ -2599,12 +2672,66 @@ class IfcEllipseHelper extends IfcConicHelper
     let points = [];
     const ellipse = this.entity;
     const loader = this.loader;
+
+    const schema = ellipse.constructor.schema;
+
     const matrix = this.helper(ellipse.Position).getMatrix();
+    const radius = ellipse.Radius;
+
+    let startAngle;
+    let endAngle;
+
+     const isCartesianPoint = param1 instanceof schema.IfcCartesianPoint
+     && param2 instanceof schema.IfcCartesianPoint;
+
+     if(isCartesianPoint === true){
+
+        const trim_start = this.helper(param1).getPoint();
+        const trim_end = this.helper(param2).getPoint();
+
+        if(  trim_start instanceof THREE.Vector3
+          && trim_end instanceof THREE.Vector3
+        ){
+
+          // Fixme : this block of code is repeated as same as IfcCircleHelper.getTrimmedPoints (move in a function to reuse)
+
+          const vecX = new THREE.Vector3();
+          const vecY = new THREE.Vector3();
+          const vecZ = new THREE.Vector3();
+          const position = new THREE.Vector3();
+
+          matrix.extractBasis(vecX,vecY,vecZ);
+          position.setFromMatrixPosition(matrix);
+
+          const v1 = trim_start.clone().sub(position);
+          const v2 = trim_end.clone().sub(position);
+
+          const dxS = vecX.x * v1.x + vecX.y * v1.y + vecX.z * v1.z;
+          const dyS = vecY.x * v1.x + vecY.y * v1.y + vecY.z * v1.z;
+
+          const dxE = vecX.x * v2.x + vecX.y * v2.y + vecX.z * v2.z;
+          const dyE = vecY.x * v2.x + vecY.y * v2.y + vecY.z * v2.z;
+
+          startAngle = (new THREE.Vector2(dxS,dyS)).angle();//-Math.PI+Math.PI/4;
+          endAngle = (new THREE.Vector2(dxE,dyE)).angle();//-Math.PI-Math.PI/4;  
+
+          //while(startAngle<0){startAngle+=2*Math.PI};
+          //while(endAngle<0){endAngle+=2*Math.PI};
+
+          //console.log(`start : ${startAngle} end : ${endAngle}`);
+        }else{
+           console.error("IfcEllipseHelper.getTrimmedPoints : Angle cartesian point dimension not implemented")
+        }    
+
+    }else{
+      startAngle = THREE.MathUtils.degToRad(param1);
+      endAngle = THREE.MathUtils.degToRad(param2);
+    }
+
+//    const matrix = this.helper(ellipse.Position).getMatrix();
     const semiAxis1 = ellipse.SemiAxis1;
     const semiAxis2 = ellipse.SemiAxis2;
     const maxAxis = Math.max(semiAxis1, semiAxis2);
-    const startAngle = THREE.MathUtils.degToRad(param1);
-    const endAngle = THREE.MathUtils.degToRad(param2);
     const segments = loader.getCircleSegments(maxAxis);
 
     const addPoint = angle =>
@@ -2623,6 +2750,82 @@ class IfcEllipseHelper extends IfcConicHelper
   }
 };
 registerIfcHelperClass(IfcEllipseHelper);
+
+
+class IfcBSplineCurveWithKnotsHelper extends IfcCurveHelper
+{
+  constructor(loader, entity)
+  {
+    super(loader, entity);
+  }
+
+   // using de-Boor algoritm https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/de-Boor.html
+  getPoints()
+  {
+    if(this.points === null){
+      const bspline = this.entity;
+      //const segments = this.loader.getCircleSegments(maxAxis)
+      this.points = [];
+      const U = [];
+      const segments = 50; // <-- Fixme : use getCircleSegments in function of some parameter
+      
+      // expand knots
+      for (let i = 0; i < bspline.Knots.length; i++) {
+        for (let m = 0; m < bspline.KnotMultiplicities[i]; m++) {
+            U.push(bspline.Knots[i]);
+          }
+      }
+
+      const controlPoints = bspline.ControlPointsList.map(p => p.Coordinates);
+
+      // Cox-de Boor basis function
+      const N = (i, p, u, U) => {
+        if (p === 0) {
+            return (U[i] <= u && u < U[i + 1]) ? 1 : 0;
+        }
+
+        let denom1 = U[i + p] - U[i];
+        let denom2 = U[i + p + 1] - U[i + 1];
+
+        let term1 = denom1 !== 0 ? ((u - U[i]) / denom1) * N(i, p - 1, u, U) : 0;
+        let term2 = denom2 !== 0 ? ((U[i + p + 1] - u) / denom2) * N(i + 1, p - 1, u, U) : 0;
+
+        return term1 + term2;
+      } 
+
+      // Evaluate point B-spline at u
+      const evaluateBSpline = (u, degree, controlPoints, U) =>{
+        let n = controlPoints.length - 1;
+        let p = degree;
+        let point = new THREE.Vector3(0, 0, 0);
+
+        for (let i = 0; i <= n; i++) {
+            let basis = N(i, p, u, U);
+            point.x += basis * controlPoints[i][0];
+            point.y += basis * controlPoints[i][1];
+            point.z += basis * controlPoints[i][2];
+        }
+
+        return point;
+      }   
+      
+      const p = bspline.Degree;
+      const m = U.length - 1;
+      const dtds = 1.0/segments;
+      let t=0;
+      const uMin = U[p];
+      const uMax = U[m - p];
+     
+      for (let i = 0; i < segments; i++) {
+          const u = uMin + (uMax - uMin) * t;
+          this.points.push(evaluateBSpline(u, bspline.Degree, controlPoints, U));
+          t += dtds;
+      }
+      return this.points;   
+    }
+  }
+}
+registerIfcHelperClass(IfcBSplineCurveWithKnotsHelper);
 
 
 /* Geometry helpers */
@@ -2652,7 +2855,7 @@ class IfcConnectedFaceSetHelper extends IfcHelper
         this.helper(face).addFaces(geometry);
       }
       let solid = new Solid();
-      let optimize = false;
+      let optimize = true;
       const range = loader.options.faceSetOptimizationRange;
       if (range instanceof Array)
       {
@@ -2687,6 +2890,8 @@ class IfcFaceHelper extends IfcHelper
     let bounds = face.Bounds; // IfcFaceBound[...]
 
     let faceVertices = null;
+    let faceBoundIndices = null;
+
     let holes = [];
     for (let b = 0; b < bounds.length; b++)
     {
@@ -2694,18 +2899,32 @@ class IfcFaceHelper extends IfcHelper
       let loop = bound.Bound; // IfcLoop:
 
       // (IfcPolyLoop, IfcEdgeLoop, IfcVertexLoop)
-      let loopVertices =
-        GeometryUtils.cloneRing(this.helper(loop).getPoints());
+      let result =this.helper(loop).getPoints();
+      let boundIndices = null;
+      let boundVertices = null;
+
+      if (Array.isArray(result[0])) {
+        // EdgeLoopHelper case: [points, bounds]
+        [boundVertices, boundIndices] = result;
+      } else {
+        // PolyLoopHelper case: just points
+        boundVertices = result;
+        boundIndices = null;
+      }
+
+      let loopVertices = GeometryUtils.cloneRing(boundVertices);
 
       let loopOrientation = bound.Orientation;
       if (loopOrientation === false)
       {
         // reverse loop sense
         loopVertices = loopVertices.slice().reverse();
+        if(boundIndices) boundIndices = boundIndices.slice().reverse();
       }
       if (bound instanceof schema.IfcFaceOuterBound)
       {
         faceVertices = loopVertices;
+        if(boundIndices) faceBoundIndices = boundIndices;
       }
       else
       {
@@ -2715,11 +2934,53 @@ class IfcFaceHelper extends IfcHelper
 
     if (faceVertices && faceVertices.length >= 3)
     {
-      let face = solidGeometry.addFace(...faceVertices);
-      for (let holeVertices of holes)
-      {
-        if (holeVertices.length >= 3)
-        face.addHole(...holeVertices);
+      if(face.FaceSurface instanceof schema.IfcCylindricalSurface){
+         const faces = GeometryUtils.triangulateCylindricalFace(
+            faceVertices
+            ,[] // no holes by now
+            ,this.helper(face.FaceSurface.Position).getMatrix()
+            ,face.FaceSurface.Radius
+            //,16 //this.loader.getCircleSegments(face.FaceSurface.Radius)
+         );
+
+        // create faces 
+        for(let points of faces){
+          solidGeometry.addFace(...points);
+        }
+      }else if(face.FaceSurface instanceof schema.IfcSurfaceOfRevolution){
+        let profile3d = this.helper(face.FaceSurface.SweptCurve.Curve).getPoints();
+
+        //window.debugBoundaringVertices = [...faceVertices]
+        //window.debugMatrix = this.helper(face.FaceSurface.AxisPosition).getMatrix()
+
+        /*if(face.SameSense === false){
+          profile3d.reverse();
+          faceVertices.reverse();
+          faceBoundIndices.reverse();
+        }*/
+
+        const faces = GeometryUtils.triangulateSurfaceOfRevolution(
+            this.helper(face.FaceSurface.AxisPosition).getMatrix()
+           ,faceVertices
+           ,faceBoundIndices
+           ,profile3d
+        )
+
+        // create faces 
+        for(let points of faces){
+          solidGeometry.addFace(...points);
+        }
+
+      }else{
+
+        const face = solidGeometry.addFace(...faceVertices);
+
+        for (let holeVertices of holes)
+        {
+          if (holeVertices.length >= 3){
+            face.addHole(...holeVertices);
+          }
+        }
       }
     }
   }
@@ -2783,16 +3044,39 @@ class IfcEdgeLoopHelper extends IfcHelper
     if (this.points === null)
     {
       const edges = this.entity.EdgeList;
+      const schema = this.entity.constructor.schema;
 
+      this.bounds = []; // boundaries for each edge
       this.points = [];
       for (let i = 0; i < edges.length; i++)
       {
         let edge = edges[i];
         let edgePoints = this.helper(edge).getPoints();
+
         GeometryUtils.joinPointArrays(this.points, edgePoints);
+
+        /*if(   
+          edge.EdgeElement.EdgeGeometry.BasisCurve instanceof schema.IfcCircle
+        ){*/
+           //this.points = this.points.concat(edgePoints);
+
+          if(this.points.length > 0){
+            // its bounds
+            const append_bound_indices = (bounds, newSize, defaultValue)=>{
+                var originLength = bounds.length; // cache original length
+
+                bounds.length = newSize; // resize array to newSize
+
+                (newSize > originLength) && bounds.fill(defaultValue, originLength); // Use Array.prototype.fill to insert defaultValue from originLength to the new length
+            }
+
+            append_bound_indices(this.bounds,this.points.length,i);
+
+          }    
+        //}    
       }
     }
-    return this.points;
+     return [this.points,this.bounds];
   }
 };
 registerIfcHelperClass(IfcEdgeLoopHelper);
@@ -2872,19 +3156,12 @@ class IfcEdgeCurveHelper extends IfcEdgeHelper
       const edge = this.entity;
       const schema = edge.constructor.schema;
 
-      const edgePoints = super.getPoints();
       const edgeGeometry = edge.EdgeGeometry;
-      const geometryHelper = this.helper(edgeGeometry);
 
+      const geometryHelper = this.helper(edgeGeometry);
       let geomPoints = geometryHelper.getPoints();
-      if (geomPoints && geomPoints.length > 0 && edgeGeometry instanceof schema.IfcConic)
-      {
-        this.points = geomPoints;
-      }
-      else
-      {
-        this.points = edgePoints;
-      }
+      this.points = geomPoints;
+
     }
     return this.points;
   }
