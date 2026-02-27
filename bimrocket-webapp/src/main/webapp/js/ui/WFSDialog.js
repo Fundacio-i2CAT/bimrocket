@@ -205,17 +205,32 @@ class WFSDialog extends Dialog
         $ => $("IFC", "ifcClassName") === "IfcSite");
       if (sites.length > 0)
       {
-        const site = sites[0];
-        site.updateMatrixWorld(true);
-        const center = new THREE.Vector3(0, 0, 0);
-        center.applyMatrix4(site.matrixWorld);
-        controller.bbox = 
-        [
-          center.x - limitDistanceValue,
-          center.y - limitDistanceValue,
-          center.x + limitDistanceValue,
-          center.y + limitDistanceValue
-        ].join(",");
+          let site = sites[0];
+        let project = site.parent;
+        let center = new THREE.Vector3(0, 0, 0);
+        center.applyMatrix4(site.matrix).applyMatrix4(project.matrix);
+        if (srsName !== "" && srsName !== undefined)
+        {
+          controller.srsName = srsName;
+          controller.bbox =
+          [
+            center.x - limitDistanceValue,
+            center.y - limitDistanceValue,
+            center.x + limitDistanceValue,
+            center.y + limitDistanceValue
+          ].join(",");
+          controller.bbox = `${controller.bbox},${srsName}`;
+        } 
+        else
+        {
+          controller.bbox =
+          [
+            center.x - limitDistanceValue,
+            center.y - limitDistanceValue,
+            center.x + limitDistanceValue,
+            center.y + limitDistanceValue
+          ].join(",");
+        }
       }
       else
       {
