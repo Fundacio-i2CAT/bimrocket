@@ -36,6 +36,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -49,6 +50,8 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jakarta.ws.rs.core.NewCookie;
 import org.apache.commons.lang3.StringUtils;
 import org.bimrocket.api.security.Role;
 import org.bimrocket.api.security.User;
@@ -598,6 +601,33 @@ public class SecurityService
         }
       }
     }
+  }
+
+  public boolean checkPasswordHash(User user, String password)
+  {
+    boolean validPassword = true;
+    String passwordHash = hash(password);
+
+    if (!user.getPasswordHash().equals(passwordHash)) validPassword = false;
+
+    return validPassword;
+  }
+
+  public NewCookie CreateHttpOnlyCookie()
+  {
+    String token = "";
+    NewCookie cookie = new NewCookie(
+            "auth_token",   // name
+            token,            // value
+            "/",              // path
+            null,             // domain
+            null,             // comment
+            3600,             // maxAge
+            true,             // secure
+            true              // httpOnly
+    );
+
+    return cookie;
   }
 
 }

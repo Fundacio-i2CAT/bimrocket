@@ -35,6 +35,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.servlet.http.Cookie;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -45,6 +47,8 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import static org.bimrocket.api.ApiResult.OK;
@@ -65,6 +69,31 @@ public class SecurityEndpoint
 {
   @Inject
   SecurityService securityService;
+
+  @POST
+  @Path("/login")
+  @Consumes(APPLICATION_JSON)
+  @Produces(APPLICATION_JSON)
+  @PermitAll
+  @Operation(
+          summary = "Basic Authentication",
+          security = {}
+  )
+  public Response login(@Valid LoginRequest loginRequest)
+  {
+    User user = securityService.getUser(loginRequest.getUserName());
+
+    if (user == null || !securityService.checkPasswordHash(user, loginRequest.getPassword()))
+    {
+      return Response.status(Response.Status.UNAUTHORIZED).build();
+    }
+
+    NewCookie authCookie = securityService.CreateHttpOnlyCookie();
+
+    return Response.ok()
+      .cookie(authCookie)
+      .build();
+  }
 
   /* Users */
 
