@@ -485,7 +485,7 @@ export function load(application)
   const githubTool = new OpenLinkTool(application,
   { name : "github", label: "GitHub", url: "https://github.com/bimrocket/bimrocket",
     target : "_blank"});
-    const hidePanelsTool = new HidePanelsTool(application);
+  const hidePanelsTool = new HidePanelsTool(application);
 
   // create menus
   const menuBar = application.menuBar;
@@ -652,6 +652,7 @@ export function load(application)
   toolBar.addToolButton(saveLocalTool);
   toolBar.addToolButton(optionsTool);
   toolBar.addToolButton(printTool);
+  toolBar.addToolButton(hidePanelsTool);
   toolBar.addToolButton(selectTool);
   toolBar.addToolButton(orbitTool);
   toolBar.addToolButton(flyTool);
