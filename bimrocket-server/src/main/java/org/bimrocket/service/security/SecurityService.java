@@ -30,6 +30,8 @@
  */
 package org.bimrocket.service.security;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -41,12 +43,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +69,8 @@ import org.bimrocket.dao.expression.Expression;
 import org.bimrocket.dao.expression.OrderByExpression;
 import org.bimrocket.dao.expression.io.log.LogExpressionPrinter;
 import org.bimrocket.util.EntityDefinition;
+
+import javax.crypto.SecretKey;
 
 /**
  *
@@ -133,12 +132,15 @@ public class SecurityService
 
   boolean ldapEnabled;
 
+  String secretKey;
+
   @PostConstruct
   public void init()
   {
     LOGGER.log(Level.INFO, "Init SecurityService");
 
     ldapEnabled = config.getValue(BASE + "ldap.enabled", Boolean.class);
+    secretKey = config.getValue(BASE + "jwtSecret", String.class);
 
     CDI<Object> cdi = CDI.current();
 
@@ -613,21 +615,39 @@ public class SecurityService
     return validPassword;
   }
 
-  public NewCookie CreateHttpOnlyCookie()
+  public NewCookie CreateHttpOnlyCookie(String userId)
   {
-    String token = "";
+    String token = createJWTToken(userId);
     NewCookie cookie = new NewCookie(
             "auth_token",   // name
             token,            // value
             "/",              // path
             null,             // domain
             null,             // comment
-            3600,             // maxAge
+            28800,            // maxAge, 8h
             true,             // secure
             true              // httpOnly
     );
 
     return cookie;
+  }
+
+  public String createJWTToken(String userId)
+  {
+    SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("userid", userId);
+
+    Date now = new Date();
+    Date expiration = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8h
+
+    return Jwts.builder()
+            .claims(claims)
+            .issuedAt(now)
+            .expiration(expiration)
+            .signWith(key)
+            .compact();
   }
 
 }

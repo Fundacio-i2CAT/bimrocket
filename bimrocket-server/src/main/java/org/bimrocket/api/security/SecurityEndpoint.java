@@ -88,7 +88,7 @@ public class SecurityEndpoint
       return Response.status(Response.Status.UNAUTHORIZED).build();
     }
 
-    NewCookie authCookie = securityService.CreateHttpOnlyCookie();
+    NewCookie authCookie = securityService.CreateHttpOnlyCookie(user.getId());
 
     return Response.ok()
       .cookie(authCookie)
