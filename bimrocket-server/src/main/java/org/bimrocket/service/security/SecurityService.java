@@ -30,6 +30,7 @@
  */
 package org.bimrocket.service.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -648,6 +649,18 @@ public class SecurityService
             .expiration(expiration)
             .signWith(key)
             .compact();
+  }
+
+  public boolean validateJWTToken(String token)
+  {
+    SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    Claims claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+    String userId = claims.get("userid", String.class);
+    return true;
   }
 
 }
