@@ -548,7 +548,7 @@ public class SecurityService
     if ("basic".equalsIgnoreCase(authoType))
     {
       String userId = claims.get("userid", String.class);
-      String password = claims.get("password", String.class);
+      //String password = claims.get("password", String.class);
 
       if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
@@ -563,6 +563,7 @@ public class SecurityService
       if (FALSE.equals(user.getActive()))
         throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
 
+      /*
       if (ADMIN_USER.equals(userId)) // admin user
       {
         if (!adminPassword.equals(password))
@@ -581,6 +582,7 @@ public class SecurityService
         if (!user.getPasswordHash().equals(passwordHash))
           throw new NotAuthorizedException();
       }
+      */
       return user;
     }
     else if ("bearer".equalsIgnoreCase(authoType))
@@ -694,9 +696,9 @@ public class SecurityService
     return validPassword;
   }
 
-  public NewCookie CreateHttpOnlyCookie(String userId, String password, String typeAuth)
+  public NewCookie CreateHttpOnlyCookie(String userId, String typeAuth)
   {
-    String token = createJWTToken(userId, password, typeAuth);
+    String token = createJWTToken(userId, typeAuth);
     NewCookie cookie = new NewCookie(
             "auth_token",   // name
             token,            // value
@@ -711,13 +713,12 @@ public class SecurityService
     return cookie;
   }
 
-  public String createJWTToken(String userId, String password, String authType)
+  public String createJWTToken(String userId, String authType)
   {
     SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
     Map<String, Object> claims = new HashMap<>();
     claims.put("userid", userId);
-    claims.put("password", password);
     claims.put("authType", authType);
 
     Date now = new Date();
@@ -741,6 +742,37 @@ public class SecurityService
             .getPayload();
 
     return claims;
+  }
+
+  public boolean validateCredentialsLogin(String userId, String password)
+  {
+    User user = getUser(userId); // get from store
+    if (user == null)
+    {
+      user = new User();
+      user.setId(userId);
+      user.setName(userId);
+    }
+
+    if (ADMIN_USER.equals(userId)) // admin user
+    {
+      if (!adminPassword.equals(password))
+        return false;
+    }
+    else if (user.getPasswordHash() == null) // LDAP User
+    {
+      if (ldapConnector == null ||
+              !ldapConnector.validateCredentials(userId, password))
+        return false;
+    }
+    else // check hashed password in User
+    {
+      String passwordHash = hash(password);
+
+      if (!user.getPasswordHash().equals(passwordHash))
+        return false;
+    }
+    return true;
   }
 
 }
