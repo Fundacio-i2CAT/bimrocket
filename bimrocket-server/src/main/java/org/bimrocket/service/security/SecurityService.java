@@ -59,6 +59,7 @@ import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
 import org.bimrocket.service.security.store.SecurityDaoStore;
 import org.bimrocket.service.security.store.empty.SecurityEmptyDaoStore;
+import org.bimrocket.util.JWTUtils;
 import org.eclipse.microprofile.config.Config;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 import org.bimrocket.util.ExpiringCache;
@@ -401,6 +402,7 @@ public class SecurityService
     User user;
     String authorization;
     HttpServletRequest request;
+    Cookie cookieAuth = null;
 
     // get User from thread map
     String userId = userIdByThread.get(Thread.currentThread());
@@ -420,11 +422,24 @@ public class SecurityService
     try
     {
       request = requestInstance.get();
+
       user = (User)request.getAttribute(USER_REQUEST_ATTRIBUTE);
       if (user != null) return user;
 
-      authorization = request.getHeader("Authorization");
-      if (authorization == null)
+      Cookie[] cookies = request.getCookies();
+      if (cookies != null)
+      {
+        for (Cookie c : cookies){
+          if (c.getName().equals("auth_token"))
+          {
+            cookieAuth = c;
+            break;
+          }
+        }
+      }
+      //authorization = request.getHeader("Authorization");
+      //if (authorization == null)
+      if (cookies == null || cookieAuth ==null)
       {
         request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
         return anonymousUser;
@@ -435,6 +450,7 @@ public class SecurityService
       return anonymousUser;
     }
 
+    /*
     userId = authorizationCache.get(authorization);
 
     if (userId != null)
@@ -442,15 +458,17 @@ public class SecurityService
       user = userCache.get(userId);
       if (user != null) return user;
     }
+    */
 
-    user = getUserFromAuthorization(authorization);
+    user = getUserFromCookie(cookieAuth);
+    //user = getUserFromAuthorization(authorization);
     userId = user.getId().trim();
 
     if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
     addUserRoles(user);
 
-    authorizationCache.put(authorization, userId);
+    //authorizationCache.put(authorization, userId);
     userCache.put(userId, user);
     request.setAttribute(USER_REQUEST_ATTRIBUTE, user);
 
@@ -515,6 +533,66 @@ public class SecurityService
         //TODO: find User by token
       }
     }
+    return anonymousUser;
+  }
+
+  private User getUserFromCookie(Cookie cookie)
+  {
+    Claims claims = getClaimsFromJWTToken(cookie.getValue());
+    Date expiration = claims.getExpiration();
+
+    if (expiration.before(new Date()))
+      return anonymousUser;
+
+    String authoType = claims.get("authType", String.class);
+    if ("basic".equalsIgnoreCase(authoType))
+    {
+      String userId = claims.get("userid", String.class);
+      String password = claims.get("password", String.class);
+
+      if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
+
+      User user = getUser(userId); // get from store
+      if (user == null)
+      {
+        user = new User();
+        user.setId(userId);
+        user.setName(userId);
+      }
+
+      if (FALSE.equals(user.getActive()))
+        throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
+
+      if (ADMIN_USER.equals(userId)) // admin user
+      {
+        if (!adminPassword.equals(password))
+          throw new NotAuthorizedException();
+      }
+      else if (user.getPasswordHash() == null) // LDAP User
+      {
+        if (ldapConnector == null ||
+                !ldapConnector.validateCredentials(userId, password))
+          throw new NotAuthorizedException();
+      }
+      else // check hashed password in User
+      {
+        String passwordHash = hash(password);
+
+        if (!user.getPasswordHash().equals(passwordHash))
+          throw new NotAuthorizedException();
+      }
+      return user;
+    }
+    else if ("bearer".equalsIgnoreCase(authoType))
+    {
+      String userId = claims.get("userid", String.class);
+      User user = getUser(userId); // get from store
+      if (user != null)
+      {
+        return user;
+      }
+    }
+
     return anonymousUser;
   }
 
@@ -616,9 +694,9 @@ public class SecurityService
     return validPassword;
   }
 
-  public NewCookie CreateHttpOnlyCookie(String userId)
+  public NewCookie CreateHttpOnlyCookie(String userId, String password, String typeAuth)
   {
-    String token = createJWTToken(userId);
+    String token = createJWTToken(userId, password, typeAuth);
     NewCookie cookie = new NewCookie(
             "auth_token",   // name
             token,            // value
@@ -633,12 +711,14 @@ public class SecurityService
     return cookie;
   }
 
-  public String createJWTToken(String userId)
+  public String createJWTToken(String userId, String password, String authType)
   {
     SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
     Map<String, Object> claims = new HashMap<>();
     claims.put("userid", userId);
+    claims.put("password", password);
+    claims.put("authType", authType);
 
     Date now = new Date();
     Date expiration = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8h
@@ -651,7 +731,7 @@ public class SecurityService
             .compact();
   }
 
-  public boolean validateJWTToken(String token)
+  public Claims getClaimsFromJWTToken(String token)
   {
     SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     Claims claims = Jwts.parser()
@@ -659,8 +739,8 @@ public class SecurityService
             .build()
             .parseSignedClaims(token)
             .getPayload();
-    String userId = claims.get("userid", String.class);
-    return true;
+
+    return claims;
   }
 
 }

@@ -81,15 +81,14 @@ public class SecurityEndpoint
   )
   public Response login(@Valid LoginRequest loginRequest)
   {
-    User user = securityService.getUser(loginRequest.getUserName());
+    //User user = securityService.getUser(loginRequest.getUserName());
 
-    if (user == null || !securityService.checkPasswordHash(user, loginRequest.getPassword()))
-    {
-      return Response.status(Response.Status.UNAUTHORIZED).build();
-    }
+    //if (user == null || !securityService.checkPasswordHash(user, loginRequest.getPassword()))
+    //{
+      //return Response.status(Response.Status.UNAUTHORIZED).build();
+    //}
 
-    NewCookie authCookie = securityService.CreateHttpOnlyCookie(user.getId());
-
+    NewCookie authCookie = securityService.CreateHttpOnlyCookie(loginRequest.getUserName(), loginRequest.getPassword(), "basic");
     return Response.ok()
       .cookie(authCookie)
       .build();
