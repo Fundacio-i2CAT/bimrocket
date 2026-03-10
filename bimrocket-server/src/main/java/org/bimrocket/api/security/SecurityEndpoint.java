@@ -35,7 +35,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -84,7 +83,7 @@ public class SecurityEndpoint
     if (!securityService.validateCredentialsLogin(loginRequest.getUserName(), loginRequest.getPassword()))
       return Response.status(Response.Status.UNAUTHORIZED).build();
 
-    NewCookie authCookie = securityService.CreateHttpOnlyCookie(loginRequest.getUserName());
+    NewCookie authCookie = securityService.createHttpOnlyCookie(loginRequest.getUserName());
     return Response.ok()
       .cookie(authCookie)
       .build();

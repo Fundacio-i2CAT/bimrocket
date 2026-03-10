@@ -33,6 +33,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ *
+ * @author jordi.hernandez@i2cat.net
+ */
 public class AzureBlobFileStore implements FileStore
 {
   static final String BASE = "services.file.store.azure.";

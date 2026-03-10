@@ -59,7 +59,6 @@ import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
 import org.bimrocket.service.security.store.SecurityDaoStore;
 import org.bimrocket.service.security.store.empty.SecurityEmptyDaoStore;
-import org.bimrocket.util.JWTUtils;
 import org.eclipse.microprofile.config.Config;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 import org.bimrocket.util.ExpiringCache;
@@ -400,7 +399,6 @@ public class SecurityService
   public User getCurrentUser()
   {
     User user;
-    String authorization;
     HttpServletRequest request;
     Cookie cookieAuth = null;
 
@@ -437,8 +435,6 @@ public class SecurityService
           }
         }
       }
-      //authorization = request.getHeader("Authorization");
-      //if (authorization == null)
       if (cookies == null || cookieAuth ==null)
       {
         request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
@@ -450,7 +446,6 @@ public class SecurityService
       return anonymousUser;
     }
 
-    //userId = authorizationCache.get(authorization);
     Claims claims = getClaimsFromJWTToken(cookieAuth.getValue());
     userId = claims.get("userid", String.class);
     if (userId != null)
@@ -460,14 +455,12 @@ public class SecurityService
     }
 
     user = getUserFromCookie(claims);
-    //user = getUserFromAuthorization(authorization);
     userId = user.getId().trim();
 
     if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
     addUserRoles(user);
 
-    //authorizationCache.put(authorization, userId);
     userCache.put(userId, user);
     request.setAttribute(USER_REQUEST_ATTRIBUTE, user);
 
@@ -479,62 +472,6 @@ public class SecurityService
 
   /* private methods */
 
-  private User getUserFromAuthorization(String authorization)
-  {
-    String[] authoParts = authorization.split(" ");
-    if (authoParts.length == 2)
-    {
-      String authoType = authoParts[0];
-      if ("basic".equalsIgnoreCase(authoType))
-      {
-        String userPassword = authoParts[1].trim();
-        String decoded = new String(Base64.getDecoder().decode(userPassword));
-        String[] userPasswordParts = decoded.split(":");
-        String userId = userPasswordParts.length > 0 ? userPasswordParts[0] : null;
-        String password = userPasswordParts.length > 1 ? userPasswordParts[1] : null;
-
-        if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
-
-        User user = getUser(userId); // get from store
-        if (user == null)
-        {
-          user = new User();
-          user.setId(userId);
-          user.setName(userId);
-        }
-
-        if (FALSE.equals(user.getActive()))
-          throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
-
-        if (ADMIN_USER.equals(userId)) // admin user
-        {
-          if (!adminPassword.equals(password))
-            throw new NotAuthorizedException();
-        }
-        else if (user.getPasswordHash() == null) // LDAP User
-        {
-          if (ldapConnector == null ||
-              !ldapConnector.validateCredentials(userId, password))
-            throw new NotAuthorizedException();
-        }
-        else // check hashed password in User
-        {
-          String passwordHash = hash(password);
-
-          if (!user.getPasswordHash().equals(passwordHash))
-            throw new NotAuthorizedException();
-        }
-        return user;
-      }
-      else if ("bearer".equalsIgnoreCase(authoType))
-      {
-        String token = authoParts[1].trim();
-        //TODO: find User by token
-      }
-    }
-    return anonymousUser;
-  }
-
   private User getUserFromCookie(Claims claims)
   {
 
@@ -544,8 +481,6 @@ public class SecurityService
       return anonymousUser;
 
     String userId = claims.get("userid", String.class);
-
-    //if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
     User user = getUser(userId); // get from store
     if (user == null)
@@ -649,6 +584,8 @@ public class SecurityService
     }
   }
 
+  /* public methods */
+
   public boolean checkPasswordHash(User user, String password)
   {
     boolean validPassword = true;
@@ -659,7 +596,7 @@ public class SecurityService
     return validPassword;
   }
 
-  public NewCookie CreateHttpOnlyCookie(String userId)
+  public NewCookie createHttpOnlyCookie(String userId)
   {
     String token = createJWTToken(userId);
     NewCookie cookie = new NewCookie(
