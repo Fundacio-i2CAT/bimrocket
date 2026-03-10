@@ -30,25 +30,21 @@
  */
 package org.bimrocket.servlet.oauth2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.NewCookie;
 import org.bimrocket.api.security.User;
 import org.bimrocket.service.security.SecurityService;
-import org.bimrocket.util.TextUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-
-import static org.bimrocket.util.TextUtils.getISODate;
 
 /**
  *
@@ -92,7 +88,7 @@ public class TokenValidationServlet extends HttpServlet
     String json = "";
     UserToken ut = null;
 
-    // Cocde received by keycloak in the redirect uri
+    // Code received by keycloak in the redirect uri
     String code = request.getParameter("code");
     if (code == null || code.isBlank())
     {
@@ -145,8 +141,12 @@ public class TokenValidationServlet extends HttpServlet
           return;
       }
 
+      // Create HttpOnly cookie
+      NewCookie cookie = securityService.createHttpOnlyCookie(ut.getUserId());
+      response.addHeader("Set-Cookie", cookie.toString());
+
       // Generate response HTML with the access token
-      generateHTMLResponse(ut, response);
+      generateHTMLResponse(response);
     }
     catch(Exception e)
     {
@@ -192,17 +192,11 @@ public class TokenValidationServlet extends HttpServlet
   }
 
 
-  public void generateHTMLResponse(UserToken userToken, HttpServletResponse response) throws Exception
+  public void generateHTMLResponse(HttpServletResponse response) throws Exception
   {
     String targetOrigin = "*";
 
-    // Create JSON with Jackson
-    Map<String, Object> jsonMap = new HashMap<>();
-    jsonMap.put("accessToken", userToken.getAccessToken());
-    jsonMap.put("username", userToken.getUserId());
-
-    ObjectMapper mapper = new ObjectMapper();
-    String jsonString = mapper.writeValueAsString(jsonMap);
+    String message = "Cookie created successfully";
 
     response.setContentType("text/html; charset=UTF-8");
     PrintWriter out = response.getWriter();
@@ -213,11 +207,9 @@ public class TokenValidationServlet extends HttpServlet
     out.println("<body>");
     out.println("<script>");
     out.println("  (function() {");
-
-    // JSON
-    out.println("    const message = " + mapper.writeValueAsString(jsonString) + ";");
+    out.println("    const message = '" + message + "';");
     out.println("    if (window.opener) {");
-    out.println("      window.opener.postMessage(JSON.parse(message), '" + targetOrigin + "');");
+    out.println("      window.opener.postMessage(message, '" + targetOrigin + "');");
     out.println("      window.close();");
     out.println("    } else {");
     out.println("      document.body.textContent = message;");
