@@ -450,17 +450,16 @@ public class SecurityService
       return anonymousUser;
     }
 
-    /*
-    userId = authorizationCache.get(authorization);
-
+    //userId = authorizationCache.get(authorization);
+    Claims claims = getClaimsFromJWTToken(cookieAuth.getValue());
+    userId = claims.get("userid", String.class);
     if (userId != null)
     {
       user = userCache.get(userId);
       if (user != null) return user;
     }
-    */
 
-    user = getUserFromCookie(cookieAuth);
+    user = getUserFromCookie(claims);
     //user = getUserFromAuthorization(authorization);
     userId = user.getId().trim();
 
@@ -536,66 +535,30 @@ public class SecurityService
     return anonymousUser;
   }
 
-  private User getUserFromCookie(Cookie cookie)
+  private User getUserFromCookie(Claims claims)
   {
-    Claims claims = getClaimsFromJWTToken(cookie.getValue());
+
     Date expiration = claims.getExpiration();
 
     if (expiration.before(new Date()))
       return anonymousUser;
 
-    String authoType = claims.get("authType", String.class);
-    if ("basic".equalsIgnoreCase(authoType))
+    String userId = claims.get("userid", String.class);
+
+    //if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
+
+    User user = getUser(userId); // get from store
+    if (user == null)
     {
-      String userId = claims.get("userid", String.class);
-      //String password = claims.get("password", String.class);
-
-      if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
-
-      User user = getUser(userId); // get from store
-      if (user == null)
-      {
-        user = new User();
-        user.setId(userId);
-        user.setName(userId);
-      }
-
-      if (FALSE.equals(user.getActive()))
-        throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
-
-      /*
-      if (ADMIN_USER.equals(userId)) // admin user
-      {
-        if (!adminPassword.equals(password))
-          throw new NotAuthorizedException();
-      }
-      else if (user.getPasswordHash() == null) // LDAP User
-      {
-        if (ldapConnector == null ||
-                !ldapConnector.validateCredentials(userId, password))
-          throw new NotAuthorizedException();
-      }
-      else // check hashed password in User
-      {
-        String passwordHash = hash(password);
-
-        if (!user.getPasswordHash().equals(passwordHash))
-          throw new NotAuthorizedException();
-      }
-      */
-      return user;
-    }
-    else if ("bearer".equalsIgnoreCase(authoType))
-    {
-      String userId = claims.get("userid", String.class);
-      User user = getUser(userId); // get from store
-      if (user != null)
-      {
-        return user;
-      }
+      user = new User();
+      user.setId(userId);
+      user.setName(userId);
     }
 
-    return anonymousUser;
+    if (FALSE.equals(user.getActive()))
+      throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
+
+    return user;
   }
 
   private void addUserRoles(User user)
@@ -696,9 +659,9 @@ public class SecurityService
     return validPassword;
   }
 
-  public NewCookie CreateHttpOnlyCookie(String userId, String typeAuth)
+  public NewCookie CreateHttpOnlyCookie(String userId)
   {
-    String token = createJWTToken(userId, typeAuth);
+    String token = createJWTToken(userId);
     NewCookie cookie = new NewCookie(
             "auth_token",   // name
             token,            // value
@@ -713,13 +676,12 @@ public class SecurityService
     return cookie;
   }
 
-  public String createJWTToken(String userId, String authType)
+  public String createJWTToken(String userId)
   {
     SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
     Map<String, Object> claims = new HashMap<>();
     claims.put("userid", userId);
-    claims.put("authType", authType);
 
     Date now = new Date();
     Date expiration = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8h
