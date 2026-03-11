@@ -596,19 +596,20 @@ public class SecurityService
     return validPassword;
   }
 
-  public NewCookie createHttpOnlyCookie(String userId)
+  public NewCookie createHttpOnlyCookie(HttpServletRequest request, String userId)
   {
     String token = createJWTToken(userId);
-    NewCookie cookie = new NewCookie(
-            "auth_token",   // name
-            token,            // value
-            "/",              // path
-            null,             // domain
-            null,             // comment
-            28800,            // maxAge, 8h
-            true,             // secure
-            true              // httpOnly
-    );
+
+    boolean isSecureEnv = request.isSecure();
+
+    NewCookie cookie = new NewCookie.Builder("auth_token")
+            .value(token)
+            .path("/")
+            .maxAge(28800)
+            .secure(isSecureEnv)
+            .httpOnly(true)
+            .sameSite(NewCookie.SameSite.LAX)
+            .build();
 
     return cookie;
   }

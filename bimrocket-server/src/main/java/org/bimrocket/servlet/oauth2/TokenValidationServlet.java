@@ -142,7 +142,7 @@ public class TokenValidationServlet extends HttpServlet
       }
 
       // Create HttpOnly cookie
-      NewCookie cookie = securityService.createHttpOnlyCookie(ut.getUserId());
+      NewCookie cookie = securityService.createHttpOnlyCookie(request, ut.getUserId());
       response.addHeader("Set-Cookie", cookie.toString());
 
       // Generate response HTML with the access token
