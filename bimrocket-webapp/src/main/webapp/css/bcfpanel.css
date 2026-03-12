@@ -71,6 +71,19 @@
   text-align: center;
 }
 
+.bcf_panel .bcf_checkbox
+{
+  margin: 8px 0;
+  display: flex;
+  gap: 4px;
+
+  & input, label
+  {
+    width: initial;
+    cursor: pointer;
+  }
+}
+
 .bcf_body > .bcf_topic_nav
 {
   display: grid;

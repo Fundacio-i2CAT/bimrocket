@@ -2,6 +2,8 @@
  * BCFPanel.js
  *
  * @author realor
+ * @author nuriaescudei2cat
+ * @author alexis-i2cat
  */
 
 import { Panel } from "./Panel.js";
@@ -59,7 +61,6 @@ class BCFPanel extends Panel
     this.bodyElem.appendChild(this.searchPanelElem);
 
     // connect panel
-
     this.connPanelElem = document.createElement("div");
     this.connPanelElem.className = "bcf_body";
     this.searchPanelElem.appendChild(this.connPanelElem);
@@ -99,6 +100,8 @@ class BCFPanel extends Panel
 
     this.projectNameFilterField = Controls.addTextField(this.filterProjectsElem,
       "projectNameFilter", "bim|label.filter_project_name");
+
+    this.filterVisibilityButton = Controls.addCheckBoxField(this.filterProjectsElem, "filterProjects", "bim|button.filter_projects", false, "bcf_checkbox");
 
     this.buttonContainer = document.createElement("div");
     this.buttonContainer.style.display = "flex";
@@ -319,11 +322,11 @@ class BCFPanel extends Panel
 
     this.guidElem = Controls.addTextField(this.auditPanelElem,
       "topic_guid", "GUID:");
-     this.guidElem.setAttribute("readonly", true);
+    this.guidElem.setAttribute("readonly", true);
 
     this.creationDateElem = Controls.addTextField(this.auditPanelElem,
       "topic_creation_date", "bim|label.creation_date");
-     this.creationDateElem.setAttribute("readonly", true);
+    this.creationDateElem.setAttribute("readonly", true);
 
     this.selectedComponentsElem = document.createElement("div");
     this.selectedComponentsElem.className = "selected_components";
@@ -331,11 +334,11 @@ class BCFPanel extends Panel
 
     this.creationAuthorElem = Controls.addTextField(this.auditPanelElem,
       "topic_creation_author", "bim|label.creation_author");
-     this.creationAuthorElem.setAttribute("readonly", true);
+    this.creationAuthorElem.setAttribute("readonly", true);
 
     this.modifyDateElem = Controls.addTextField(this.auditPanelElem,
       "topic_modify_date", "bim|label.modify_date");
-     this.modifyDateElem.setAttribute("readonly", true);
+    this.modifyDateElem.setAttribute("readonly", true);
 
     this.modifyAuthorElem = Controls.addTextField(this.auditPanelElem,
       "topic_modify_author", "bim|label.modify_author");
@@ -397,6 +400,11 @@ class BCFPanel extends Panel
   showProjects()
   {
     let projects = Array.from(this.projectMap.values());
+
+    if (this.filterVisibilityButton.checked)
+    {
+      projects = projects.filter(project => project.visible);
+    }
 
     projects.sort((projectA, projectB) =>
     {
@@ -497,7 +505,6 @@ class BCFPanel extends Panel
       }
     }
   }
-
 
   showTopic(topic = null, index = -1)
   {
@@ -1185,7 +1192,7 @@ class BCFPanel extends Panel
     let nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
 
     let odataFilter = {
-      nameFilter: nameFilter
+      nameFilter: nameFilter,
     };
     let odataOrderBy = "name";
 
@@ -1242,29 +1249,12 @@ class BCFPanel extends Panel
             id: projectId,
             name : projectName,
             persistent: true,
-            visible : false
+            visible : false,
           };
           projectMap.set(projectId, project);
         }
       }
 
-      const options = [];
-
-      if (projectMap.size === 0)
-      {
-        options.push(["", "Cap projecte coincideix"]);
-      }
-      else
-      {
-        projectMap.forEach((project, projectId) => {
-          let name = project.name + " [";
-          if (project.persistent) name += "P";
-          if (project.visible) name += "V";
-          name += "]";
-
-          options.push([projectId, name]);
-        });
-      }
       this.showProjects();
     };
 
