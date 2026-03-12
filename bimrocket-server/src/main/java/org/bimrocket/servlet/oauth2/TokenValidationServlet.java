@@ -30,6 +30,7 @@
  */
 package org.bimrocket.servlet.oauth2;
 
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -41,8 +42,8 @@ import org.bimrocket.service.security.SecurityService;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -58,37 +59,36 @@ public class TokenValidationServlet extends HttpServlet
   static final Logger LOGGER =
     Logger.getLogger(TokenValidationServlet.class.getName());
 
+  private static final String MISSING_CODE_PARAMETER = "Missing Code parameter";
+  private static final String INVALID_PATH_REDIRECT_URL = "Invalid path for redirect url";
+
   @Inject
   transient SecurityService securityService;
 
   @Inject
-  transient KeycloakAuthManager keycloakAuthManager;
+  Instance<AuthenticationManager> authManagers;
 
-  @Inject
-  transient ValidAuthManager validAuthManager;
+  private Map<String, AuthenticationManager> issuerManagers;
 
-  @Inject
-  transient GicarAuthManager gicarAuthManager;
-
-  private static final String MISSING_CODE_PARAMETER = "Missing Code parameter";
-  private static final String INVALID_PATH_REDIRECT_URL = "Invalid path for redirect url";
-  private static final String ISSUER_KEYCLOAK = "keycloak";
-  private static final String ISSUER_VALID = "valid";
-  private static final String ISSUER_GICAR = "gicar";
+  @Override
+  public void init()
+  {
+    issuerManagers = new HashMap<>();
+    for (AuthenticationManager manager : authManagers)
+    {
+      issuerManagers.put(manager.getIssuer(), manager);
+    }
+  }
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException
   {
-    // PathInfo to select for keycloak, valid or gicar issuer
     String pathInfo = request.getPathInfo();
 
     // Get redirect uri specified in the request to be used after when call to get token from code
     String redirectUri = request.getRequestURL().toString();
-    String json = "";
-    UserToken ut = null;
 
-    // Code received by keycloak in the redirect uri
     String code = request.getParameter("code");
     if (code == null || code.isBlank())
     {
@@ -100,46 +100,19 @@ public class TokenValidationServlet extends HttpServlet
 
     try
     {
-      String issuer = null;
+      String issuer = extractIssuer(pathInfo);
 
-      if (pathInfo.contains(ISSUER_KEYCLOAK))
-      {
-        issuer = ISSUER_KEYCLOAK;
-      } else if (pathInfo.contains(ISSUER_VALID))
-      {
-        issuer = ISSUER_VALID;
-      } else if (pathInfo.contains(ISSUER_GICAR))
-      {
-        issuer = ISSUER_GICAR;
-      }
+      AuthenticationManager manager = issuerManagers.get(issuer);
 
-      if (issuer == null)
+      if (manager == null)
       {
         sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
         return;
       }
 
-      switch (issuer)
-      {
-        case ISSUER_KEYCLOAK:
-          json = keycloakAuthManager.getAuthenticationToken(code, redirectUri);
-          ut = keycloakAuthManager.getUseridFromToken(json);
-          checkUseridDB(ut, issuer);
-          break;
-        case ISSUER_VALID:
-          json = validAuthManager.getAuthenticationToken(code, redirectUri);
-          ut = validAuthManager.getUseridFromToken(json);
-          checkUseridDB(ut, issuer);
-          break;
-        case ISSUER_GICAR:
-          json = gicarAuthManager.getAuthenticationToken(code, redirectUri);
-          ut = gicarAuthManager.getUseridFromToken(json);
-          checkUseridDB(ut, issuer);
-          break;
-        default:
-          sendBadRequest(response, INVALID_PATH_REDIRECT_URL);
-          return;
-      }
+      String json = manager.getAuthenticationToken(code, redirectUri);
+      UserToken ut = manager.getUseridFromToken(json);
+      checkUseridDB(ut, manager);
 
       // Create HttpOnly cookie
       NewCookie cookie = securityService.createHttpOnlyCookie(request, ut.getUserId());
@@ -157,6 +130,18 @@ public class TokenValidationServlet extends HttpServlet
 
   // internal methods
 
+  private String extractIssuer(String pathInfo)
+  {
+    if (pathInfo == null || pathInfo.isBlank())
+    {
+      return null;
+    }
+
+    String[] parts = pathInfo.split("/");
+
+    return parts[parts.length - 1].toLowerCase();
+  }
+
   void logParameters(HttpServletRequest request, Object parameters)
   {
     request.setAttribute("log.parameters", parameters.toString());
@@ -169,30 +154,21 @@ public class TokenValidationServlet extends HttpServlet
     resp.getWriter().write("{\"error\":\"" + error + "\"}");
   }
 
-  public void checkUseridDB(UserToken userToken, String issuer) throws Exception
+  private void checkUseridDB(UserToken userToken, AuthenticationManager manager) throws Exception
   {
-     Map<String, List<String>> issuerRoles = Map.of(
-       ISSUER_KEYCLOAK, List.of(Utils.PROJECTISTA),
-       ISSUER_VALID, List.of(Utils.PROJECTISTA),
-       ISSUER_GICAR, List.of(Utils.VECTOR_UT_OGE)
-     );
-
-     User user = securityService.getUser(userToken.getUserId());
-     if (user == null)
-     {
-       User newUser = new User();
-       newUser.setId(userToken.getUserId());
-       newUser.setName(userToken.getUserId());
-       newUser.setPassword(Utils.generatePassword());
-       // Roles by issuer
-       List<String> roles = issuerRoles.getOrDefault(issuer, List.of());
-       newUser.setRoleIds(new HashSet<>(roles));
-       securityService.createUser(newUser);
-     }
+    User user = securityService.getUser(userToken.getUserId());
+    if (user == null)
+    {
+      User newUser = new User();
+      newUser.setId(userToken.getUserId());
+      newUser.setName(userToken.getUserId());
+      newUser.setPassword(Utils.generatePassword());
+      newUser.setRoleIds(new HashSet<>(manager.getDefaultRoles()));
+      securityService.createUser(newUser);
+    }
   }
 
-
-  public void generateHTMLResponse(HttpServletResponse response) throws Exception
+  private void generateHTMLResponse(HttpServletResponse response) throws Exception
   {
     String targetOrigin = "*";
 

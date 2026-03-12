@@ -15,43 +15,41 @@ import java.util.Locale;
  */
 public class Utils
 {
-    public static final String PROJECTISTA = "PROJECTISTA";
-    public static final String VECTOR_UT_OGE = "VECTOR-UT-OGE";
+  public static final String PROJECTISTA = "PROJECTISTA";
+  public static final String VECTOR_UT_OGE = "VECTOR-UT-OGE";
 
-    public static JsonNode decodeJWTToken(String token) throws JsonProcessingException
-    {
-        String[] parts = token.split("\\.");
+  public static JsonNode decodeJWTToken(String token) throws JsonProcessingException
+  {
+    String[] parts = token.split("\\.");
+    String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.readTree(payloadJson);
+  }
 
-        String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+  public static String escapeJsString(String value)
+  {
+    if (value == null) return "\"\"";
+    return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+  }
 
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readTree(payloadJson);
-    }
+  public static String generatePassword()
+  {
+    SecureRandom RANDOM = new SecureRandom();
 
-    public static String escapeJsString(String value)
-    {
-      if (value == null) return "\"\"";
-      return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
-    }
+    /**
+     * Generate paswrod with format: prefix + zero-padded digits + specialChar
+     * Example: Prova000#
+    */
+    String prefix = "Bimrocket";
+    int digits = 4;
+    String specials = "#";
 
-    public static String generatePassword()
-    {
-      SecureRandom RANDOM = new SecureRandom();
+    int max = (int) Math.pow(10, digits);
+    int number = RANDOM.nextInt(max);
 
-      /**
-       * Generate paswrod with format: prefix + zero-padded digits + specialChar
-       * Example: Prova000#
-      */
-      String prefix = "Bimrocket";
-      int digits = 4;
-      String specials = "#";
+    String format = "%0" + digits + "d";
+    String numStr = String.format(Locale.ROOT, format, number);
 
-      int max = (int) Math.pow(10, digits);
-      int number = RANDOM.nextInt(max);
-
-      String format = "%0" + digits + "d";
-      String numStr = String.format(Locale.ROOT, format, number);
-
-      return prefix + numStr + specials;
-    }
+    return prefix + numStr + specials;
+  }
 }

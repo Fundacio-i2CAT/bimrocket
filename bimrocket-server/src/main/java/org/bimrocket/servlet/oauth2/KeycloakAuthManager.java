@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  *
@@ -22,6 +23,18 @@ public class KeycloakAuthManager implements AuthenticationManager
   Config config;
 
   static final String BASE = "services.security.oauth2.";
+
+  @Override
+  public String getIssuer()
+  {
+    return "keycloak";
+  }
+
+  @Override
+  public List<String> getDefaultRoles()
+  {
+    return List.of(Utils.PROJECTISTA);
+  }
 
   @Override
   public String getAuthenticationToken(String code, String redirectUri) throws Exception
