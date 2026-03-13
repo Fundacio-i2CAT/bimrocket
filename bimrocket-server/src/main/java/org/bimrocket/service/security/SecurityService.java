@@ -31,8 +31,6 @@
 package org.bimrocket.service.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -59,6 +57,7 @@ import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
 import org.bimrocket.service.security.store.SecurityDaoStore;
 import org.bimrocket.service.security.store.empty.SecurityEmptyDaoStore;
+import org.bimrocket.util.JWTUtils;
 import org.eclipse.microprofile.config.Config;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 import org.bimrocket.util.ExpiringCache;
@@ -117,6 +116,7 @@ public class SecurityService
 
   SecurityDaoStore daoStore;
   LdapConnector ldapConnector;
+  JWTUtils jwtUtils;
 
   String adminPassword;
 
@@ -142,6 +142,8 @@ public class SecurityService
 
     ldapEnabled = config.getValue(BASE + "ldap.enabled", Boolean.class);
     secretKey = config.getValue(BASE + "jwtSecret", String.class);
+
+    jwtUtils = new JWTUtils(secretKey);
 
     CDI<Object> cdi = CDI.current();
 
@@ -401,6 +403,7 @@ public class SecurityService
     User user;
     HttpServletRequest request;
     Cookie cookieAuth = null;
+    Claims claims = null;
 
     // get User from thread map
     String userId = userIdByThread.get(Thread.currentThread());
@@ -440,13 +443,15 @@ public class SecurityService
         request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
         return anonymousUser;
       }
+      claims = jwtUtils.verifyToken(cookieAuth.getValue());
+      if (claims == null) return anonymousUser;
+
     }
     catch (Exception ex) // not in servlet context
     {
       return anonymousUser;
     }
 
-    Claims claims = getClaimsFromJWTToken(cookieAuth.getValue());
     userId = claims.get("userid", String.class);
     if (userId != null)
     {
@@ -616,32 +621,10 @@ public class SecurityService
 
   public String createJWTToken(String userId)
   {
-    SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-
     Map<String, Object> claims = new HashMap<>();
     claims.put("userid", userId);
 
-    Date now = new Date();
-    Date expiration = new Date(now.getTime() + 8 * 60 * 60 * 1000); // 8h
-
-    return Jwts.builder()
-            .claims(claims)
-            .issuedAt(now)
-            .expiration(expiration)
-            .signWith(key)
-            .compact();
-  }
-
-  public Claims getClaimsFromJWTToken(String token)
-  {
-    SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-    Claims claims = Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-
-    return claims;
+    return jwtUtils.generateToken(claims); //Default expiration 8h
   }
 
   public boolean validateCredentialsLogin(String userId, String password)
