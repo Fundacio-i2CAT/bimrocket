@@ -24,6 +24,22 @@ services:
       class: org.bimrocket.service.security.store.mongo.SecurityMongoDaoStore
       mongo:
         database: bimdb
+    jwtSecret: #JWT secret_id
+    oauth2:
+      keycloak:
+        urlAuthenticationToken: #Keycloak Authentication
+        clientId: #Keycloak client_id
+        secretId: #Keycloak secret_id
+      valid:
+        urlAuthenticationToken: #Valid Authentication
+        urlGetUserInfo: #Valid User info
+        clientId: #Valid client_id
+        secretId: #Valid secret_id
+      gicar:
+        urlAuthenticationToken: #Gicar Authentication
+        urlGetUserInfo: #Gicar User info
+        clientId: #Gicar client_id
+        secretId: #Gicar secret_id
 
   # file service
   file:
