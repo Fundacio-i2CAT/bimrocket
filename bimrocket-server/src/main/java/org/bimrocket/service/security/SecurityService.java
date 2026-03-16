@@ -661,4 +661,18 @@ public class SecurityService
     return true;
   }
 
+  public NewCookie destroyHttpOnlyCookie(HttpServletRequest request)
+  {
+    boolean isSecureEnv = request.isSecure();
+
+    NewCookie cookie = new NewCookie.Builder("auth_token")
+            .value("")
+            .path("/")
+            .maxAge(0)
+            .secure(isSecureEnv)
+            .httpOnly(true)
+            .build();
+
+    return cookie;
+  }
 }

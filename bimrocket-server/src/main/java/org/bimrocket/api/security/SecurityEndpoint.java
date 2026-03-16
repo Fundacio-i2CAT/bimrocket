@@ -49,9 +49,14 @@ import jakarta.ws.rs.QueryParam;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import static org.bimrocket.api.ApiResult.OK;
 import org.bimrocket.dao.expression.Expression;
 import org.bimrocket.dao.expression.OrderByExpression;
@@ -89,9 +94,36 @@ public class SecurityEndpoint
       return Response.status(Response.Status.UNAUTHORIZED).build();
 
     NewCookie authCookie = securityService.createHttpOnlyCookie(this.request, loginRequest.getUserName());
-    return Response.ok()
+
+    Map<String, String> json = new HashMap<>();
+    json.put("message", "Login successful");
+
+    return Response.ok(json)
+      .type(MediaType.APPLICATION_JSON)
       .cookie(authCookie)
       .build();
+  }
+
+  @POST
+  @Path("/logout")
+  @Consumes(APPLICATION_JSON)
+  @Produces(APPLICATION_JSON)
+  @PermitAll
+  @Operation(
+          summary = "Basic Authentication Logout",
+          security = {}
+  )
+  public Response logout()
+  {
+    NewCookie authCookie = securityService.destroyHttpOnlyCookie(this.request);
+
+    Map<String, String> json = new HashMap<>();
+    json.put("message", "Logout successful");
+
+    return Response.ok(json)
+            .type(MediaType.APPLICATION_JSON)
+            .cookie(authCookie)
+            .build();
   }
 
   /* Users */
