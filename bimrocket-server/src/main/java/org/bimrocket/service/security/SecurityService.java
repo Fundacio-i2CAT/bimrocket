@@ -430,17 +430,22 @@ public class SecurityService
       if (user != null) return user;
 
       Cookie[] cookies = request.getCookies();
-      if (cookies != null)
+
+      if (cookies == null)
       {
-        for (Cookie c : cookies){
-          if (c.getName().equals("auth_token"))
-          {
-            cookieAuth = c;
-            break;
-          }
+        request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
+        return anonymousUser;
+      }
+
+      for (Cookie c : cookies){
+        if (c.getName().equals("auth_token"))
+        {
+          cookieAuth = c;
+          break;
         }
       }
-      if (cookies == null || cookieAuth ==null)
+
+      if (cookieAuth ==null)
       {
         request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
         return anonymousUser;
