@@ -25,6 +25,7 @@ services:
       mongo:
         database: bimdb
     jwtSecret: #JWT secret_id
+    hoursExpirationCookie: 8
     oauth2:
       keycloak:
         urlAuthenticationToken: #Keycloak Authentication

@@ -134,6 +134,7 @@ public class SecurityService
   boolean ldapEnabled;
 
   String secretKey;
+  long hoursExpirationCookie;
 
   @PostConstruct
   public void init()
@@ -142,8 +143,9 @@ public class SecurityService
 
     ldapEnabled = config.getValue(BASE + "ldap.enabled", Boolean.class);
     secretKey = config.getValue(BASE + "jwtSecret", String.class);
+    hoursExpirationCookie = config.getValue(BASE + "hoursExpirationCookie", Long.class);
 
-    jwtUtils = new JWTUtils(secretKey);
+    jwtUtils = new JWTUtils(secretKey, hoursExpirationCookie);
 
     CDI<Object> cdi = CDI.current();
 
@@ -606,11 +608,12 @@ public class SecurityService
     String token = createJWTToken(userId);
 
     boolean isSecureEnv = request.isSecure();
+    int secondsExpiration = Math.toIntExact(hoursExpirationCookie) * 60 * 60;
 
     NewCookie cookie = new NewCookie.Builder("auth_token")
             .value(token)
             .path("/")
-            .maxAge(28800)
+            .maxAge(secondsExpiration)
             .secure(isSecureEnv)
             .httpOnly(true)
             .sameSite(NewCookie.SameSite.LAX)
@@ -624,7 +627,7 @@ public class SecurityService
     Map<String, Object> claims = new HashMap<>();
     claims.put("userid", userId);
 
-    return jwtUtils.generateToken(claims); //Default expiration 8h
+    return jwtUtils.generateToken(claims);
   }
 
   public boolean validateCredentialsLogin(String userId, String password)
