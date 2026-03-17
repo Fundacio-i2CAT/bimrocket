@@ -50,6 +50,12 @@ public class CORSFilter implements ContainerResponseFilter
   {
     MultivaluedMap<String, Object> headers = responseContext.getHeaders();
     //headers.add("Access-Control-Allow-Origin", "*");
+    String origin = requestContext.getHeaderString("Origin");
+    if (origin != null) {
+      headers.add("Access-Control-Allow-Origin", origin);
+      headers.add("Vary", "Origin");
+    }
+
     headers.add("Access-Control-Allow-Credentials", "true");
     headers.add("Access-Control-Allow-Headers",
      "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match");

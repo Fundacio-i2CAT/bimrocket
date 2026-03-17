@@ -124,7 +124,7 @@ public class ProxyService
     HttpServletResponse servletResponse) throws Exception
   {
     String url = servletRequest.getParameter("url");
-    sendCORSHeaders(servletResponse);
+    sendCORSHeaders(servletRequest, servletResponse);
 
     if (url == null)
     {
@@ -306,9 +306,17 @@ public class ProxyService
     }
   }
 
-  private void sendCORSHeaders(HttpServletResponse servletResponse)
+  private void sendCORSHeaders(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
   {
     //servletResponse.setHeader("Access-Control-Allow-Origin", "*");
+    String origin = servletRequest.getHeader("Origin");
+
+    if (origin != null)
+    {
+      servletResponse.setHeader("Access-Control-Allow-Origin", origin);
+      servletResponse.setHeader("Vary", "Origin");
+    }
+
     servletResponse.setHeader("Access-Control-Allow-Credentials", "true");
     servletResponse.setHeader("Access-Control-Allow-Headers", "*");
     servletResponse.setHeader("Access-Control-Allow-Methods", "*");

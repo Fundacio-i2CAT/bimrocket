@@ -520,6 +520,13 @@ public class WebdavServlet extends HttpServlet
   void sendHeaders(HttpServletRequest request, HttpServletResponse response)
   {
     //response.setHeader("Access-Control-Allow-Origin", "*");
+    String origin = request.getHeader("Origin");
+
+    if (origin != null) {
+      response.setHeader("Access-Control-Allow-Origin", origin);
+      response.setHeader("Vary", "Origin");
+    }
+
     response.setHeader("Access-Control-Allow-Credentials", "true");
     response.setHeader("Access-Control-Allow-Headers", WEBDAV_HEADERS);
     response.setHeader("Access-Control-Allow-Methods", WEBDAV_METHODS);
