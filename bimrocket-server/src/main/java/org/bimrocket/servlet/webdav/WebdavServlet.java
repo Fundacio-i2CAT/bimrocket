@@ -522,21 +522,37 @@ public class WebdavServlet extends HttpServlet
     String origin = request.getHeader("Origin");
 
     // localhost or 127.0.0.1
-    if (origin != null &&
-            (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")))
+    if (origin != null)
     {
-      response.setHeader("Access-Control-Allow-Origin", origin);
+      // Local dev: localhost or 127.0.0.1
+      if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1"))
+      {
+        response.setHeader("Access-Control-Allow-Origin", origin);
+      }
+      else
+      {
+        // prod)
+        response.setHeader("Access-Control-Allow-Origin", origin);
+      }
     }
     else
     {
-      // same domain (prod)
-      origin = request.getScheme() + "://" +
-              request.getServerName() +
-              (request.getServerPort() == 80 || request.getServerPort() == 443
-                      ? ""
-                      : ":" + request.getServerPort());
+      // prod
+      String scheme = request.getHeader("X-Forwarded-Proto");
+      String host = request.getHeader("X-Forwarded-Host");
+      String portStr = request.getHeader("X-Forwarded-Port");
 
-      response.setHeader("Access-Control-Allow-Origin", origin);
+      if (scheme == null) scheme = request.getScheme();
+      if (host == null) host = request.getServerName();
+      int port = (portStr != null) ? Integer.parseInt(portStr) : request.getServerPort();
+
+      String backendOrigin = scheme + "://" + host;
+      if (!((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)))
+      {
+        backendOrigin += ":" + port;
+      }
+
+      response.setHeader("Access-Control-Allow-Origin", backendOrigin);
     }
 
     response.setHeader("Vary", "Origin");
