@@ -308,15 +308,27 @@ public class ProxyService
 
   private void sendCORSHeaders(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
   {
-    //servletResponse.setHeader("Access-Control-Allow-Origin", "*");
     String origin = servletRequest.getHeader("Origin");
 
-    if (origin != null)
+    // localhost or 127.0.0.1
+    if (origin != null &&
+            (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")))
     {
       servletResponse.setHeader("Access-Control-Allow-Origin", origin);
-      servletResponse.setHeader("Vary", "Origin");
+    }
+    else
+    {
+      // same domain (prod)
+      origin = servletRequest.getScheme() + "://" +
+              servletRequest.getServerName() +
+              (servletRequest.getServerPort() == 80 || servletRequest.getServerPort() == 443
+                      ? ""
+                      : ":" + servletRequest.getServerPort());
+
+      servletResponse.setHeader("Access-Control-Allow-Origin", origin);
     }
 
+    servletResponse.setHeader("Vary", "Origin");
     servletResponse.setHeader("Access-Control-Allow-Credentials", "true");
     servletResponse.setHeader("Access-Control-Allow-Headers", "*");
     servletResponse.setHeader("Access-Control-Allow-Methods", "*");

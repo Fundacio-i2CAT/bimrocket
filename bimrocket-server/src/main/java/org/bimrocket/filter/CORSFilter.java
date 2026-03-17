@@ -49,13 +49,31 @@ public class CORSFilter implements ContainerResponseFilter
     ContainerResponseContext responseContext) throws IOException
   {
     MultivaluedMap<String, Object> headers = responseContext.getHeaders();
-    //headers.add("Access-Control-Allow-Origin", "*");
+
     String origin = requestContext.getHeaderString("Origin");
+
     if (origin != null) {
-      headers.add("Access-Control-Allow-Origin", origin);
-      headers.add("Vary", "Origin");
+      // localhost or 127.0.0.1
+      if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
+        headers.add("Access-Control-Allow-Origin", origin);
+      } else {
+        // prod or same domain, copy Origin
+        headers.add("Access-Control-Allow-Origin", origin);
+      }
+    } else {
+      // same domain
+      String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
+      String host = requestContext.getUriInfo().getRequestUri().getHost();
+      int port = requestContext.getUriInfo().getRequestUri().getPort();
+
+      String backendOrigin = scheme + "://" + host;
+      if (!((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443))) {
+        backendOrigin += ":" + port;
+      }
+      headers.add("Access-Control-Allow-Origin", backendOrigin);
     }
 
+    headers.add("Vary", "Origin");
     headers.add("Access-Control-Allow-Credentials", "true");
     headers.add("Access-Control-Allow-Headers",
      "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match");
