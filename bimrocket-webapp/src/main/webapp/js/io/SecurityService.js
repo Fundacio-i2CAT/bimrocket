@@ -1,7 +1,8 @@
 /**
  * SecurityService.js
  *
- * @author i2CAT
+ * @author nuriaescudei2cat
+ * @author alexis-i2cat
  */
 
 import { Service } from "./Service.js";

@@ -2,11 +2,11 @@
  * BCFService.js
  *
  * @author realor
+ * @author alexis-i2cat
  */
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class BCFService extends Service
 {

@@ -2,6 +2,7 @@
  * BCFPanel.js
  *
  * @author realor
+ * @author alexis-i2cat
  */
 
 import { Panel } from "./Panel.js";
