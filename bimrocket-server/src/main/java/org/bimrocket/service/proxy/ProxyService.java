@@ -308,7 +308,7 @@ public class ProxyService
 
   private void sendCORSHeaders(HttpServletResponse servletResponse)
   {
-    //servletResponse.setHeader("Access-Control-Allow-Origin", "*");
+    servletResponse.setHeader("Access-Control-Allow-Origin", "*");
     servletResponse.setHeader("Access-Control-Allow-Credentials", "true");
     servletResponse.setHeader("Access-Control-Allow-Headers", "*");
     servletResponse.setHeader("Access-Control-Allow-Methods", "*");
