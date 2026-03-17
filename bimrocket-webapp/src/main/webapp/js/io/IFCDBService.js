@@ -76,8 +76,6 @@ class IFCDBService extends Service
 
   async invoke(method, path = "", headers = {}, body)
   {
-    const username = this.username;
-    const password = this.password;
     let url = this.url;
 
     if (!url.endsWith("/")) url += "/";
@@ -85,18 +83,14 @@ class IFCDBService extends Service
 
     const fetchOptions = {
       method : method,
-      headers : headers
+      headers : headers,
+      credentials: "include",
     };
 
     if (body)
     {
       fetchOptions.body = body;
     }
-
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(fetchOptions.headers,
-      credentials.username, credentials.password);
 
     const response = await fetch(url, fetchOptions);
     if (!response.ok) throw await response.json();

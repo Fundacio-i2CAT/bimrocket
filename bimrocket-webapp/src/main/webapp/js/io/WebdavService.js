@@ -455,22 +455,8 @@ class WebdavService extends FileService
     }
     request.open(method, encodeURI(url), true);
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-    const credentials = this.getCredentials();
-
-    if (this.useProxy)
-    {
-      if (credentials.username && credentials.password)
-      {
-        WebUtils.setBasicAuthorization(request,
-          credentials.username, credentials.password, "Forwarded-Authorization");
-      }
-    }
-    else
-    {
-      WebUtils.setBasicAuthorization(request,
-        credentials.username, credentials.password);
-    }
+    
+    request.withCredentials = true;
   }
 
   createError(message, status)

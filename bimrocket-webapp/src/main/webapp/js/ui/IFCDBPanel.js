@@ -815,16 +815,31 @@ class IFCDBPanel extends Panel
   requestCredentials(message, onLogin, onFailed)
   {
     const loginDialog = new LoginDialog(this.application, message);
+
     loginDialog.login = (username, password) =>
     {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
+      const securityService = this.application.services.security.security;
+
+      securityService.login(username, password, () =>
+        {
+          if (onLogin) onLogin(); 
+        },
+        (error) =>
+        {
+          MessageDialog.create("ERROR", "Invalid credentials")
+            .setClassName("error")
+            .setI18N(this.application.i18n).show();
+          if (onFailed) onFailed();
+        }
+      );
     };
+
     loginDialog.onCancel = () =>
     {
       loginDialog.hide();
       if (onFailed) onFailed();
     };
+    
     loginDialog.show();
   }
 
