@@ -2005,34 +2005,15 @@ class BCFPanel extends Panel
     }
   }
 
-  handleError(error, onLogin)
-  {
-    this.hideProgressBar();
-
-    if (error.code === 401)
-    {
-      this.requestCredentials("message.invalid_credentials", onLogin);
-    }
-    else if (error.code === 403)
-    {
-      this.requestCredentials("message.action_denied", onLogin);
-    }
-    else
-    {
-      let message = error.message;
-      MessageDialog.create("ERROR", message)
-        .setClassName("error")
-        .setI18N(this.application.i18n).show();
-    }
-  }
-
   requestCredentials(message, onLogin, onFailed)
   {
     const loginDialog = new LoginDialog(this.application, message);
 
     loginDialog.login = (username, password) =>
     {
-      this.service.login(username, password, () =>
+      const securityService = this.application.services.security.security;
+
+      securityService.login(username, password, () =>
         {
           if (onLogin) onLogin(); 
         },

@@ -95,6 +95,42 @@ class SecurityService extends Service
     this.invoke("DELETE", "users/" + userId, null, onCompleted, onError);
   }
 
+  login(username, password, onCompleted, onError)
+  {
+    const request = new XMLHttpRequest();
+
+    if (onError)
+    {
+      request.onerror = () => onError({code: 0, message: "Connection error"});
+    }
+
+    if (onCompleted) request.onload = () =>
+    {
+      if (request.status === 200)
+      {
+        onCompleted();
+      } 
+      else
+      {
+        if (onError) onError({code: request.status, message: "Login failed"});
+      }
+    };
+
+    request.open("POST", this.url + "/login");
+    request.setRequestHeader("Accept", "application/json");
+    request.setRequestHeader("Content-Type", "application/json");
+
+    request.withCredentials = true; 
+
+    const data =
+    {
+      username: username,
+      password: password
+    };
+
+    request.send(JSON.stringify(data));
+  }
+
   invoke(method, path, data, onCompleted, onError)
   {
     const request = new XMLHttpRequest();
@@ -141,7 +177,7 @@ class SecurityService extends Service
       }
     };
 
-    request.open(method, this.url + "/security/" + path);
+    request.open(method, this.url + "/" + path);
     request.setRequestHeader("Accept", "application/json");
     
     if (data)
@@ -149,8 +185,9 @@ class SecurityService extends Service
       request.setRequestHeader("Content-Type", "application/json");
     }
 
-    const credentials = this.getCredentials();
+    request.withCredentials = true;
 
+    const credentials = this.getCredentials();
     WebUtils.setBasicAuthorization(request,
       credentials.username, credentials.password);
 
