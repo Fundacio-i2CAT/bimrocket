@@ -210,6 +210,42 @@ class BCFService extends Service
       "/document_references/" + docRefGuid, null, onCompleted, onError);
   }
 
+  login(username, password, onCompleted, onError)
+  {
+    const request = new XMLHttpRequest();
+
+    if (onError)
+    {
+      request.onerror = () => onError({code: 0, message: "Connection error"});
+    }
+
+    if (onCompleted) request.onload = () =>
+    {
+      if (request.status === 200)
+      {
+        onCompleted();
+      } 
+      else
+      {
+        if (onError) onError({code: request.status, message: "Login failed"});
+      }
+    };
+
+    request.open("POST", this.url + "/security/login");
+    request.setRequestHeader("Accept", "application/json");
+    request.setRequestHeader("Content-Type", "application/json");
+
+    request.withCredentials = true; 
+
+    const data =
+    {
+      username: username,
+      password: password
+    };
+
+    request.send(JSON.stringify(data));
+  }
+
   invoke(method, path, data, onCompleted, onError)
   {
     const request = new XMLHttpRequest();
@@ -260,10 +296,7 @@ class BCFService extends Service
     request.setRequestHeader("Accept", "application/json");
     request.setRequestHeader("Content-Type", "application/json");
 
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
+    request.withCredentials = true;
 
     if (data)
     {
