@@ -5,13 +5,14 @@
  */
 
 import { GeoJSONLoader } from "../io/gis/GeoJSONLoader.js";
+import { GeoJSONExporter } from "../io/gis/GeoJSONExporter.js";
 import { GMLLoader } from "../io/gis/GMLLoader.js";
 import { ASCIIGridLoader } from "../io/gis/ASCIIGridLoader.js";
 import { OnTerrainPositioner } from "../builders/OnTerrainPositioner.js";
 import { OnTerrainExtruder } from "../builders/OnTerrainExtruder.js";
 import { IOManager } from "../io/IOManager.js";
-import { WFSController } from "../controllers/WFSController.js";
-import { MapViewController } from "../controllers/MapViewController.js";
+import { WFSTool } from "../tools/WFSTool.js";
+import { MapViewTool  } from "../tools/MapViewTool.js";
 import { BundleManager } from "../i18n/BundleManager.js";
 
 export function load(application)
@@ -27,6 +28,10 @@ export function load(application)
     {
       class : GeoJSONLoader,
       loadMethod : 0
+    },
+    exporter :
+    {
+      class : GeoJSONExporter
     }
   };
 
@@ -55,6 +60,17 @@ export function load(application)
       loadMethod : 2
     }
   };
+
+  // create tools
+  const wfsTool = new WFSTool(application);
+  const mapViewTool  = new MapViewTool(application);
+
+  // create menus
+  const menuBar = application.menuBar;
+
+  const gisMenu = menuBar.addMenu("menu.gis", menuBar.menus.length - 2);
+  gisMenu.addMenuItem(wfsTool);
+  gisMenu.addMenuItem(mapViewTool);
 
   // load bundles
   BundleManager.setBundle("base", "i18n/base");
