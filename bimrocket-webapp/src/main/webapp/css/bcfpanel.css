@@ -75,7 +75,6 @@
 {
   margin: 8px 0;
   display: flex;
-  gap: 4px;
 
   & input, label
   {
@@ -259,10 +258,10 @@ ul.bcf_list li
 a.select_components
 {
   margin-bottom: 4px;
-  display: inline-block; 
+  display: inline-block;
 }
 
-.component-link 
+.component-link
 {
   cursor: pointer;
 }

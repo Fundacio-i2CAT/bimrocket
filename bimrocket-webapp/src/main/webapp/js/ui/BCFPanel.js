@@ -36,6 +36,21 @@ class BCFPanel extends Panel
     this.group = "bcf"; // service group
     this.minimumHeight = 200;
 
+    this.csvQuote = text => '"' + text.replace(/"/g, '""') + '"';
+    this.csvSeparator = ";";
+    this.csvColumns = [
+      ["Index", "index", false], // column name, topic field, quote?
+      ["Title", "title", true],
+      ["Type", "topic_type", false],
+      ["Priority", "priority", false],
+      ["Status", "topic_status", false],
+      ["Stage", "stage", false],
+      ["Creation Author", "creation_author", true],
+      ["Assigned To", "assigned_to", true],
+      ["Due Date", "due_date", false],
+      ["Description", "description", true]
+    ];
+
     this.service = null;
 
     this.contextMenu = new ContextMenu(this.application);
@@ -105,7 +120,8 @@ class BCFPanel extends Panel
     this.projectNameFilterField = Controls.addTextField(this.filterProjectsElem,
       "projectNameFilter", "bim|label.filter_project_name");
 
-    this.filterVisibilityButton = Controls.addCheckBoxField(this.filterProjectsElem, "filterProjects", "bim|button.filter_projects", false, "bcf_checkbox");
+    this.filterVisibilityButton = Controls.addCheckBoxField(this.filterProjectsElem,
+      "filterProjects", "bim|button.filter_projects", false, "bcf_checkbox");
 
     this.buttonContainer = document.createElement("div");
     this.buttonContainer.style.display = "flex";
@@ -501,7 +517,8 @@ class BCFPanel extends Panel
         status += "]";
 
         title.textContent = `${project.name} ${status}`;
-        this.backTopicsListButton.parentNode.insertBefore(title, this.backTopicsListButton.nextSibling);
+        this.backTopicsListButton.parentNode.insertBefore(title,
+          this.backTopicsListButton.nextSibling);
       }
     }
   }
@@ -795,7 +812,8 @@ class BCFPanel extends Panel
 
     const basePos = application.baseObject.position;
     position.sub(basePos);
-    const selection = application.selection.objects || [application.selection.object].filter(Boolean);
+    const selection = application.selection.objects ||
+          [application.selection.object].filter(Boolean);
     const globalIds = selection
       .map(obj => obj?.userData?.IFC?.GlobalId)
       .filter(Boolean)
@@ -1189,7 +1207,8 @@ class BCFPanel extends Panel
 
   refreshProjects()
   {
-    let nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
+    let nameFilter = this.projectNameFilterField ?
+      this.projectNameFilterField.value.trim() : "";
 
     let odataFilter = {
       nameFilter: nameFilter,
@@ -1484,12 +1503,20 @@ class BCFPanel extends Panel
       return;
     }
 
-    let csvContent = "Index;Title;Type;Priority;Status;Stage;Creation Author;Assigned To;Due Date;Description\n";
+    const quote = this.csvQuote;
+    const separator = this.csvSeparator;
+    const columns = this.csvColumns;
+
+    let csvContent = columns.map(column => column[0]).join(separator) + "\n";
 
     topics.forEach(topic =>
     {
-      let row = `${topic.index};"${topic.title}";${topic.topic_type};${topic.priority};${topic.topic_status};${topic.stage};"${topic.creation_author}";"${topic.assigned_to}";${topic.due_date};"${topic.description}"`;
-      csvContent += row + "\n";
+      let rowData = columns.map(column => {
+        let fieldValue = topic[column[1]];
+        if (column[2]) fieldValue = quote(fieldValue);
+        return fieldValue;
+      });
+      csvContent += rowData.join(separator) + "\n";
     });
 
     const data = "\uFEFF" + csvContent;
@@ -1715,8 +1742,8 @@ class BCFPanel extends Panel
     const componentsArray = Array.isArray(components) ? components : [components];
     const targetIds = new Set(componentsArray.map(component => component.ifc_guid));
 
-    const elements = application.findObjects($ => targetIds.has($("IFC", "GlobalId")), application.baseObject, true);
-
+    const elements = application.findObjects(
+      $ => targetIds.has($("IFC", "GlobalId")), application.baseObject, true);
 
     if (elements.length > 0)
     {
