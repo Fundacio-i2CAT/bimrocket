@@ -308,15 +308,43 @@ public class ProxyService
 
   private void sendCORSHeaders(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
   {
-    //servletResponse.setHeader("Access-Control-Allow-Origin", "*");
     String origin = servletRequest.getHeader("Origin");
 
+    // localhost or 127.0.0.1
     if (origin != null)
     {
-      servletResponse.setHeader("Access-Control-Allow-Origin", origin);
-      servletResponse.setHeader("Vary", "Origin");
+      // Local dev: localhost or 127.0.0.1
+      if (origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1"))
+      {
+        servletResponse.setHeader("Access-Control-Allow-Origin", origin);
+      }
+      else
+      {
+        // prod)
+        servletResponse.setHeader("Access-Control-Allow-Origin", origin);
+      }
+    }
+    else
+    {
+      // prod
+      String scheme = servletRequest.getHeader("X-Forwarded-Proto");
+      String host = servletRequest.getHeader("X-Forwarded-Host");
+      String portStr = servletRequest.getHeader("X-Forwarded-Port");
+
+      if (scheme == null) scheme = servletRequest.getScheme();
+      if (host == null) host = servletRequest.getServerName();
+      int port = (portStr != null) ? Integer.parseInt(portStr) : servletRequest.getServerPort();
+
+      String backendOrigin = scheme + "://" + host;
+      if (!((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)))
+      {
+        backendOrigin += ":" + port;
+      }
+
+      servletResponse.setHeader("Access-Control-Allow-Origin", backendOrigin);
     }
 
+    servletResponse.setHeader("Vary", "Origin");
     servletResponse.setHeader("Access-Control-Allow-Credentials", "true");
     servletResponse.setHeader("Access-Control-Allow-Headers", "*");
     servletResponse.setHeader("Access-Control-Allow-Methods", "*");

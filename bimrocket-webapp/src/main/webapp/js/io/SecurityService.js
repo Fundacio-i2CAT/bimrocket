@@ -188,10 +188,6 @@ class SecurityService extends Service
 
     request.withCredentials = true;
 
-    const credentials = this.getCredentials();
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
-
     if (data)
     {
       request.send(JSON.stringify(data));
