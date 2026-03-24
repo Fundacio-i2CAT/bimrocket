@@ -153,6 +153,17 @@ public class SecurityEndpoint
     return securityService.getUser(userId);
   }
 
+  @GET
+  @Path("/users/currentUser")
+  @Produces(APPLICATION_JSON)
+  @Operation(summary = "Get current user")
+  public User getCurrentUser()
+  {
+    User user = securityService.getCurrentUser();
+    user.setPasswordHash("");
+    return user;
+  }
+
   @POST
   @Path("/users")
   @Consumes(APPLICATION_JSON)
