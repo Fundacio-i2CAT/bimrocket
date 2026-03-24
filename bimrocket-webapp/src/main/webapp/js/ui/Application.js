@@ -235,11 +235,14 @@ class Application
     
     // profile
     const profileButton = document.createElement("button");
+    this.profileButton = profileButton;
     profileButton.className = "user_profile"
     headerElem.appendChild(profileButton)
 
-    let currentUsername = null;
-    profileButton.textContent = currentUsername ? currentUsername : "Login";
+    this.currentUsername = null;
+    profileButton.textContent = this.currentUsername ? this.currentUsername : "Login";
+
+    profileButton.addEventListener("click", () => this.checkCurrentSession())
 
     /* selection materials */
 
@@ -2033,6 +2036,58 @@ class Application
       this.logoPanel.classList.remove("show");
       this.logoPanel.setAttribute("tabindex", -1);
     }
+  }
+
+  checkCurrentSession()
+  {
+    const securityService = this.services.security.security;
+    
+    const onCompleted = (user) =>
+    {
+      this.currentUsername = user.username || "User";
+      this.profileButton.textContent = this.currentUsername;
+
+      this.profileButton.onclick = () =>
+        {
+          if(confirm("Confirm logout?"))
+          {
+            // todo sec service: logout() implementation
+            console.log("Logout!");
+            return;
+          }
+        }
+    }
+
+    const onError = (error) =>
+    {
+      this.currentUsername = null;
+      this.profileButton.textContent = "Login";
+
+      this.profileButton.onclick = () =>
+      {
+        const loginDialog = new LoginDialog(this.application, message);
+
+        loginDialog.login = (username, password) =>
+        {
+          securityService.login(username, password, () =>
+          {
+            loginDialog.hide();
+            this.checkCurrentSession();
+          },
+          (error) =>
+          {
+            MessageDialog.create("ERROR", "Invalid credentials")
+            .setClassName("error")
+            .setI18N(this.i18n).show();
+          });
+        }
+
+        loginDialog.onCancel = () => loginDialog.hide();
+        loginDialog.show();
+      }
+    }
+    // todo sec service: getCurrentUser() implementation
+    securityService.getCurrentUser(onCompleted, onError)
   }
 
   enterPresentationMode()

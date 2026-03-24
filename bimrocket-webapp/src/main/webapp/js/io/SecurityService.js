@@ -81,6 +81,14 @@ class SecurityService extends Service
     this.invoke("GET", "users/" + userId, null, onCompleted, onError);
   }
 
+  getCurrentUser(onCompleted, onError)
+  {
+    onCompleted({
+      username: "mock",
+      roles: ["mock_role1", "mock_role2"]
+    })
+  }
+
   createUser(user, onCompleted, onError)
   {
     this.invoke("POST", "users", user, onCompleted, onError);
