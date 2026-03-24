@@ -237,12 +237,11 @@ class Application
     const profileButton = document.createElement("button");
     this.profileButton = profileButton;
     profileButton.className = "user_profile"
-    headerElem.appendChild(profileButton)
-
     this.currentUsername = null;
     profileButton.textContent = this.currentUsername ? this.currentUsername : "Login";
+    headerElem.appendChild(profileButton)
 
-    profileButton.addEventListener("click", () => this.checkCurrentSession())
+    // profileButton.addEventListener("click", () => this.checkCurrentSession())
 
     /* selection materials */
 
@@ -2013,6 +2012,7 @@ class Application
         this.logoPanel.querySelector(".info").innerHTML = "";
         this.menuBar.updadeTabindex();
         this.hideLogo();
+        this.checkCurrentSession();
         this.loadModelFromUrl();
       };
     };
@@ -2040,20 +2040,30 @@ class Application
 
   checkCurrentSession()
   {
-    const securityService = this.services.security.security;
+    const securityService = this.services?.security?.security;
     
     const onCompleted = (user) =>
     {
-      this.currentUsername = user.username || "User";
+      const { name, id } = user;
+
+      this.currentUsername = name || id || "User";
       this.profileButton.textContent = this.currentUsername;
 
       this.profileButton.onclick = () =>
         {
-          if(confirm("Confirm logout?"))
+          if (confirm("Confirmar logout?"))
           {
-            // todo sec service: logout() implementation
-            console.log("Logout!");
-            return;
+            securityService.logout(
+              () => {
+                this.currentUsername = null;
+                this.checkCurrentSession();
+              },
+              (error) => {
+                MessageDialog.create("ERROR", error)
+                  .setClassName("error")
+                  .setI18N(this.i18n).show();
+              }
+            );
           }
         }
     }
@@ -2062,10 +2072,11 @@ class Application
     {
       this.currentUsername = null;
       this.profileButton.textContent = "Login";
+      this.profileButton.blur();
 
       this.profileButton.onclick = () =>
       {
-        const loginDialog = new LoginDialog(this.application, message);
+        const loginDialog = new LoginDialog(this, "Invalid credentials.");
 
         loginDialog.login = (username, password) =>
         {
@@ -2076,7 +2087,7 @@ class Application
           },
           (error) =>
           {
-            MessageDialog.create("ERROR", "Invalid credentials")
+            MessageDialog.create("ERROR", "Invalid credentials.")
             .setClassName("error")
             .setI18N(this.i18n).show();
           });
@@ -2086,7 +2097,7 @@ class Application
         loginDialog.show();
       }
     }
-    // todo sec service: getCurrentUser() implementation
+
     securityService.getCurrentUser(onCompleted, onError)
   }
 

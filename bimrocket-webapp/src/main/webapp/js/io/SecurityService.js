@@ -83,10 +83,12 @@ class SecurityService extends Service
 
   getCurrentUser(onCompleted, onError)
   {
-    onCompleted({
-      username: "mock",
-      roles: ["mock_role1", "mock_role2"]
-    })
+    this.invoke("GET", "users/currentUser", null, onCompleted, onError)
+  }
+
+  logout(onCompleted, onError)
+  {
+    this.invoke("POST", "logout", null, onCompleted, onError)
   }
 
   createUser(user, onCompleted, onError)
@@ -195,10 +197,6 @@ class SecurityService extends Service
     }
 
     request.withCredentials = true;
-
-    const credentials = this.getCredentials();
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
 
     if (data)
     {
