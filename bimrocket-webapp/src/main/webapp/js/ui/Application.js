@@ -230,8 +230,16 @@ class Application
     // menuBar
     this.menuBar = new MenuBar(this, headerElem);
 
-     // toolBar
+    // toolBar
     this.toolBar = new ToolBar(this, toolBarElem);
+    
+    // profile
+    const profileButton = document.createElement("button");
+    profileButton.className = "user_profile"
+    headerElem.appendChild(profileButton)
+
+    let currentUsername = null;
+    profileButton.textContent = currentUsername ? currentUsername : "Login";
 
     /* selection materials */
 
