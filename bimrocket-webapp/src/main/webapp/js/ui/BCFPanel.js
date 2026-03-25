@@ -2,6 +2,8 @@
  * BCFPanel.js
  *
  * @author realor
+ * @author nuriaescudei2cat
+ * @author alexis-i2cat
  */
 
 import { Panel } from "./Panel.js";
@@ -34,6 +36,21 @@ class BCFPanel extends Panel
     this.group = "bcf"; // service group
     this.minimumHeight = 200;
 
+    this.csvQuote = text => '"' + text.replace(/"/g, '""') + '"';
+    this.csvSeparator = ";";
+    this.csvColumns = [
+      ["Index", "index", false], // column name, topic field, quote?
+      ["Title", "title", true],
+      ["Type", "topic_type", false],
+      ["Priority", "priority", false],
+      ["Status", "topic_status", false],
+      ["Stage", "stage", false],
+      ["Creation Author", "creation_author", true],
+      ["Assigned To", "assigned_to", true],
+      ["Due Date", "due_date", false],
+      ["Description", "description", true]
+    ];
+
     this.service = null;
 
     this.contextMenu = new ContextMenu(this.application);
@@ -52,7 +69,9 @@ class BCFPanel extends Panel
     this.projectMap = new Map();
 
     this.selectedProjectId = null;
+
     // search panel
+
     this.searchPanelElem = document.createElement("div");
     this.searchPanelElem.id = "bcf_search_panel";
     this.searchPanelElem.className = "bcf_panel";
@@ -67,7 +86,8 @@ class BCFPanel extends Panel
     this.bcfServiceElem = Controls.addSelectField(this.connPanelElem,
       "bcfService", "bim|label.bcf_service", []);
     this.bcfServiceElem.addEventListener("change",
-      event => {
+      event =>
+      {
         let name = this.bcfServiceElem.value;
         this.service = this.application.services[this.group][name];
         this.filterPanelElem.style.display = "none";
@@ -100,6 +120,9 @@ class BCFPanel extends Panel
     this.projectNameFilterField = Controls.addTextField(this.filterProjectsElem,
       "projectNameFilter", "bim|label.filter_project_name");
 
+    this.filterVisibilityButton = Controls.addCheckBoxField(this.filterProjectsElem,
+      "filterProjects", "bim|button.filter_projects", false, "bcf_checkbox");
+
     this.buttonContainer = document.createElement("div");
     this.buttonContainer.style.display = "flex";
     this.buttonContainer.style.justifyContent = "center";
@@ -110,12 +133,6 @@ class BCFPanel extends Panel
 
     this.clearButton = Controls.addButton(this.buttonContainer,
       "clearFilters", "button.clear", () => this.clearFilters());
-
-    const updateSearchButton = () => {
-      const hasName = this.projectNameFilterField.value.trim() !== "";
-    };
-
-    this.projectNameFilterField.addEventListener("input", updateSearchButton);
 
     this.projectTreeContainer = document.createElement("div");
     this.projectTreeContainer.className = "project_tree_container";
@@ -211,7 +228,7 @@ class BCFPanel extends Panel
 
     this.topicIndexElem = Controls.addTextField(this.detailBodyElem,
       "topic_index", "bim|label.index");
-     this.topicIndexElem.setAttribute("readonly", true);
+    this.topicIndexElem.setAttribute("readonly", true);
 
     this.titleElem = Controls.addTextField(this.detailBodyElem,
       "topic_title", "bim|label.title");
@@ -230,7 +247,7 @@ class BCFPanel extends Panel
 
     this.createdByElem = Controls.addTextField(this.detailBodyElem,
       "topic_created_by", "bim|label.creation_author");
-     this.createdByElem.setAttribute("readonly", true);
+    this.createdByElem.setAttribute("readonly", true);
 
     this.assignedToElem = Controls.addSelectField(this.detailBodyElem,
       "topic_assigned_to", "bim|label.assigned_to");
@@ -319,11 +336,11 @@ class BCFPanel extends Panel
 
     this.guidElem = Controls.addTextField(this.auditPanelElem,
       "topic_guid", "GUID:");
-     this.guidElem.setAttribute("readonly", true);
+    this.guidElem.setAttribute("readonly", true);
 
     this.creationDateElem = Controls.addTextField(this.auditPanelElem,
       "topic_creation_date", "bim|label.creation_date");
-     this.creationDateElem.setAttribute("readonly", true);
+    this.creationDateElem.setAttribute("readonly", true);
 
     this.selectedComponentsElem = document.createElement("div");
     this.selectedComponentsElem.className = "selected_components";
@@ -331,15 +348,15 @@ class BCFPanel extends Panel
 
     this.creationAuthorElem = Controls.addTextField(this.auditPanelElem,
       "topic_creation_author", "bim|label.creation_author");
-     this.creationAuthorElem.setAttribute("readonly", true);
+    this.creationAuthorElem.setAttribute("readonly", true);
 
     this.modifyDateElem = Controls.addTextField(this.auditPanelElem,
       "topic_modify_date", "bim|label.modify_date");
-     this.modifyDateElem.setAttribute("readonly", true);
+    this.modifyDateElem.setAttribute("readonly", true);
 
     this.modifyAuthorElem = Controls.addTextField(this.auditPanelElem,
       "topic_modify_author", "bim|label.modify_author");
-     this.modifyAuthorElem.setAttribute("readonly", true);
+    this.modifyAuthorElem.setAttribute("readonly", true);
 
     // setup panel
 
@@ -371,12 +388,13 @@ class BCFPanel extends Panel
       "saveProject", "button.save", () => this.saveProject());
 
     this.deleteProjectButton = Controls.addButton(this.projectButtonsElem,
-      "deleteProject", "button.delete", () => {
-       ConfirmDialog.create("bim|title.delete_project",
-         "bim|question.delete_project")
-         .setAction(() => this.deleteProject())
-         .setAcceptLabel("button.delete")
-         .setI18N(this.application.i18n).show();
+      "deleteProject", "button.delete", () =>
+      {
+        ConfirmDialog.create("bim|title.delete_project",
+          "bim|question.delete_project")
+          .setAction(() => this.deleteProject())
+          .setAcceptLabel("button.delete")
+          .setI18N(this.application.i18n).show();
       });
 
     this.extensionsView = Controls.addCodeEditor(this.extensionsSetupElem,
@@ -397,6 +415,11 @@ class BCFPanel extends Panel
   showProjects()
   {
     let projects = Array.from(this.projectMap.values());
+
+    if (this.filterVisibilityButton.checked)
+    {
+      projects = projects.filter(project => project.visible);
+    }
 
     projects.sort((projectA, projectB) =>
     {
@@ -427,7 +450,7 @@ class BCFPanel extends Panel
         this.changeProject();
       }, className);
 
-      node.addEventListener('contextmenu', (event) =>
+      node.addEventListener("contextmenu", (event) =>
       {
         event.preventDefault();
         event.stopPropagation();
@@ -438,7 +461,8 @@ class BCFPanel extends Panel
     }
   }
 
-  clearFilters = () => {
+  clearFilters = () =>
+  {
     this.projectNameFilterField.value = "";
   };
 
@@ -493,11 +517,11 @@ class BCFPanel extends Panel
         status += "]";
 
         title.textContent = `${project.name} ${status}`;
-        this.backTopicsListButton.parentNode.insertBefore(title, this.backTopicsListButton.nextSibling);
+        this.backTopicsListButton.parentNode.insertBefore(title,
+          this.backTopicsListButton.nextSibling);
       }
     }
   }
-
 
   showTopic(topic = null, index = -1)
   {
@@ -557,7 +581,7 @@ class BCFPanel extends Panel
       {
         this.loadComments(false,
           () => this.loadViewpoints(false,
-          () => this.loadDocumentReferences(false)));
+            () => this.loadDocumentReferences(false)));
       }
     }
     else
@@ -686,7 +710,7 @@ class BCFPanel extends Panel
       "stage" : this.stageElem.value,
       "assigned_to" : this.assignedToElem.value,
       "description" : this.descriptionElem.value,
-      "due_date" : this.addTime(this.dueDateElem.value)
+      "due_date" : this.addTime(this.dueDateElem.value),
     };
 
     const onCompleted = topic =>
@@ -788,7 +812,8 @@ class BCFPanel extends Panel
 
     const basePos = application.baseObject.position;
     position.sub(basePos);
-    const selection = application.selection.objects || [application.selection.object].filter(Boolean);
+    const selection = application.selection.objects ||
+          [application.selection.object].filter(Boolean);
     const globalIds = selection
       .map(obj => obj?.userData?.IFC?.GlobalId)
       .filter(Boolean)
@@ -798,7 +823,7 @@ class BCFPanel extends Panel
     {
       viewpoint.components =
       {
-        selection: globalIds
+        selection: globalIds,
       };
     }
 
@@ -807,12 +832,12 @@ class BCFPanel extends Panel
       viewpoint.perspective_camera =
       {
         "camera_view_point" :
-        {"x": position.x, "y" : position.y, "z" : position.z},
+        { "x": position.x, "y" : position.y, "z" : position.z },
         "camera_direction" :
-        {"x": zAxis.x, "y" : zAxis.y, "z" : zAxis.z},
+        { "x": zAxis.x, "y" : zAxis.y, "z" : zAxis.z },
         "camera_up_vector" :
-        {"x": yAxis.x, "y" : yAxis.y, "z" : yAxis.z},
-        "field_of_view" : camera.fov
+        { "x": yAxis.x, "y" : yAxis.y, "z" : yAxis.z },
+        "field_of_view" : camera.fov,
       };
     }
     else if (camera instanceof THREE.OrthographicCamera)
@@ -820,12 +845,12 @@ class BCFPanel extends Panel
       viewpoint.orthogonal_camera =
       {
         "camera_view_point" :
-        {"x": position.x, "y" : position.y, "z" : position.z},
+        { "x": position.x, "y" : position.y, "z" : position.z },
         "camera_direction" :
-        {"x": zAxis.x, "y" : zAxis.y, "z" : zAxis.z},
+        { "x": zAxis.x, "y" : zAxis.y, "z" : zAxis.z },
         "camera_up_vector" :
-        {"x": yAxis.x, "y" : yAxis.y, "z" : yAxis.z},
-        "view_to_world_scale" : 0.5 * camera.zoom / camera.right
+        { "x": yAxis.x, "y" : yAxis.y, "z" : yAxis.z },
+        "view_to_world_scale" : 0.5 * camera.zoom / camera.right,
       };
     }
 
@@ -870,7 +895,7 @@ class BCFPanel extends Panel
       viewpoint.snapshot =
       {
         snapshot_type : format,
-        snapshot_data : image
+        snapshot_data : image,
       };
 
       this.showProgressBar();
@@ -973,7 +998,7 @@ class BCFPanel extends Panel
     let topicGuid = this.guidElem.value;
     let comment =
     {
-      "comment" : this.commentElem.value
+      "comment" : this.commentElem.value,
     };
 
     const onCompleted = comment =>
@@ -1080,7 +1105,7 @@ class BCFPanel extends Panel
     let docRef =
     {
       "url" : this.docRefUrlElem.value,
-      "description" : this.docRefDescElem.value
+      "description" : this.docRefDescElem.value,
     };
 
     const onCompleted = docRef =>
@@ -1182,10 +1207,11 @@ class BCFPanel extends Panel
 
   refreshProjects()
   {
-    let nameFilter = this.projectNameFilterField ? this.projectNameFilterField.value.trim() : "";
+    let nameFilter = this.projectNameFilterField ?
+      this.projectNameFilterField.value.trim() : "";
 
     let odataFilter = {
-      nameFilter: nameFilter
+      nameFilter: nameFilter,
     };
     let odataOrderBy = "name";
 
@@ -1220,7 +1246,7 @@ class BCFPanel extends Panel
             id: projectId,
             name : projectName,
             persistent : false,
-            visible : true
+            visible : true,
           };
           projectMap.set(projectId, project);
         }
@@ -1242,29 +1268,12 @@ class BCFPanel extends Panel
             id: projectId,
             name : projectName,
             persistent: true,
-            visible : false
+            visible : false,
           };
           projectMap.set(projectId, project);
         }
       }
 
-      const options = [];
-
-      if (projectMap.size === 0)
-      {
-        options.push(["", "Cap projecte coincideix"]);
-      }
-      else
-      {
-        projectMap.forEach((project, projectId) => {
-          let name = project.name + " [";
-          if (project.persistent) name += "P";
-          if (project.visible) name += "V";
-          name += "]";
-
-          options.push([projectId, name]);
-        });
-      }
       this.showProjects();
     };
 
@@ -1302,7 +1311,7 @@ class BCFPanel extends Panel
 
     const projectId = this.getProjectId();
     const project = {
-      "name" : projectName
+      "name" : projectName,
     };
     this.showProgressBar();
     this.service.updateProject(projectId, project, onCompleted, onError);
@@ -1494,12 +1503,20 @@ class BCFPanel extends Panel
       return;
     }
 
-    let csvContent = "Index;Title;Type;Priority;Status;Stage;Creation Author;Assigned To;Due Date;Description\n";
+    const quote = this.csvQuote;
+    const separator = this.csvSeparator;
+    const columns = this.csvColumns;
+
+    let csvContent = columns.map(column => column[0]).join(separator) + "\n";
 
     topics.forEach(topic =>
     {
-      let row = `${topic.index};"${topic.title}";${topic.topic_type};${topic.priority};${topic.topic_status};${topic.stage};"${topic.creation_author}";"${topic.assigned_to}";${topic.due_date};"${topic.description}"`;
-      csvContent += row + "\n";
+      let rowData = columns.map(column => {
+        let fieldValue = topic[column[1]];
+        if (column[2]) fieldValue = quote(fieldValue);
+        return fieldValue;
+      });
+      csvContent += rowData.join(separator) + "\n";
     });
 
     const data = "\uFEFF" + csvContent;
@@ -1534,17 +1551,17 @@ class BCFPanel extends Panel
 
       Controls.addText(itemListHeaderElem, authorDate, "bcf_comment_author");
       Controls.addButton(itemListHeaderElem, "updateComment", "button.edit",
-         () => this.editComment(comment),
+        () => this.editComment(comment),
         "bcf_edit_comment");
       Controls.addButton(itemListHeaderElem, "deleteComment", "button.delete",
-         () =>
-         {
-           ConfirmDialog.create("bim|title.delete_comment",
-             "bim|question.delete_comment")
-             .setAction(() => this.deleteComment(comment))
-             .setAcceptLabel("button.delete")
-             .setI18N(this.application.i18n).show();
-         }, "bcf_delete_comment");
+        () =>
+        {
+          ConfirmDialog.create("bim|title.delete_comment",
+            "bim|question.delete_comment")
+            .setAction(() => this.deleteComment(comment))
+            .setAcceptLabel("button.delete")
+            .setI18N(this.application.i18n).show();
+        }, "bcf_delete_comment");
 
       Controls.addText(itemListElem, comment.comment, "bcf_comment_text");
       this.application.i18n.updateTree(itemListElem);
@@ -1572,17 +1589,17 @@ class BCFPanel extends Panel
       itemListElem.appendChild(linkElem);
 
       Controls.addButton(itemListElem, "updateDocRef", "button.edit",
-         () => this.editDocumentReference(docRef),
+        () => this.editDocumentReference(docRef),
         "bcf_edit_doc_ref");
       Controls.addButton(itemListElem, "deleteDocRef", "button.delete",
-         () =>
-         {
-           ConfirmDialog.create("bim|title.delete_doc_ref",
-             "bim|question.delete_doc_ref")
-             .setAction(() => this.deleteDocumentReference(docRef))
-             .setAcceptLabel("button.delete")
-             .setI18N(this.application.i18n).show();
-         }, "bcf_delete_doc_ref");
+        () =>
+        {
+          ConfirmDialog.create("bim|title.delete_doc_ref",
+            "bim|question.delete_doc_ref")
+            .setAction(() => this.deleteDocumentReference(docRef))
+            .setAcceptLabel("button.delete")
+            .setI18N(this.application.i18n).show();
+        }, "bcf_delete_doc_ref");
 
       this.application.i18n.updateTree(itemListElem);
       docRefsElem.appendChild(itemListElem);
@@ -1646,7 +1663,7 @@ class BCFPanel extends Panel
           {
             event.preventDefault();
             this.handleSelectComponent(viewpoint.components.selection, event);
-          }
+          },
         );
 
         componentsContainer.appendChild(componentsLabel);
@@ -1666,7 +1683,7 @@ class BCFPanel extends Panel
               event.preventDefault();
               event.stopPropagation();
               this.handleSelectComponent(component, event);
-            }
+            },
           );
 
           componentsList.appendChild(componentItem);
@@ -1725,8 +1742,8 @@ class BCFPanel extends Panel
     const componentsArray = Array.isArray(components) ? components : [components];
     const targetIds = new Set(componentsArray.map(component => component.ifc_guid));
 
-    const elements = application.findObjects($ => targetIds.has($("IFC", "GlobalId")), application.baseObject, true)
-
+    const elements = application.findObjects(
+      $ => targetIds.has($("IFC", "GlobalId")), application.baseObject, true);
 
     if (elements.length > 0)
     {
@@ -1947,8 +1964,8 @@ class BCFPanel extends Panel
           this.filterPanelElem.style.display = "none";
           this.topicTableElem.style.display = "none";
         })
-       .setAcceptLabel("button.delete")
-       .setI18N(application.i18n).show();
+        .setAcceptLabel("button.delete")
+        .setI18N(application.i18n).show();
     }
   }
 

@@ -16,6 +16,7 @@ export const translations =
   "button.new_user" : "Usuario nuevo",
   "button.back_topicss" : "Volver a proyectos",
   "button.new_role" : "Rol nuevo",
+  "button.filter_projects": "Mostrar sólo los proyectos cargados en el visor",
 
   "tool.bim_inventory.label" : "Inventario BIM",
   "tool.bim_inventory.help" : "Inventario BIM",
