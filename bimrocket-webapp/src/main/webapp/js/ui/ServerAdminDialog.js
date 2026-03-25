@@ -45,8 +45,8 @@ class ServerAdminDialog extends Dialog
 
     this.apiServiceElem = Controls.addTextField(connPanel,
       "securityService", "bim|label.admin_service", "securityServiceUrl");
-    this.apiServiceElem.value = `${Environment.SERVER_URL}/api`;
-    this.apiServiceElem.placeholder = "https://bim.santfeliu.cat/api";
+    this.apiServiceElem.value = `${Environment.SERVER_URL}/api/security`;
+    this.apiServiceElem.placeholder = "https://bim.santfeliu.cat/api/security";
   
     const buttonsContainer = this.createContainer('admin_buttons', connPanel);
     this.connButtonsElem = buttonsContainer;
