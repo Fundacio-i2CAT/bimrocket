@@ -56,7 +56,7 @@ class IFCLoader extends THREE.Loader
   {
     units : "m", // default model units
     minCircleSegments : 16, // minimum circle segments.
-    circleSegmentsPerRadius : 32, // circle segments per meter radius.
+    maxArcError : 0.01, // max arc error in meters
     halfSpaceSize : 100, // half space size in meters
     unvoidableClasses : [
       "IfcDoor",
@@ -505,13 +505,17 @@ class IFCLoader extends THREE.Loader
 
   getArcSegments(radius, angle = 2 * Math.PI)
   {
+    const minCircleSegments = this.options.minCircleSegments;
     const meterRadius = radius * this.modelFactor;
-    const segmentsPerRadius = this.options.circleSegmentsPerRadius;
+    const maxArcError = this.options.maxArcError;
+    if (maxArcError >= meterRadius) return minCircleSegments;
+
     const factor = angle / (2 * Math.PI);
+    const circleSegments = Math.PI / Math.acos(1 - maxArcError / meterRadius);
 
-    let segments = Math.ceil(factor * segmentsPerRadius * meterRadius);
+    let segments = Math.ceil(factor * circleSegments);
 
-    segments = Math.max(this.options.minCircleSegments, segments);
+    segments = Math.max(minCircleSegments, segments);
 
     if (segments % 2 === 1) segments++;
 
