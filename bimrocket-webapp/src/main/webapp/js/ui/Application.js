@@ -362,6 +362,15 @@ class Application
       }
     });
 
+    window.addEventListener("storage", event =>
+    {
+      if (event.key === Setup.PREFIX + Setup.SESSION_ACTIVE)
+      {
+        window.location.reload();
+      }
+    }
+    )
+
     // animation
     let animationClock = new THREE.Clock();
     let _animationEvent = { delta : 0 };
@@ -2041,11 +2050,13 @@ class Application
   checkCurrentSession()
   {
     const securityService = this.services?.security?.security;
+    const isLoggedIn = this.setup.sessionActive;
     
     const onCompleted = (user) =>
     {
       const { name, id } = user;
 
+      this.setup.sessionActive = true;
       this.currentUsername = name || id || this.i18n.get("button.user");
       this.profileButton.textContent = this.currentUsername;
 
@@ -2071,6 +2082,7 @@ class Application
     const onError = (error) =>
     {
       this.currentUsername = null;
+      this.setup.sessionActive = false;
       this.profileButton.textContent = this.i18n.get("button.login");
       this.profileButton.blur();
 
@@ -2083,6 +2095,7 @@ class Application
           securityService.login(username, password, () =>
           {
             loginDialog.hide();
+            this.setup.sessionActive = true;
             this.checkCurrentSession();
           },
           (error) =>
@@ -2098,7 +2111,7 @@ class Application
       }
     }
 
-    securityService.getCurrentUser(onCompleted, onError)
+    isLoggedIn ? securityService.getCurrentUser(onCompleted, onError) : onError({ message: "No active session flag" })
   }
 
   enterPresentationMode()
