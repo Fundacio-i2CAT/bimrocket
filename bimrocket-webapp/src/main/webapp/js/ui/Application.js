@@ -2046,12 +2046,12 @@ class Application
     {
       const { name, id } = user;
 
-      this.currentUsername = name || id || "User";
+      this.currentUsername = name || id || this.i18n.get("button.user");
       this.profileButton.textContent = this.currentUsername;
 
       this.profileButton.onclick = () =>
         {
-          if (confirm("Confirmar logout?"))
+          if (confirm(this.i18n.get("question.confirm_logout")))
           {
             securityService.logout(
               () => {
@@ -2059,7 +2059,7 @@ class Application
                 this.checkCurrentSession();
               },
               (error) => {
-                MessageDialog.create("ERROR", error)
+                MessageDialog.create("ERROR", this.i18n.get("message.logout_failed"))
                   .setClassName("error")
                   .setI18N(this.i18n).show();
               }
@@ -2071,12 +2071,12 @@ class Application
     const onError = (error) =>
     {
       this.currentUsername = null;
-      this.profileButton.textContent = "Login";
+      this.profileButton.textContent = this.i18n.get("button.login");
       this.profileButton.blur();
 
       this.profileButton.onclick = () =>
       {
-        const loginDialog = new LoginDialog(this, "Invalid credentials.");
+        const loginDialog = new LoginDialog(this, this.i18n.get("title.login_dialog"));
 
         loginDialog.login = (username, password) =>
         {
@@ -2087,7 +2087,7 @@ class Application
           },
           (error) =>
           {
-            MessageDialog.create("ERROR", "Invalid credentials.")
+            MessageDialog.create("ERROR", this.i18n.get("message.login_failed"))
             .setClassName("error")
             .setI18N(this.i18n).show();
           });

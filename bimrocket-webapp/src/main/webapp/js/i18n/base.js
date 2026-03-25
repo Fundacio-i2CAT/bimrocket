@@ -81,6 +81,10 @@ export const translations =
   "button.menu_show" : "MENU",
   "button.menu_hide" : "CLOSE",
 
+  "button.login": "Login",
+  "button.logout": "Logout",
+  "button.user": "User",
+
   "units.km" : "kilometers",
   "units.m" : "meters",
   "units.cm" : "centimeters",
@@ -598,6 +602,7 @@ export const translations =
   "title.acl_editor_error": "Error saving",
   "title.acl_not_found": "ACL not found",
   "title.confirm_save": "Confirmation",
+  "title.login_dialog": "Please log in to continue",
 
   "message.measure_length" : (length, units) => `Length: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Area: ${area} ${units}2`,
@@ -661,6 +666,9 @@ export const translations =
   "message.invalid_privileges": "Errors found in the input privileges.",
   "message.edit_acl_json_error": detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
+  "message.logout_failed": "Failed to log out.",
+  "message.login_failed": "Invalid credentials.",
+
   "question.discard_changes" : name => `Discard unsaved changes in ${name || 'editor'}?`,
   "question.delete_service" : name => `Do you want to delete the ${name} service?`,
   "question.delete_folder" : name => `Do you want to delete the ${name} folder?`,
@@ -671,6 +679,7 @@ export const translations =
   "question.create_new_scene" : "Do you want to create a new scene?",
   "question.delete_conversation" : "Do you want to delete the conversation?",
   "question.confirm_save_changes": "Do you want to confirm the changes?",
+  "question.confirm_logout": "Are you sure you want to log out?",
 
   "controller.AutoPilotController" : "Drives an object.",
   "controller.Brain4itPostController" : "Posts a value to Brain4it.",

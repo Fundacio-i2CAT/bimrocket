@@ -81,6 +81,10 @@ export const translations =
   "button.menu_show" : "MENÚ",
   "button.menu_hide" : "TANCA",
 
+  "button.login": "Inicia sessió",
+  "button.logout": "Tanca sessió",
+  "button.user": "Usuari",
+
   "units.km" : "kilometres",
   "units.m" : "metres",
   "units.cm" : "centímetres",
@@ -598,6 +602,7 @@ export const translations =
   "title.acl_editor_error": "Error en desar",
   "title.acl_not_found": "No s'ha trobat l'ACL",
   "title.confirm_save": "Confirmació",
+  "title.login_dialog": "Inicia sessió per continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Àrea: ${area} ${units}2`,
@@ -661,6 +666,9 @@ export const translations =
   "message.invalid_privileges": "Hi ha errors en els privilegis introduïts.",
   "message.edit_acl_json_error": detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
+  "message.logout_failed": "Error en tancar sessió.",
+  "message.login_failed": "Credencials incorrectes.",
+
   "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || " l'editor"}?`,
   "question.delete_service" : name => `Vols esborrar el servei ${name}?`,
   "question.delete_folder" : name => `Vols esborrar la carpeta ${name}?`,
@@ -671,6 +679,7 @@ export const translations =
   "question.create_new_scene" : "Vols crear una nova escena?",
   "question.delete_conversation" : "Vols esborrar la conversa?",
   "question.confirm_save_changes": "Vols confirmar els canvis?",
+  "question.confirm_logout": "Segur que vols tancar la sessió?",
 
   "controller.AutoPilotController" : "Condueix un objecte.",
   "controller.Brain4itPostController" : "Fa un POST a Brain4it.",

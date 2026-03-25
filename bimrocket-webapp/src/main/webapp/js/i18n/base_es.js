@@ -81,6 +81,10 @@ export const translations =
   "button.menu_show" : "MENÚ",
   "button.menu_hide" : "CERRAR",
 
+  "button.login": "Iniciar sesión",
+  "button.logout": "Cerrar sesión",
+  "button.user": "Usuario",
+
   "units.km" : "kilometros",
   "units.m" : "metros",
   "units.cm" : "centímetros",
@@ -598,6 +602,7 @@ export const translations =
   "title.acl_editor_error" : "Error al guardar",
   "title.acl_not_found": "No se ha encontrado el ACL",
   "title.confirm_save": "Confirmación",
+  "title.login_dialog": "Inicia sesión para continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Área: ${area} ${units}2`,
@@ -661,6 +666,9 @@ export const translations =
   "message.invalid_privileges": "Hay errores en los privilegios introducidos.",
   "message.edit_acl_json_error": detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
 
+  "message.logout_failed": "Error al cerrar sesión.",
+  "message.login_failed": "Credenciales incorrectas.",
+
   "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,
   "question.delete_service" : name => `Quieres borrar el servicio ${name}?`,
   "question.delete_folder" : name => `Quieres borrar la carpeta ${name}?`,
@@ -671,6 +679,7 @@ export const translations =
   "question.create_new_scene" : "Quieres crear una nueva escena?",
   "question.delete_conversation" : "Quieres borrar la conversación?",
   "question.confirm_save_changes": "Quieres confirmar los cambios?",
+  "question.confirm_logout": "¿Seguro que quieres cerrar sesión?",
 
   "controller.AutoPilotController" : "Conduce un objeto.",
   "controller.Brain4itPostController" : "Hace un POST a Brain4it.",
