@@ -822,6 +822,8 @@ class IFCDBPanel extends Panel
 
       securityService.login(username, password, () =>
       {
+        this.application.setup.sessionActive = true;
+        this.application.checkCurrentSession();
         if (onLogin) onLogin();
       },
       (error) =>
@@ -830,8 +832,7 @@ class IFCDBPanel extends Panel
           .setClassName("error")
           .setI18N(this.application.i18n).show();
         if (onFailed) onFailed();
-      },
-      );
+      });
     };
 
     loginDialog.onCancel = () =>

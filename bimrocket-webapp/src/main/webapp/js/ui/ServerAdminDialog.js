@@ -93,7 +93,7 @@ class ServerAdminDialog extends Dialog
       credentialsAlias: Environment.SERVER_ALIAS
     });
     
-    this.application.services[this.group] = this.service;
+    this.application.services[this.group][this.service.name] = this.service;
   }
 
   createTab(container, tabClassName, toolbarClassName, buttonId, buttonLabel, buttonCallback, tabContainerProperty, toolbarProperty, tableContainerProperty) 
@@ -941,7 +941,8 @@ class ServerAdminDialog extends Dialog
     {
       this.service.login(username, password, () =>
       {
-        loginDialog.hide();
+        this.application.setup.sessionActive = true;
+        this.application.checkCurrentSession();
         if (onLogin) onLogin();
       },
       (error) =>

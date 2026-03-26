@@ -2016,6 +2016,8 @@ class BCFPanel extends Panel
 
       securityService.login(username, password, () =>
         {
+          this.application.setup.sessionActive = true;
+          this.application.checkCurrentSession();
           if (onLogin) onLogin(); 
         },
         (error) =>

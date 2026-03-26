@@ -756,7 +756,8 @@ class FileExplorer extends Panel
 
       securityService.login(username, password, () =>
       {
-        loginDialog.hide();
+        this.application.setup.sessionActive = true;
+        this.application.checkCurrentSession();
         if (onLogin) onLogin();
       },
       (error) =>

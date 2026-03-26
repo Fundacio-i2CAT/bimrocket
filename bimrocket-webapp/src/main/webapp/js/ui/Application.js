@@ -241,8 +241,6 @@ class Application
     profileButton.textContent = this.currentUsername ? this.currentUsername : "Login";
     headerElem.appendChild(profileButton)
 
-    // profileButton.addEventListener("click", () => this.checkCurrentSession())
-
     /* selection materials */
 
     const selectionColor = new THREE.Color(0, 0, 1);
@@ -2094,7 +2092,6 @@ class Application
         {
           securityService.login(username, password, () =>
           {
-            loginDialog.hide();
             this.setup.sessionActive = true;
             this.checkCurrentSession();
           },
