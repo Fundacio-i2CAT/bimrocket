@@ -72,7 +72,7 @@ class SecurityService extends Service
         query += "$orderBy=" + odataOrderBy;
       }
     }
-    
+
     this.invoke("GET", "users" + query, null, onCompleted, onError);
   }
 
@@ -112,7 +112,7 @@ class SecurityService extends Service
 
     if (onError)
     {
-      request.onerror = () => onError({code: 0, message: "Connection error"});
+      request.onerror = () => onError({ code: 0, message: "Connection error" });
     }
 
     if (onCompleted) request.onload = () =>
@@ -123,7 +123,7 @@ class SecurityService extends Service
       } 
       else
       {
-        if (onError) onError({code: request.status, message: "Login failed"});
+        if (onError) onError({ code: request.status, message: "Login failed" });
       }
     };
 
@@ -131,12 +131,12 @@ class SecurityService extends Service
     request.setRequestHeader("Accept", "application/json");
     request.setRequestHeader("Content-Type", "application/json");
 
-    request.withCredentials = true; 
+    request.withCredentials = true;
 
     const data =
     {
       username: username,
-      password: password
+      password: password,
     };
 
     request.send(JSON.stringify(data));
@@ -149,7 +149,7 @@ class SecurityService extends Service
     {
       request.onerror = error =>
       {
-        onError({code: 0, message: "Connection error"});
+        onError({ code: 0, message: "Connection error" });
       };
     }
 
@@ -165,7 +165,7 @@ class SecurityService extends Service
           }
           catch (ex)
           {
-            if (onError) onError({code: 0, message: ex});
+            if (onError) onError({ code: 0, message: ex });
           }
         }
         else
@@ -182,7 +182,7 @@ class SecurityService extends Service
         }
         catch (ex)
         {
-          error = {code: request.status, message: "Error " + request.status};
+          error = { code: request.status, message: "Error " + request.status };
         }
         if (onError) onError(error);
       }
@@ -190,7 +190,7 @@ class SecurityService extends Service
 
     request.open(method, this.url + "/" + path);
     request.setRequestHeader("Accept", "application/json");
-    
+
     if (data)
     {
       request.setRequestHeader("Content-Type", "application/json");

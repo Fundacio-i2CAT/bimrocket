@@ -936,16 +936,30 @@ class ServerAdminDialog extends Dialog
   requestCredentials(message, onLogin, onFailed)
   {
     const loginDialog = new LoginDialog(this.application, message);
+
     loginDialog.login = (username, password) =>
     {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
+      this.service.login(username, password, () =>
+      {
+        loginDialog.hide();
+        if (onLogin) onLogin();
+      },
+      (error) =>
+      {
+        MessageDialog.create("ERROR", this.application.i18n.get("message.login_failed") || "Invalid credentials")
+          .setClassName("error")
+          .setI18N(this.application.i18n).show();
+        if (onFailed) onFailed();
+      },
+      );
     };
+
     loginDialog.onCancel = () =>
     {
       loginDialog.hide();
       if (onFailed) onFailed();
     };
+
     loginDialog.show();
   }
 

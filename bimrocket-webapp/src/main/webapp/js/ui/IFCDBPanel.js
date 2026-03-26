@@ -821,16 +821,16 @@ class IFCDBPanel extends Panel
       const securityService = this.application.services.security.security;
 
       securityService.login(username, password, () =>
-        {
-          if (onLogin) onLogin(); 
-        },
-        (error) =>
-        {
-          MessageDialog.create("ERROR", "Invalid credentials")
-            .setClassName("error")
-            .setI18N(this.application.i18n).show();
-          if (onFailed) onFailed();
-        }
+      {
+        if (onLogin) onLogin();
+      },
+      (error) =>
+      {
+        MessageDialog.create("ERROR", "Invalid credentials")
+          .setClassName("error")
+          .setI18N(this.application.i18n).show();
+        if (onFailed) onFailed();
+      },
       );
     };
 
@@ -839,7 +839,7 @@ class IFCDBPanel extends Panel
       loginDialog.hide();
       if (onFailed) onFailed();
     };
-    
+
     loginDialog.show();
   }
 
