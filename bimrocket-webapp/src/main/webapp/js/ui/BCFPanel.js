@@ -2022,10 +2022,8 @@ class BCFPanel extends Panel
         },
         (error) =>
         {
-          MessageDialog.create("ERROR", "Invalid credentials")
-            .setClassName("error")
-            .setI18N(this.application.i18n).show();
-          if (onFailed) onFailed();
+          const errorMessage = this.application.i18n.get("message.login_failed");
+          this.requestCredentials(errorMessage, onLogin, onFailed);
         }
       );
     };

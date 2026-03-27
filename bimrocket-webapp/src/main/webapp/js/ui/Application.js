@@ -2051,7 +2051,7 @@ class Application
     const isLoggedIn = this.setup.sessionActive;
     
     const onCompleted = (user) =>
-    {
+    { 
       const { name, id } = user;
 
       this.setup.sessionActive = true;
