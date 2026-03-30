@@ -248,13 +248,13 @@ class OpenAction extends Action
       metadata.lastModified = entry.modified;
       const mimeType = node.data.type || "text/plain";
       const formatInfo = IOManager.getFormatInfoByMimeType(mimeType);
-      if (formatInfo?.dataType === "arraybuffer")
+      if (formatInfo?.dataType === "text")
       {
-        data = await node.data.arrayBuffer();
+        data = await node.data.text();
       }
       else
       {
-        data = await node.data.text();
+        data = await node.data.arrayBuffer();
       }
     }
     this.readyCallback(new Result(OK, "", path, metadata, entries, data));

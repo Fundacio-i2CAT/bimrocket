@@ -43,6 +43,9 @@ export const translations =
 
   "tool.server_admin.label" : "Admin Service",
 
+  "action.compare_snapshot" : "Compare snapshot",
+  "action.save_snapshot" : "Save snapshot",
+
   "tab.file" : "File",
   "tab.entity" : "Entity",
   "tab.definition" : "Definition",

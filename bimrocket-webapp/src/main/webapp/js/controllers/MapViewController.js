@@ -41,19 +41,19 @@ class MapViewController extends Controller
     this.heightProvider = "";
     this.utmZoneNumber = 0; // 0: web mercator
     this.utmZoneLetter = "";
-    this.maxRequestPerSecond = 100;
+    this.maxRequestsPerSecond = 100;
 
     this._mapView = null;
     this._onNodeChanged = this.onNodeChanged.bind(this);
     this._lastParameters = null;
-    this._rateLimiter = new RateLimiter(this.maxRequestPerSecond, 200);
+    this._rateLimiter = new RateLimiter(this.maxRequestsPerSecond, 200);
   }
 
   onStart()
   {
     this.application.addEventListener("scene", this._onNodeChanged);
     this.updateMap();
-    this._rateLimiter.maxTasksPerSecond = this.maxRequestPerSecond;
+    this._rateLimiter.maxTasksPerSecond = this.maxRequestsPerSecond;
     this._rateLimiter.start();
   }
 

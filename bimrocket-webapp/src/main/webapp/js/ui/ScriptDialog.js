@@ -6,6 +6,7 @@
 
 import { Dialog } from "./Dialog.js";
 import { Toast } from "../ui/Toast.js";
+import "../lib/codemirror.js";
 import * as THREE from "three";
 
 class ScriptDialog extends Dialog
@@ -15,63 +16,114 @@ class ScriptDialog extends Dialog
     super("title.script_editor");
     this.application = application;
     this.setI18N(this.application.i18n);
-    this.scriptName = "";
-    this.scriptCode = "";
-    this.saved = true;
+    this._savedScriptCode = "";
+    this._changed = false;
 
     this.setSize(760, 600);
-
-    const editorHeight = 75;
-    const consoleHeight = 100 - editorHeight;
+    this.bodyElem.classList.add("flex");
+    this.bodyElem.classList.add("flex_column");
 
     this.nameField = this.addTextField("name", "tool.script.name", "",
       "script_name");
 
     this.editorView = this.addCodeEditor("editor",
       "label.formula.expression", "",
-      { "language" : "javascript",
-        "height" : "calc(" + editorHeight + "% - 38px)" });
+      { language : "javascript", className : "flex_grow_1" });
+
+    const { EditorView } = CM["@codemirror/view"];
+    const { StateEffect } = CM["@codemirror/state"];
+
+    const changeListener = EditorView.updateListener.of(update =>
+    {
+      if (update.docChanged && this.visible)
+      {
+        this._changed = true;
+        this.updateButtons();
+      }
+    });
+
+    this.editorView.dispatch(
+    {
+      effects: StateEffect.appendConfig.of(changeListener)
+    });
 
     this.consoleElem = document.createElement("div");
     this.consoleElem.className = "console";
-    this.consoleElem.style.height = consoleHeight + "%";
     this.bodyElem.appendChild(this.consoleElem);
 
     this.runButton = this.addButton("run", "button.run", () =>
     {
-      this.endEdition();
       this.run();
     });
 
     this.saveButton = this.addButton("save", "button.save", () =>
     {
-      this.endEdition();
+      if (!this.scriptName.endsWith(".js"))
+      {
+        this.scriptName += ".js";
+      }
       saveAction(this.scriptName, this.scriptCode);
+      this._savedScriptCode = this.scriptCode;
+      this._changed = false;
+      this.updateButtons();
     });
 
     this.saveButton.style.display = saveAction ? "" : "none";
 
-    this.closeButton = this.addButton("cancel", "button.close", () =>
+    this.discardButton = this.addButton("cancel", "button.discard", () =>
     {
-      this.endEdition();
+      this.scriptCode = this._savedScriptCode;
+      this._changed = false;
+      this.updateButtons();
+      this.clearConsole();
+
+      Toast.create("message.changes_discarded")
+        .setI18N(application.i18n).show();
+    });
+
+    this.closeButton = this.addButton("close", "button.close", () =>
+    {
       this.hide();
     });
 
     this.nameField.addEventListener("input", () =>
     {
-      this.saveButton.disabled = this.nameField.value.trim().length === 0;
+      this._changed = true;
+      this.updateButtons();
     });
+  }
+
+  get scriptName()
+  {
+    return this.nameField.value;
+  }
+
+  set scriptName(scriptName)
+  {
+    this.nameField.value = scriptName;
+  }
+
+  get scriptCode()
+  {
+    return this.editorView.state.doc.toString();
+  }
+
+  set scriptCode(code)
+  {
+    this._savedScriptCode = code;
+    const state = this.editorView.state;
+    const tx = state.update(
+      { changes: { from: 0, to: state.doc.length, insert: code } });
+    this.editorView.dispatch(tx);
+  }
+
+  hasUnsavedChanges()
+  {
+    return this.scriptCode !== this._savedScriptCode;
   }
 
   onShow()
   {
-    this.nameField.value = this.scriptName;
-    const state = this.editorView.state;
-    const tx = state.update(
-      { changes: { from: 0, to: state.doc.length, insert: this.scriptCode } });
-    this.editorView.dispatch(tx);
-
-    this.saveButton.disabled = this.nameField.value.trim().length === 0;
     if (this.scriptName === "")
     {
       this.nameField.focus();
@@ -80,6 +132,15 @@ class ScriptDialog extends Dialog
     {
       this.editorView.focus();
     }
+    this._changed = this.hasUnsavedChanges();
+    this.updateButtons();
+  }
+
+  updateButtons()
+  {
+    const disabled = !this._changed;
+    this.saveButton.disabled = disabled;
+    this.discardButton.disabled = disabled;
   }
 
   clearConsole()
@@ -125,12 +186,7 @@ class ScriptDialog extends Dialog
   endEdition()
   {
     this.scriptName = this.nameField.value;
-    let code = this.editorView.state.doc.toString();
-    if (code !== this.scriptCode)
-    {
-      this.scriptCode = code;
-      this.saved = false;
-    }
+    this.scriptCode = this.editorView.state.doc.toString();
   };
 
   log(className, ...args)

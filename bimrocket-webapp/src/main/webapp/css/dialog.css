@@ -316,6 +316,13 @@ div.dialog > .header > button:focus
   width: 100%;
   box-sizing: border-box;
   overflow: auto;
+  flex-grow: 1;
+  max-height: 25%;
+}
+
+.dialog div.console *
+{
+  user-select: text;
 }
 
 .dialog div.console div.info
@@ -344,4 +351,3 @@ div.dialog > .header > button:focus
   0% {opacity: 0; visibility: visible; }
   100% {opacity: 0.4; }
 }
-

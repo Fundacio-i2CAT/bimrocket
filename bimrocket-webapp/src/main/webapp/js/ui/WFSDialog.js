@@ -16,9 +16,9 @@ class WFSDialog extends Dialog
 {
   constructor(application)
   {
-    super("tool.wfs.label");
+    super("gis|tool.wfs.label");
     this.application = application;
-    this.setSize(420, 470);
+    this.setSize(400, 450);
     this.setI18N(application.i18n);
     this.setClassName("wfs_container");
 
@@ -32,38 +32,35 @@ class WFSDialog extends Dialog
     bodyElem.style.padding = "10px";
 
     const groupElem = document.createElement("div");
-    
+
     this.wfsTypeElem = Controls.addSelectField(groupElem, "wfsType",
-      "label.wfs.type",
-      [["geojson", "option.wfs.geojson"],
-       ["gml2", "option.wfs.gml2"],
-       ["gml3", "option.wfs.gml3"],
-       ["gml32", "option.wfs.gml32"]],
+      "gis|label.wfs.type",
+      [["geojson", "gis|option.wfs.geojson"],
+       ["gml2", "gis|option.wfs.gml2"],
+       ["gml3", "gis|option.wfs.gml3"],
+       ["gml32", "gis|option.wfs.gml32"]],
       "geojson");
     this.wfsTypeElem.style.display = "flex";
     this.wfsTypeElem.style.flexDirection = "column";
     this.wfsTypeElem.style.width = "100%";
-    this.wfsTypeElem.style.padding = "6px";
     this.wfsTypeElem.style.marginBottom = "6px";
 
     bodyElem.appendChild(groupElem);
 
     this.urlElem = Controls.addTextField(bodyElem, "wfsUrl",
-      "label.wfs.url", "");
+      "gis|label.wfs.url", "");
     this.urlElem.spellcheck = false;
-    this.urlElem.style.padding = "6px";
     this.urlElem.style.marginBottom = "6px";
     this.markRequired(this.urlElem);
 
     this.layerNameElem = Controls.addTextField(bodyElem, "wfsLayerName",
-      "label.wfs.layer_name", "");
+      "gis|label.wfs.layer_name", "");
     this.layerNameElem.spellcheck = false;
-    this.layerNameElem.style.padding = "6px";
     this.layerNameElem.style.marginBottom = "6px";
     this.markRequired(this.layerNameElem);
 
     this.limitDistanceElem = Controls.addTextField(bodyElem,
-      "wfsLimitDistance", "label.wfs.limit_distance", null);
+      "wfsLimitDistance", "gis|label.wfs.limit_distance", null);
     this.limitDistanceElem.spellcheck = false;
     this.limitDistanceElem.type = "number";
     this.limitDistanceElem.parentElement.style.display = "flex";
@@ -75,35 +72,30 @@ class WFSDialog extends Dialog
       limitDistanceLabel.style.display = "block";
       limitDistanceLabel.style.width = "100%";
     }
-    this.limitDistanceElem.style.padding = "6px";
     this.limitDistanceElem.style.marginBottom = "6px";
 
     const limitDistanceNote = Controls.addText(bodyElem,
-      "label.wfs.limit_distance_help");
+      "gis|label.wfs.limit_distance_help");
     limitDistanceNote.style.display = "block";
     limitDistanceNote.style.fontSize = "11px";
-    limitDistanceNote.style.color = "#9caded";
     limitDistanceNote.style.marginBottom = "10px";
 
     this.srsNameElem = Controls.addTextField(bodyElem, "wfsSrsName",
-      "label.wfs.srs_name", "");
+      "gis|label.wfs.srs_name", "");
     this.srsNameElem.spellcheck = false;
-    this.srsNameElem.style.padding = "6px";
     this.srsNameElem.style.marginBottom = "6px";
 
     const srsNameNote = Controls.addText(bodyElem,
-      "label.wfs.srs_name_help");
+      "gis|label.wfs.srs_name_help");
     srsNameNote.style.display = "block";
     srsNameNote.style.fontSize = "11px";
-    srsNameNote.style.color = "#9caded";
     srsNameNote.style.marginBottom = "10px";
 
     this.extrusionElem = Controls.addCheckBoxField(bodyElem, "wfsExtrusion",
-      "label.wfs.extrusion", false, "report_name");
-    this.extrusionElem.style.marginBottom = "6px";
+      "gis|label.wfs.extrusion", false, "report_name");
 
     this.extrusionDepthElem = Controls.addTextField(bodyElem, "wfsExtrusionDepth",
-      "label.wfs.extrusion_depth", "1");
+      "gis|label.wfs.extrusion_depth", "1");
     this.extrusionDepthElem.spellcheck = false;
     this.extrusionDepthElem.type = "number";
     this.extrusionDepthElem.parentElement.style.display = "flex";
@@ -115,8 +107,6 @@ class WFSDialog extends Dialog
       extrusionDepthLabel.style.display = "block";
       extrusionDepthLabel.style.width = "100%";
     }
-    this.extrusionDepthElem.style.padding = "6px";
-    this.extrusionDepthElem.style.marginBottom = "6px";
     this.extrusionDepthGroupElem = this.extrusionDepthElem.parentNode;
     this.extrusionDepthGroupElem.style.display = "none";
 
@@ -219,7 +209,7 @@ class WFSDialog extends Dialog
             center.y + limitDistanceValue
           ].join(",");
           controller.bbox = `${controller.bbox},${srsName}`;
-        } 
+        }
         else
         {
           controller.bbox =

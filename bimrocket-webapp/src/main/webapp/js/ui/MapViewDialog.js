@@ -13,9 +13,9 @@ class MapViewDialog extends Dialog
 {
   constructor(application)
   {
-    super("tool.mapView.label");
+    super("gis|tool.mapView.label");
     this.application = application;
-    this.setSize(420, 380);
+    this.setSize(400, 350);
     this.setI18N(application.i18n);
     this.setClassName("mapView_container");
 
@@ -29,88 +29,80 @@ class MapViewDialog extends Dialog
     bodyElem.style.padding = "10px";
 
     this.providerElem = Controls.addSelectField(bodyElem, "mapViewProvider",
-      "label.mapView.provider",
+      "gis|label.mapView.provider",
       [
-        ["OpenStreetMapsProvider", "option.mapView.openstreetmap"],
-        ["GoogleMapsProvider", "option.mapView.googlemaps"],
-        ["BingMapsProvider", "option.mapView.bingmaps"],
-        ["MapBoxProvider", "option.mapView.mapbox"],
-        ["HereMapsProvider", "option.mapView.heremaps"],
-        ["MapTilerProvider", "option.mapView.maptiler"],
-        ["OpenMapTilesProvider", "option.mapView.openmaptiles"],
-        ["WMSProvider", "option.mapView.wms"]
+        ["OpenStreetMapsProvider", "gis|option.mapView.openstreetmap"],
+        ["GoogleMapsProvider", "gis|option.mapView.googlemaps"],
+        ["BingMapsProvider", "gis|option.mapView.bingmaps"],
+        ["MapBoxProvider", "gis|option.mapView.mapbox"],
+        ["HereMapsProvider", "gis|option.mapView.heremaps"],
+        ["MapTilerProvider", "gis|option.mapView.maptiler"],
+        ["OpenMapTilesProvider", "gis|option.mapView.openmaptiles"],
+        ["WMSProvider", "gis|option.mapView.wms"]
       ],
       "OpenStreetMapsProvider");
 
     this.providerElem.style.display = "flex";
     this.providerElem.style.flexDirection = "column";
     this.providerElem.style.width = "100%";
-    this.providerElem.style.padding = "6px";
     this.providerElem.style.marginBottom = "6px";
 
     this.providerKeyElem = Controls.addTextField(bodyElem, "mapViewProviderKey",
-      "label.mapView.provider_key", "");
+      "gis|label.mapView.provider_key", "");
     this.providerKeyElem.spellcheck = false;
-    this.providerKeyElem.style.padding = "6px";
     this.providerKeyElem.parentNode.style.marginBottom = "6px";
     this.providerKeyElem.parentNode.style.display = "none";
 
     this.mapModeElem = Controls.addSelectField(bodyElem, "mapViewMapMode",
-      "label.mapView.map_mode",
+      "gis|label.mapView.map_mode",
       [
-        ["PLANAR", "option.mapView.planar"],
-        ["SPHERICAL", "option.mapView.spherical"],
-        ["HEIGHT", "option.mapView.height"],
-        ["HEIGHT_SHADER", "option.mapView.height_shader"],
-        ["MARTINI", "option.mapView.martini"]
+        ["PLANAR", "gis|option.mapView.planar"],
+        ["SPHERICAL", "gis|option.mapView.spherical"],
+        ["HEIGHT", "gis|option.mapView.height"],
+        ["HEIGHT_SHADER", "gis|option.mapView.height_shader"],
+        ["MARTINI", "gis|option.mapView.martini"]
       ],
       "PLANAR");
     this.mapModeElem.style.display = "flex";
     this.mapModeElem.style.flexDirection = "column";
     this.mapModeElem.style.width = "100%";
-    this.mapModeElem.style.padding = "6px";
     this.mapModeElem.style.marginBottom = "6px";
 
     this.utmZoneElem = Controls.addTextField(bodyElem, "mapViewUtmZone",
-      "label.mapView.utm_zone", "0");
+      "gis|label.mapView.utm_zone", "31T");
     this.utmZoneElem.spellcheck = false;
-    this.utmZoneElem.style.padding = "6px";
     this.utmZoneElem.style.marginBottom = "6px";
 
     this.heightProviderKeyElem = Controls.addTextField(bodyElem,
-      "mapViewHeightProviderKey", "label.mapView.height_provider_key", "");
+      "mapViewHeightProviderKey", "gis|label.mapView.height_provider_key", "");
     this.heightProviderKeyElem.spellcheck = false;
-    this.heightProviderKeyElem.style.padding = "6px";
     this.heightProviderKeyElem.parentNode.style.marginBottom = "6px";
     this.heightProviderKeyElem.parentNode.style.display = "none";
 
     this.wmsUrlElem = Controls.addTextField(bodyElem, "mapViewWmsUrl",
-      "label.mapView.wms_url", "");
+      "gis|label.mapView.wms_url", "");
     this.wmsUrlElem.spellcheck = false;
-    this.wmsUrlElem.style.padding = "6px";
     this.wmsUrlElem.parentNode.style.marginBottom = "6px";
     this.wmsUrlElem.parentNode.style.display = "none";
     this.markRequired(this.wmsUrlElem);
 
      this.wmsLayerElem = Controls.addTextField(bodyElem, "mapViewWmsLayer",
-      "label.mapView.wms_layer", "");
+      "gis|label.mapView.wms_layer", "");
     this.wmsLayerElem.spellcheck = false;
-    this.wmsLayerElem.style.padding = "6px";
     this.wmsLayerElem.parentNode.style.marginBottom = "6px";
     this.wmsLayerElem.parentNode.style.display = "none";
     this.markRequired(this.wmsLayerElem);
 
     this.maxRequestsPerSecondElem = Controls.addTextField(bodyElem,
-      "mapViewMaxRequestsPerSecond", "label.mapView.max_requests_per_second", "20");
+      "mapViewMaxRequestsPerSecond", "gis|label.mapView.max_requests_per_second", "20");
     this.maxRequestsPerSecondElem.spellcheck = false;
     this.maxRequestsPerSecondElem.type = "number";
     this.maxRequestsPerSecondElem.min = "1";
     this.maxRequestsPerSecondElem.parentElement.style.display = "flex";
     this.maxRequestsPerSecondElem.parentElement.style.flexDirection = "column";
-    const maxRequestsPerSecondLabel = this.maxRequestsPerSecondElem.parentElement
+    const maxRequestsPerSecondLabel = this.maxRequestsPerSecondElem.parentElement;
     maxRequestsPerSecondLabel.style.display = "flex";
     maxRequestsPerSecondLabel.style.width = "100%";
-    this.maxRequestsPerSecondElem.style.padding = "6px";
     this.maxRequestsPerSecondElem.style.marginBottom = "6px";
 
     this.acceptButton = this.addButton("accept", "button.accept",
@@ -145,7 +137,7 @@ class MapViewDialog extends Dialog
   {
     const provider = this.providerElem.value;
     const isWMS = provider === "WMSProvider";
-    
+
     if (isWMS)
     {
       const wmsUrlValue = this.wmsUrlElem.value.trim();
@@ -281,10 +273,10 @@ class MapViewDialog extends Dialog
     const heightModeEnabled = heightModes.includes(this.mapModeElem.value);
     this.heightProviderKeyElem.parentNode.style.display =
       heightModeEnabled ? "block" : "none";
-    
+
     this.wmsUrlElem.parentNode.style.display = isWMS ? "block" : "none";
     this.wmsLayerElem.parentNode.style.display = isWMS ? "block" : "none";
-    
+
     this.updateAcceptButtonState();
   }
 

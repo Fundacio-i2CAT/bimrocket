@@ -13,8 +13,8 @@ class WFSTool extends Tool
   {
     super(application);
     this.name = "wfs";
-    this.label = "tool.wfs.label";
-    this.help = "tool.wfs.help";
+    this.label = "gis|tool.wfs.label";
+    this.help = "gis|tool.wfs.help";
     this.className = "wfs";
     this.setOptions(options);
     application.addTool(this);

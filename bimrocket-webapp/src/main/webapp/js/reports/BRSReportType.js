@@ -16,7 +16,7 @@ class BRSReportType extends ReportType
 
   getDescription()
   {
-    return "BIMROCKET Script (BRS)";
+    return "BIMROCKET Specification (BRS)";
   }
 
   getSourceLanguage()

@@ -150,6 +150,7 @@ export function load(application)
     extensions : ["brf"],
     mimeType : "application/json",
     dataType : "text",
+    icon : "brf",
     loader :
     {
       class : BRFLoader,
@@ -168,6 +169,7 @@ export function load(application)
     extensions : ["dae"],
     mimeType : "model/vnd.collada+xml",
     dataType : "text",
+    icon : "model3d",
     loader :
     {
       class : ColladaLoader,
@@ -186,6 +188,7 @@ export function load(application)
     extensions : ["obj"],
     mimeType : "model/obj",
     dataType : "text",
+    icon : "model3d",
     loader :
     {
       class : OBJLoader,
@@ -217,6 +220,7 @@ export function load(application)
     extensions : ["stl"],
     mimeType : "model/stl",
     dataType : "arraybuffer",
+    icon : "model3d",
     loader :
     {
       class : STLLoader,
@@ -235,6 +239,7 @@ export function load(application)
     extensions : ["gltf"],
     mimeType : "model/gltf+json",
     dataType : "arraybuffer",
+    icon : "model3d",
     loader :
     {
       class : GLTFLoader,
@@ -254,6 +259,7 @@ export function load(application)
     extensions : ["glb"],
     mimeType : "model/gltf-binary",
     dataType : "arraybuffer",
+    icon : "model3d",
     loader :
     {
       class : GLTFLoader,
@@ -266,6 +272,61 @@ export function load(application)
       options : { binary : true }
     }
   };
+
+  IOManager.formats["js"] =
+  {
+    description : "Javascript file (*.js)",
+    extensions : ["js"],
+    mimeType : "text/javascript",
+    dataType : "text",
+    icon : "script"
+  };
+
+  IOManager.formats["brs"] =
+  {
+    description : "BIMROCKET Specification (*.brs)",
+    extensions : ["brs"],
+    mimeType : "text/javasccript",
+    dataType : "text",
+    icon : "report"
+  };
+
+  IOManager.formats["jpg"] =
+  {
+    description : "Joint Photographic Experts Group (*.jpg, *.jpeg)",
+    extensions : ["jpg", "jpeg"],
+    mimeType : "image/jpeg",
+    dataType : "arraybuffer",
+    icon : "image"
+  };
+
+  IOManager.formats["png"] =
+  {
+    description : "Portable Network Graphics (*.png)",
+    extensions : ["png"],
+    mimeType : "image/png",
+    dataType : "arraybuffer",
+    icon : "image"
+  };
+
+  IOManager.formats["svg"] =
+  {
+    description : "Scalable Vector Graphics (*.svg)",
+    extensions : ["svg"],
+    mimeType : "image/svg+xml",
+    dataType : "text",
+    icon : "image"
+  };
+
+  IOManager.formats["pdf"] =
+  {
+    description : "Portable Document Format (*.pdf)",
+    extensions : ["pdf"],
+    mimeType : "application/pdf",
+    dataType : "arraybuffer",
+    icon : "pdf"
+  };
+
 
   // create tools
   const newSceneTool = new NewSceneTool(application);
@@ -502,7 +563,7 @@ export function load(application)
   editMenu.addMenuItem(pasteTool);
   editMenu.addMenuItem(removeTool);
   editMenu.addMenuItem(linkTool);
-  editMenu.addSeparator();
+  editMenu.addSeparator("options");
   editMenu.addMenuItem(optionsTool);
 
   const viewMenu = menuBar.addMenu("menu.view");
@@ -517,15 +578,15 @@ export function load(application)
   standardViewMenu.addMenuItem(backViewTool);
   standardViewMenu.addMenuItem(leftViewTool);
   standardViewMenu.addMenuItem(rightViewTool);
-  viewMenu.addSeparator();
+  const projectionMenu = viewMenu.addMenu("menu.view.projection");
+  projectionMenu.addMenuItem(perspectiveTool);
+  projectionMenu.addMenuItem(orthographicTool);
+  viewMenu.addSeparator("style");
   const styleMenu = viewMenu.addMenu("menu.view.style");
   styleMenu.addMenuItem(edgesStyleTool);
   styleMenu.addMenuItem(facesStyleTool);
   styleMenu.addMenuItem(facesEdgesStyleTool);
   styleMenu.addMenuItem(hiddenStyleTool);
-  const projectionMenu = viewMenu.addMenu("menu.view.projection");
-  projectionMenu.addMenuItem(perspectiveTool);
-  projectionMenu.addMenuItem(orthographicTool);
   viewMenu.addMenuItem(showTool);
   viewMenu.addMenuItem(hideTool);
   viewMenu.addSeparator();

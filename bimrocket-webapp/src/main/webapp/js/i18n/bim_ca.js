@@ -43,6 +43,9 @@ export const translations =
 
   "tool.server_admin.label" : "Admin. del servei",
 
+  "action.compare_snapshot" : "Compara captura",
+  "action.save_snapshot" : "Desa captura",
+
   "tab.file" : "Fitxer",
   "tab.entity" : "Entitat",
   "tab.definition" : "Definició",

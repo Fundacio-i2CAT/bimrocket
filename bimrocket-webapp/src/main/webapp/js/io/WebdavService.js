@@ -163,7 +163,7 @@ class WebdavService extends FileService
           {
             let request = new XMLHttpRequest();
             let formatInfo = IOManager.getFormatInfo(metadata.name);
-            let dataType = formatInfo?.dataType || "text";
+            let dataType = formatInfo?.dataType || "arraybuffer";
             request.responseType = dataType;
 
             request.onload = () =>

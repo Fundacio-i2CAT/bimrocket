@@ -68,7 +68,7 @@ export function load(application)
   // create menus
   const menuBar = application.menuBar;
 
-  const gisMenu = menuBar.addMenu("menu.gis", menuBar.menus.length - 2);
+  const gisMenu = menuBar.addMenu("gis|menu.gis", menuBar.menus.length - 2);
   gisMenu.addMenuItem(wfsTool);
   gisMenu.addMenuItem(mapViewTool);
 

@@ -13,8 +13,8 @@ class MapViewTool extends Tool
   {
     super(application);
     this.name = "mapView";
-    this.label = "tool.mapView.label";
-    this.help = "tool.mapView.help";
+    this.label = "gis|tool.mapView.label";
+    this.help = "gis|tool.mapView.help";
     this.className = "mapView";
     this.setOptions(options);
     application.addTool(this);
