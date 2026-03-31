@@ -706,6 +706,7 @@ class IfcProjectHelper extends IfcHelper
       ObjectUtils.setSelectionHighlight(types, ObjectUtils.HIGHLIGHT_NONE);
       model.add(types);
       ObjectUtils.setHidden(types, true);
+      ObjectUtils.setGhost(types, true);
 
       const retainIfcFile = loader.options.retainIfcFile;
       if (retainIfcFile === undefined)
