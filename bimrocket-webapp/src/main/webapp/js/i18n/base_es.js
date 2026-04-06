@@ -623,8 +623,7 @@ export const translations =
   "title.acl_editor_error" : "Error al guardar",
   "title.acl_not_found": "No se ha encontrado el ACL",
   "title.confirm_save": "Confirmación",
-
-  "message.inform_unsaved_changes": "Tienes cambios no salvados. Sálvalos o descártalos antes de editar otro archivo.",
+  "title.overwrite" : "Sobreescribir fichero",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Área: ${area} ${units}2`,
@@ -651,6 +650,7 @@ export const translations =
   "message.folder_deleted" : "Carpeta borrada.",
   "message.renaming_completed" : "Renombrado completado.",
   "message.changes_discarded" : "Cambios descartados.",
+  "message.filename_already_exists" : "Ya existe un fichero con ese nombre.",
 
   "message.no_matches" : "Ninguna coincidencia encontrada.",
   "message.one_match" : "1 coincidencia encontrada.",
@@ -687,9 +687,10 @@ export const translations =
   "message.file_open_error" : (fileName, error) => `El fichero ${fileName} no se puede abrir:\n\n${error}`,
 
   "message.edit_acl_success" : "Los permisos se han actualizado correctamente.",
-  "message.invalid_privileges": "Hay errores en los privilegios introducidos.",
-  "message.edit_acl_json_error": detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
+  "message.invalid_privileges" : "Hay errores en los privilegios introducidos.",
+  "message.edit_acl_json_error" : detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
 
+  "question.overwrite_file" : filename => `Quieres sobreescribir el fichero ${filename}?`,
   "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,
   "question.delete_service" : name => `Quieres borrar el servicio ${name}?`,
   "question.delete_folder" : name => `Quieres borrar la carpeta ${name}?`,

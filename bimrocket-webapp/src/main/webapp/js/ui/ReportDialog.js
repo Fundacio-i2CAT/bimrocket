@@ -5,7 +5,10 @@
  */
 
 import { Dialog } from "./Dialog.js";
+import { Controls } from "../ui/Controls.js";
 import { Toast } from "../ui/Toast.js";
+import { MessageDialog } from "./MessageDialog.js";
+import { ConfirmDialog } from "../ui/ConfirmDialog.js";
 import { Report } from "../reports/Report.js";
 import { ReportType } from "../reports/ReportType.js";
 import "../lib/codemirror.js";
@@ -13,15 +16,18 @@ import * as THREE from "three";
 
 class ReportDialog extends Dialog
 {
-  constructor(application, saveAction)
+  constructor(fileExplorer)
   {
     super("title.report_editor");
-    this.application = application;
-    this.setI18N(this.application.i18n);
+    this.fileExplorer = fileExplorer;
     this.reportTypeName = ReportType.getDefaultReportTypeName();
     this.reportPanel = null;
-    this._savedReportSource = "";
     this._changed = false;
+    this._reportName = null;
+
+    const application = fileExplorer.application;
+
+    this.setI18N(application.i18n);
 
     this.setSize(760, 600);
     this.bodyElem.classList.add("flex");
@@ -30,65 +36,22 @@ class ReportDialog extends Dialog
     this.nameField = this.addTextField("name", "tool.report.name", "",
       "report_name");
     this.nameField.setAttribute("spellcheck", "false");
+    this.nameField.addEventListener("input", () =>
+    {
+      this.saveButton.disabled = !this.nameField.value.trim();
+    });
 
     this.editorView = this.addCodeEditor("editor",
       "tool.report.rules", "", { "className" : "flex_grow_1" });
 
-    const { EditorView } = CM["@codemirror/view"];
-    const { StateEffect } = CM["@codemirror/state"];
+    this.saveButton = this.addButton("save",
+      "button.save", () => this.onSave());
 
-    const changeListener = EditorView.updateListener.of(update =>
-    {
-      if (update.docChanged && this.visible)
-      {
-        this._changed = true;
-        this.updateButtons();
-      }
-    });
+    this.runButton = this.addButton("run",
+      "button.run", () => this.run());
 
-    this.editorView.dispatch(
-    {
-      effects: StateEffect.appendConfig.of(changeListener)
-    });
-
-    this.runButton = this.addButton("run", "button.run", () =>
-    {
-      this.hide();
-      this.run();
-    });
-
-    this.saveButton = this.addButton("save", "button.save", () =>
-    {
-      if (this.validate())
-      {
-        this.addExtension();
-        saveAction(this.reportName, this.reportSource);
-        this._savedReportSource = this.reportSource;
-        this._changed = false;
-        this.updateButtons();
-      }
-    });
-
-    this.discardButton = this.addButton("cancel", "button.discard", () =>
-    {
-      this.reportSource = this._savedReportSource;
-      this._changed = false;
-      this.updateButtons();
-
-      Toast.create("message.changes_discarded")
-        .setI18N(application.i18n).show();
-    });
-
-    this.closeButton = this.addButton("cancel", "button.close", () =>
-    {
-      this.hide();
-    });
-
-    this.nameField.addEventListener("input", () =>
-    {
-      this._changed = true;
-      this.updateButtons();
-    });
+    this.closeButton = this.addButton("close",
+      "button.close", () => this.hide());
   }
 
   get reportName()
@@ -99,6 +62,7 @@ class ReportDialog extends Dialog
   set reportName(reportName)
   {
     this.nameField.value = reportName;
+    this.saveButton.disabled = !reportName?.trim();
   }
 
   get reportSource()
@@ -108,16 +72,32 @@ class ReportDialog extends Dialog
 
   set reportSource(source)
   {
-    this._savedReportSource = source;
-    const state = this.editorView.state;
-    const tx = state.update(
-      { changes: { from: 0, to: state.doc.length, insert: source } });
-    this.editorView.dispatch(tx);
-  }
+    this._changed = false;
 
-  hasUnsavedChanges()
-  {
-    return this.reportSource !== this._savedReportSource;
+    if (!source || source !== this.reportSource)
+    {
+      const reportType = ReportType.getReportType(this.reportTypeName);
+
+      Controls.setCodeEditorDocument(this.editorView, source,
+      { language : reportType.getSourceLanguage() });
+
+      const { EditorView } = CM["@codemirror/view"];
+      const { StateEffect } = CM["@codemirror/state"];
+
+      const changeListener = EditorView.updateListener.of(update =>
+      {
+        if (update.docChanged && this.visible)
+        {
+          this._changed = true;
+          this.runButton.disabled = true;
+        }
+      });
+
+      this.editorView.dispatch(
+      {
+        effects: StateEffect.appendConfig.of(changeListener)
+      });
+    }
   }
 
   onShow()
@@ -130,15 +110,78 @@ class ReportDialog extends Dialog
     {
       this.editorView.focus();
     }
-    this._changed = this.hasUnsavedChanges();
-    this.updateButtons();
+    this._reportName = this.reportName;
   }
 
-  updateButtons()
+  hide()
   {
-    const disabled = !this._changed;
-    this.saveButton.disabled = disabled;
-    this.discardButton.disabled = disabled;
+    if (this._changed)
+    {
+      const application = this.fileExplorer.application;
+
+      ConfirmDialog.create("title.confirm_save",
+        "question.discard_changes", this.reportName)
+        .setAction(() =>
+        {
+          this.reportSource = "";
+          this._changed = false;
+          super.hide();
+
+          Toast.create("message.changes_discarded")
+            .setI18N(application.i18n).show();
+        })
+        .setI18N(application.i18n)
+        .setAcceptLabel("button.yes")
+        .setCancelLabel("button.no")
+        .show();
+    }
+    else
+    {
+      super.hide();
+    }
+  }
+
+  async onSave()
+  {
+    const fileExplorer = this.fileExplorer;
+    const application = fileExplorer.application;
+
+    if (this.validate())
+    {
+      this.completeName();
+
+      if (fileExplorer.service)
+      {
+        const isNew = this.reportName !== this._reportName;
+        if (isNew)
+        {
+          if (!await fileExplorer.confirmSave(this.reportName)) return;
+        }
+
+        fileExplorer.save(this.reportName, this.reportSource, () =>
+        {
+          this._changed = false;
+          this._reportName = this.reportName;
+          this.runButton.disabled = false;
+        });
+      }
+      else
+      {
+        MessageDialog.create("ERROR", "message.select_directory")
+          .setClassName("error")
+          .setI18N(application.i18n).show();
+      }
+    }
+  }
+
+  run()
+  {
+    super.hide();
+    const reportPanel = this.reportPanel;
+    if (reportPanel)
+    {
+      reportPanel.execute(this.reportName, this.reportSource, this.reportTypeName);
+    }
   }
 
   validate()
@@ -162,16 +205,7 @@ class ReportDialog extends Dialog
     return false;
   }
 
-  run()
-  {
-    const reportPanel = this.reportPanel;
-    if (reportPanel)
-    {
-      reportPanel.execute(this.reportName, this.reportSource, this.reportTypeName);
-    }
-  }
-
-  addExtension()
+  completeName()
   {
     const reportTypeName = this.reportTypeName;
     const reportName = this.reportName.toLowerCase();

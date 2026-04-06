@@ -29,6 +29,7 @@
 .fileexplorer_panel > .header > .image_button
 {
   flex-grow: 0;
+  flex-shrink: 0;
   width: 20px;
   height: 20px;
   margin: 0px;
@@ -120,7 +121,7 @@
   color: #404040;
   cursor:pointer;
   padding: 2px;
-  padding-left: 20px;
+  padding-left: 22px;
   font-size:13px;
   background-position: 2px 2px;
   background-repeat: no-repeat;

@@ -43,7 +43,7 @@ class CompareSnapshotAction extends FileAction
 
   perform()
   {
-    this.fileExplorer.openSelectedEntry((url, result) =>
+    this.fileExplorer.open((url, result) =>
     {
       if (result.data)
       {

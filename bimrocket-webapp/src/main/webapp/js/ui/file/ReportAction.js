@@ -29,8 +29,7 @@ class ReportAction extends FileAction
 
     if (!fileExplorer.reportDialog)
     {
-      fileExplorer.reportDialog = new ReportDialog(application,
-        (name, code) => this.onSave(name, code));
+      fileExplorer.reportDialog = new ReportDialog(fileExplorer);
       fileExplorer.reportDialog.reportPanel = fileExplorer.reportPanel;
     }
   }
@@ -44,28 +43,6 @@ class ReportAction extends FileAction
     if (!type) return false;
 
     return Boolean(ReportType.types[type]);
-  }
-
-  showReportDialog()
-  {
-    const fileExplorer = this.fileExplorer;
-    const application = fileExplorer.application;
-    const reportDialog = fileExplorer.reportDialog;
-    const entryName = fileExplorer.selectedEntry?.name || "";
-
-    if (reportDialog.reportName !== entryName)
-    {
-      MessageDialog.create("title.unsaved_changes",
-        "message.inform_unsaved_changes", reportDialog.reportName)
-        .setAction(() => reportDialog.show())
-        .setAcceptLabel("button.accept")
-        .setClassName("info")
-        .setI18N(application.i18n).show();
-    }
-    else
-    {
-      reportDialog.show();
-    }
   }
 
   setReport(url, source, reportTypeName = null, run = false)
@@ -92,27 +69,9 @@ class ReportAction extends FileAction
     else
     {
       reportDialog.reportName = reportName;
-      reportDialog.reportSource = source;
       reportDialog.reportTypeName = reportTypeName;
+      reportDialog.reportSource = source;
       reportDialog.show();
-    }
-  }
-
-  onSave(name, code)
-  {
-    const fileExplorer = this.fileExplorer;
-    const application = fileExplorer.application;
-    const reportDialog = fileExplorer.reportDialog;
-
-    if (fileExplorer.service)
-    {
-      fileExplorer.save(name, code, () => reportDialog.saved = true);
-    }
-    else
-    {
-      MessageDialog.create("ERROR", "message.select_directory")
-        .setClassName("error")
-        .setI18N(application.i18n).show();
     }
   }
 }

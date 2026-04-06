@@ -30,10 +30,35 @@ class UploadFileAction extends FileAction
     const inputFile = document.createElement("input");
 
     inputFile.type = "file";
+    inputFile.multiple = true;
 
     inputFile.addEventListener("change",
-      event => fileExplorer.upload(inputFile.files));
+      event => this.uploadFiles(inputFile.files));
     inputFile.click();
+  }
+
+  uploadFiles(files)
+  {
+    const fileExplorer = this.fileExplorer;
+    const queue = [...files];
+
+    const uploadFile = async () =>
+    {
+      let file = queue.shift();
+      if (file)
+      {
+        if (await fileExplorer.confirmSave(file.name))
+        {
+          this.fileExplorer.upload(file, uploadFile);
+        }
+        else
+        {
+          uploadFile();
+        }
+      }
+    };
+
+    uploadFile();
   }
 }
 

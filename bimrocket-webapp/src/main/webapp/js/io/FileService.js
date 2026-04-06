@@ -13,44 +13,190 @@ class FileService extends Service
     super(parameters);
   }
 
-  open(path, readyCallback, progressCallback)
+  /**
+   * Finds resources under the given path.
+   * Resources are returned in Result.entries.
+   *
+   * @param {string} path - the resource path
+   * @param {Object} options - the find options:
+   *   - depth: string - the search depth: "0", "1", "Infinity"
+   * @param {(Result) => void} onCompleted - the function to call when the
+   *   find operation completes
+   */
+  find(path, options, onCompleted)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  save(path, data, readyCallback, progressCallback)
+  /**
+   * Reads the data from the file associated with the specified path.
+   * The file data is returned in Result.data
+   *
+   * @param {type} path - the path of the file to read
+   * @param {(Result) => void} onCompleted - the function to call when the
+   *   read operation completes
+   * @param {({ progress: number, message: string }) => void} onProgress -
+   *   the function to call to report reading progress
+   */
+  read(path, onCompleted, onProgress)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  remove(path, readyCallback, progressCallback)
+  /**
+   * Writes the specified data to the file associated with the given path.
+   *
+   * @param {string} path - the path of the file to write
+   * @param {string|Blob} data - the data to write
+   * @param {(Result) => void} onCompleted - the function to call when the
+   *   write operation completes
+   * @param {({ progress: number, message: string }) => void} onProgress -
+   *   the function to call to report writing progress
+   */
+  write(path, data, onCompleted, onProgress)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  makeCollection(path, readyCallback, progressCallback)
+  /**
+   * Removes the file associated with the specified path.
+   *
+   * @param {string} path - the path of the file to remove
+   * @param {(Result) => void} onCompleted - the function to call when the
+   *   remove operation completes
+   * @param {({ progress: number, message: string }) => void} onProgress -
+   *   the function to call to report removing progress
+   */
+  remove(path, onCompleted, onProgress)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  move(sourcePath, destinationPath, readyCallback, progressCallback)
+  /**
+   * Creates a collection in the specified path.
+   *
+   * @param {string} path - the path of the new collection
+   * @param {(Result) => void} onCompleted - the function to call when this
+   *   operation completes
+   */
+  makeCollection(path, onCompleted)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  copy(sourcePath, destinationPath, readyCallback, progressCallback)
+  /**
+   * Moves a resource from a source path to a destination path.
+   *
+   * @param {string} sourcePath - the source path
+   * @param {string} destinationPath - the destination path
+   * @param {(Result) => void} onCompleted - the function to call when the
+   *   move operation completes
+   * @param {({ progress: number, message: string }) => void} onProgress -
+   *   the function to call to report moving progress
+   */
+  move(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  setACL(path, acl, readyCallback)
+  /**
+   * Copies a resource from a source path to a destination path.
+   *
+   * @param {string} sourcePath - the source path
+   * @param {string} destinationPath - the destination path
+   * @param {(Result) => void} onCompleted - the function to call when the
+   *   copy operation completes
+   * @param {({ progress: number, message: string }) => void} onProgress -
+   *   the function to call to report copying progress
+   */
+  copy(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
   }
 
-  getACL(path, readyCallback)
+  /**
+   * Gets the properties from the resource associated with the specified path.
+   * The properties are returned in Result.data.
+   *
+   * @param {string} path - the resource path
+   * @param {string[]} names - the names of the properties to be obtained
+   * @param {(Result) => void} onCompleted - the function to call when this
+   *   operation completes
+   */
+  getProperties(path, names, onCompleted)
   {
-    readyCallback(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
+  }
+
+  /**
+   * Sets the properties to the resource associated with the specified path.
+   *
+   * @param {string} path - the resource path
+   * @param {object} properties - the properties to set
+   * @param {(Result) => void} onCompleted - the function to call when this
+   *   operation completes
+   */
+  setProperties(path, properties, onCompleted)
+  {
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
+  }
+
+  /**
+   *  Gets the ACL from the resource associated with the specified path.
+   *  The ACL is returned in Result.data.
+   *
+   * @param {string} path - the resource path
+   * @param {(Result) => void} onCompleted - the function to call when this
+   *   operation completes
+   */
+  getACL(path, onCompleted)
+  {
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
+  }
+
+  /**
+   * Sets the ACL to the resource associated with the specified path.
+   *
+   * @param {string} path - the resource path
+   * @param {ACL} acl - the ACL to set
+   * @param {(Result) => void} onCompleted - the function to call when this
+   *   operation completes
+   */
+  setACL(path, acl, onCompleted)
+  {
+    onCompleted(new Result(Result.ERROR, "Not implemented."));
+  }
+
+  // deprecated methods
+
+  open(path, onCompleted, onProgress)
+  {
+    this.find(path, null, result =>
+    {
+      if (result.status === Result.OK)
+      {
+        if (result.metadata.type === Metadata.COLLECTION)
+        {
+          onCompleted(result);
+        }
+        else // FILE
+        {
+          this.read(path, downloadResult =>
+          {
+            onCompleted(downloadResult);
+          }, onProgress);
+        }
+      }
+      else
+      {
+        onCompleted(result);
+      }
+    });
+  }
+
+  save(path, data, onCompleted, onProgress)
+  {
+    this.write(path, data, onCompleted, onProgress);
   }
 }
 
@@ -61,6 +207,7 @@ class Result
   static INVALID_CREDENTIALS = 2;
   static FORBIDDEN = 3;
   static BAD_REQUEST = 4;
+  static NOT_FOUND = 5;
 
   constructor(status, message, path, metadata, entries, data)
   {
@@ -82,9 +229,9 @@ class Metadata
   {
     this.name = name;
     this.description = description;
-    this.type = type;
+    this.type = type; // Metadata.COLLECTION | Metadata.FILE
     this.size = size;
-    this.lastModified = lastModified;
+    this.lastModified = lastModified; // epoch number
   }
 }
 

@@ -7,6 +7,7 @@
 import { FileExplorer } from "./FileExplorer.js";
 import { FileAction } from "./FileAction.js";
 import { IOManager } from "../../io/IOManager.js";
+import { Metadata } from "../../io/FileService.js";
 
 class OpenFileAction extends FileAction
 {
@@ -27,7 +28,10 @@ class OpenFileAction extends FileAction
 
   isEnabled()
   {
-    const name = this.fileExplorer.selectedEntry?.name;
+    const fileExplorer = this.fileExplorer;
+    if (!fileExplorer.isFileEntrySelected()) return false;
+
+    const name = fileExplorer.selectedEntry.name;
     const formatInfo = IOManager.getFormatInfo(name);
     if (formatInfo)
     {
@@ -38,7 +42,7 @@ class OpenFileAction extends FileAction
 
   perform()
   {
-    this.fileExplorer.openSelectedEntry((url, result) =>
+    this.fileExplorer.open((url, result) =>
     {
       const formatInfo = IOManager.getFormatInfo(result.path);
       if (formatInfo)

@@ -10,6 +10,7 @@ import { Action } from "../Action.js";
 import { ContextMenu, MenuItem } from "../Menu.js";
 import { LoginDialog } from "../LoginDialog.js";
 import { MessageDialog } from "../MessageDialog.js";
+import { ConfirmDialog } from "../ConfirmDialog.js";
 import { Toast } from "../Toast.js";
 import { ServiceManager } from "../../io/ServiceManager.js";
 import { FileService, Metadata, Result, ACL } from "../../io/FileService.js";
@@ -38,6 +39,7 @@ class FileExplorer extends Panel
     this.group = "model"; // service group
     this.minimumHeight = 200;
 
+    /** @type {FileService} */
     this.service = null; // current service
     this.basePath = "/";
     this.selectedEntry = null;
@@ -55,7 +57,7 @@ class FileExplorer extends Panel
       "home", "button.home", event => this.goHome(), "image_button home");
 
     this.backButtonElem = Controls.addImageButton(this.headerElem,
-      "home", "button.back", event => this.goBack(), "image_button back");
+      "back", "button.back", event => this.goBack(), "image_button back");
 
     this.directoryElem = document.createElement("div");
     this.directoryElem.className = "directory";
@@ -182,7 +184,6 @@ class FileExplorer extends Panel
     }
     else
     {
-//      this.directoryElem.textContent = result.metadata.description;
       return serviceName + basePath;
     }
   }
@@ -239,35 +240,47 @@ class FileExplorer extends Panel
       {
         this.basePath = "/";
       }
-      this.open("");
+      this.list();
     }
   }
 
-  openSelectedEntry(onSuccess)
+  list(onSuccess)
   {
-    const entryName = this.selectedEntry?.name || "";
+    this.showProgressBar("Reading directory...");
+    this.service.find(this.basePath, null,
+      result => this.handleOpenResult("", result, onSuccess),
+      data => this.setProgress(data.progress, data.message));
+  }
+
+  open(onSuccess)
+  {
+    const entryName = this.selectedEntry?.name;
+    if (!entryName) throw "No entry selected.";
+
     if (this.service === null)
     {
-      if (entryName)
-      {
-        this.service = this.application.services[this.group][entryName];
-      }
+      this.service = this.application.services[this.group][entryName];
       this.basePath = "/";
-      this.open("", onSuccess);
+      this.list(onSuccess);
     }
     else
     {
-      this.open(entryName, onSuccess);
+      const path = this.getFullPath(entryName);
+      if (this.selectedEntry.type === Metadata.COLLECTION)
+      {
+        this.showProgressBar("Reading directory...");
+        this.service.find(path, null,
+          result => this.handleOpenResult(entryName, result, onSuccess),
+          data => this.setProgress(data.progress, data.message));
+      }
+      else
+      {
+        this.showProgressBar("Reading file...");
+        this.service.read(path,
+          result => this.handleOpenResult(entryName, result, onSuccess),
+          data => this.setProgress(data.progress, data.message));
+      }
     }
-  }
-
-  open(entryName, onSuccess)
-  {
-    const path = this.getFullPath(entryName);
-    this.showProgressBar("Reading...");
-    this.service.open(path,
-      result => this.handleOpenResult(entryName, result, onSuccess),
-      data => this.setProgress(data.progress, data.message));
   }
 
   save(entryName, data, onSuccess)
@@ -275,17 +288,20 @@ class FileExplorer extends Panel
     this._nextEntryName = entryName;
     const path = this.getFullPath(entryName);
     this.showProgressBar("Saving...");
-    this.service.save(path, data,
+    this.service.write(path, data,
       result => this.handleSaveResult(entryName, data, result, onSuccess),
       data => this.setProgress(data.progress, data.message));
   }
 
-  delete(entryName, onSuccess)
+  remove(onSuccess)
   {
+    const entryName = this.selectedEntry?.name;
+    if (!entryName) throw "No entry selected.";
+
     const path = this.getFullPath(entryName);
     this.showProgressBar("Deleting...");
     this.service.remove(path,
-      result => this.handleDeleteResult(entryName, result, onSuccess));
+      result => this.handleRemoveResult(entryName, result, onSuccess));
   }
 
   makeFolder(entryName, onSuccess)
@@ -297,8 +313,11 @@ class FileExplorer extends Panel
       result => this.handleMakeFolderResult(entryName, result, onSuccess));
   }
 
-  rename(entryName, newEntryName, onSuccess)
+  rename(newEntryName, onSuccess)
   {
+    const entryName = this.selectedEntry?.name;
+    if (!entryName) throw "No entry selected.";
+
     this._nextEntryName = newEntryName;
     const sourcePath = this.getFullPath(entryName);
     const destinationPath = this.getFullPath(newEntryName);
@@ -309,43 +328,79 @@ class FileExplorer extends Panel
         result, onSuccess));
   }
 
-  download(entryName, onSuccess)
+  download(onSuccess)
   {
+    const entryName = this.selectedEntry?.name;
+    if (!entryName) throw "No entry selected.";
+
     const path = this.getFullPath(entryName);
     this.showProgressBar("Downloading file...");
-    this.service.open(path,
+    this.service.read(path,
       result => this.handleDownloadResult(entryName, result, onSuccess),
       data => this.setProgress(data.progress));
   }
 
-  upload(files, onSuccess)
+  upload(file, onSuccess)
   {
-    if (files.length > 0)
+    const application = this.application;
+
+    let reader = new FileReader();
+    reader.onload = event =>
     {
-      const application = this.application;
-      let file = files[0];
-      let reader = new FileReader();
-      reader.onload = event =>
+      const data = event.target.result;
+      const path = this.getFullPath(file.name);
+      this._nextEntryName = file.name;
+      this.showProgressBar("Uploading file...");
+      this.service.write(path, data, result =>
       {
-        const data = event.target.result;
-        const path = this.getFullPath(file.name);
-        this.showProgressBar("Uploading file...");
-        this.service.save(path, data, result =>
-        {
-          this.handleUploadResult(files, result, onSuccess);
-        },
-        data => this.setProgress(data.progress));
-      };
-      let formatInfo = IOManager.getFormatInfo(file.name);
-      if (formatInfo?.dataType === "text")
-      {
-        reader.readAsText(file);
-      }
-      else
-      {
-        reader.readAsArrayBuffer(file);
-      }
+        this.handleUploadResult(file, result, onSuccess);
+      },
+      data => this.setProgress(data.progress));
+    };
+
+    let formatInfo = IOManager.getFormatInfo(file.name);
+    if (formatInfo?.dataType === "text")
+    {
+      reader.readAsText(file);
     }
+    else
+    {
+      reader.readAsArrayBuffer(file);
+    }
+  }
+
+  confirmSave(entryName)
+  {
+    return new Promise(async resolve =>
+    {
+      const exists = await this.exists(entryName);
+      if (exists)
+      {
+        ConfirmDialog.create("title.overwrite", "question.overwrite_file", entryName)
+          .setAcceptLabel("button.yes")
+          .setCancelLabel("button.no")
+          .setAcceptAction(() => resolve(true))
+          .setCancelAction(() => resolve(false))
+          .setI18N(this.application.i18n)
+          .show();
+      }
+      else resolve(true);
+    });
+  }
+
+  exists(entryName, onSuccess)
+  {
+    return new Promise(resolve =>
+    {
+      const path = this.getFullPath(entryName);
+      this.service.find(path, { depth : "0" }, result =>
+      {
+        const exists = result?.status !== Result.NOT_FOUND;
+        resolve(exists);
+
+        onSuccess?.(exists);
+      });
+    });
   }
 
   handleOpenResult(entryName, result, onSuccess)
@@ -360,12 +415,15 @@ class FileExplorer extends Panel
         this.showDirectory(entryName, result);
       }
 
-      if (onSuccess) onSuccess(this.getAbsolutePath(entryName), result);
+      onSuccess?.(this.getAbsolutePath(entryName), result);
     }
     else
     {
       this.handleError(result, false,
-        () => this.open(entryName, onSuccess),
+        () => {
+                if (entryName === "") this.list(onSuccess);
+                else this.open(onSuccess);
+              },
         () => { if (entryName === "") this.service = null; });
     }
   }
@@ -382,10 +440,9 @@ class FileExplorer extends Panel
 
       this.selectedEntry = null;
 
-      if (onSuccess) onSuccess(this.getAbsolutePath(entryName), result);
+      onSuccess?.(this.getAbsolutePath(entryName), result);
 
-      // reload current directory
-      this.open("");
+      this.list();
     }
     else
     {
@@ -394,7 +451,7 @@ class FileExplorer extends Panel
     }
   }
 
-  handleDeleteResult(entryName, result, onSuccess)
+  handleRemoveResult(entryName, result, onSuccess)
   {
     const application = this.application;
     this.showButtonsPanel();
@@ -413,14 +470,13 @@ class FileExplorer extends Panel
       }
       this.selectedEntry = null;
 
-      if (onSuccess) onSuccess(this.getAbsolutePath(entryName), result);
+      onSuccess?.(this.getAbsolutePath(entryName), result);
 
-      // reload current directory
-      this.open("");
+      this.list();
     }
     else
     {
-      this.handleError(result, true, () => this.delete(entryName, onSuccess));
+      this.handleError(result, true, () => this.remove(onSuccess));
     }
   }
 
@@ -431,15 +487,14 @@ class FileExplorer extends Panel
 
     if (result.status === Result.OK)
     {
-      if (onSuccess) onSuccess(this.getAbsolutePath(entryName), result);
+      onSuccess?.(this.getAbsolutePath(entryName), result);
 
       Toast.create("message.folder_created")
         .setI18N(application.i18n).show();
 
       this.selectedEntry = null;
 
-      // reload current directory
-      this.open("");
+      this.list();
     }
     else
     {
@@ -454,20 +509,19 @@ class FileExplorer extends Panel
 
     if (result.status === Result.OK)
     {
-      if (onSuccess) onSuccess();
+      onSuccess?.(this.getAbsolutePath(entryName), result);
 
       Toast.create("message.renaming_completed")
         .setI18N(application.i18n).show();
 
       this.selectedEntry = null;
 
-      // reload current directory
-      this.open("");
+      this.list();
     }
     else
     {
       this.handleError(result, true,
-        () => this.rename(entryName, newEntryName, onSuccess));
+        () => this.rename(newEntryName, onSuccess));
     }
   }
 
@@ -477,35 +531,33 @@ class FileExplorer extends Panel
 
     if (result.status === Result.OK)
     {
-      if (onSuccess) onSuccess();
+      onSuccess?.(this.getAbsolutePath(entryName), result);
 
       const data = result.data;
       WebUtils.downloadFile(data, entryName);
     }
     else
     {
-      this.handleError(result, false, () => this.download(entryName, onSuccess));
+      this.handleError(result, false, () => this.download(onSuccess));
     }
   }
 
-  handleUploadResult(files, result, onSuccess)
+  handleUploadResult(file, result, onSuccess)
   {
     const application = this.application;
     this.showButtonsPanel();
 
     if (result.status === Result.OK)
     {
-      if (onSuccess) onSuccess();
+      onSuccess?.(this.getAbsolutePath(file.name), result);
 
-      Toast.create("message.file_saved")
-        .setI18N(application.i18n).show();
+      Toast.create("message.file_saved").setI18N(application.i18n).show();
 
-      // reload current directory
-      this.open("");
+      this.list();
     }
     else
     {
-      this.handleError(result, true, () => this.upload(files, onSuccess));
+      this.handleError(result, true, () => this.upload(file, onSuccess));
     }
   }
 

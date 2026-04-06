@@ -26,20 +26,10 @@ class RunScriptAction extends ScriptAction
 
   perform()
   {
-    const fileExplorer = this.fileExplorer;
-    const scriptDialog = fileExplorer.scriptDialog;
-
-    if (scriptDialog.hasUnsavedChanges())
+    this.fileExplorer.open((url, result) =>
     {
-      this.showScriptDialog();
-    }
-    else
-    {
-      this.fileExplorer.openSelectedEntry((url, result) =>
-      {
-        this.setScript(url, result.data, true);
-      });
-    }
+      this.setScript(url, result.data, true);
+    });
   }
 }
 

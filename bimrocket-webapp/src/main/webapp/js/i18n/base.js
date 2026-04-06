@@ -623,8 +623,7 @@ export const translations =
   "title.acl_editor_error": "Error saving",
   "title.acl_not_found": "ACL not found",
   "title.confirm_save": "Confirmation",
-
-  "message.inform_unsaved_changes": "You have unsaved changes. Save or discard them before editing another file.",
+  "title.overwrite" : "Overwrite file",
 
   "message.measure_length" : (length, units) => `Length: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Area: ${area} ${units}2`,
@@ -651,6 +650,7 @@ export const translations =
   "message.folder_deleted" : "Folder deleted.",
   "message.renaming_completed" : "Renaming completed.",
   "message.changes_discarded" : "Changes discarded.",
+  "message.filename_already_exists" : "A file with that name already exists.",
 
   "message.no_matches" : "No matches found.",
   "message.one_match" : "1 match found.",
@@ -686,10 +686,11 @@ export const translations =
 
   "message.file_open_error" : (fileName, error) => `The file ${fileName} cannot be opened:\n\n${error}`,
 
-  "message.edit_acl_success": "Permissions were updated successfully.",
-  "message.invalid_privileges": "Errors found in the input privileges.",
-  "message.edit_acl_json_error": detail => `JSON parsing error. Please check the syntax. (${detail})`,
+  "message.edit_acl_success" : "Permissions were updated successfully.",
+  "message.invalid_privileges" : "Errors found in the input privileges.",
+  "message.edit_acl_json_error" : detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
+  "question.overwrite_file" : filename => `Do you want to overwrite the file ${filename}?`,
   "question.discard_changes" : name => `Discard unsaved changes in ${name || 'editor'}?`,
   "question.delete_service" : name => `Do you want to delete the ${name} service?`,
   "question.delete_folder" : name => `Do you want to delete the ${name} folder?`,

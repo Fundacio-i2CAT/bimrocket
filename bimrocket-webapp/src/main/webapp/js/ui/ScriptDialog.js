@@ -5,19 +5,24 @@
  */
 
 import { Dialog } from "./Dialog.js";
-import { Toast } from "../ui/Toast.js";
+import { Toast } from "./Toast.js";
+import { MessageDialog } from "./MessageDialog.js";
+import { ConfirmDialog } from "./ConfirmDialog.js";
 import "../lib/codemirror.js";
 import * as THREE from "three";
 
 class ScriptDialog extends Dialog
 {
-  constructor(application, saveAction)
+  constructor(fileExplorer)
   {
     super("title.script_editor");
-    this.application = application;
-    this.setI18N(this.application.i18n);
-    this._savedScriptCode = "";
+    this.fileExplorer = fileExplorer;
     this._changed = false;
+    this._scriptName = null;
+
+    const application = fileExplorer.application;
+
+    this.setI18N(application.i18n);
 
     this.setSize(760, 600);
     this.bodyElem.classList.add("flex");
@@ -25,72 +30,28 @@ class ScriptDialog extends Dialog
 
     this.nameField = this.addTextField("name", "tool.script.name", "",
       "script_name");
+    this.nameField.setAttribute("spellcheck", "false");
+    this.nameField.addEventListener("input", () =>
+    {
+      this.saveButton.disabled = !this.nameField.value.trim();
+    });
 
     this.editorView = this.addCodeEditor("editor",
       "label.formula.expression", "",
       { language : "javascript", className : "flex_grow_1" });
 
-    const { EditorView } = CM["@codemirror/view"];
-    const { StateEffect } = CM["@codemirror/state"];
-
-    const changeListener = EditorView.updateListener.of(update =>
-    {
-      if (update.docChanged && this.visible)
-      {
-        this._changed = true;
-        this.updateButtons();
-      }
-    });
-
-    this.editorView.dispatch(
-    {
-      effects: StateEffect.appendConfig.of(changeListener)
-    });
-
     this.consoleElem = document.createElement("div");
     this.consoleElem.className = "console";
     this.bodyElem.appendChild(this.consoleElem);
 
-    this.runButton = this.addButton("run", "button.run", () =>
-    {
-      this.run();
-    });
+    this.saveButton = this.addButton("save",
+      "button.save", () => this.onSave());
 
-    this.saveButton = this.addButton("save", "button.save", () =>
-    {
-      if (!this.scriptName.endsWith(".js"))
-      {
-        this.scriptName += ".js";
-      }
-      saveAction(this.scriptName, this.scriptCode);
-      this._savedScriptCode = this.scriptCode;
-      this._changed = false;
-      this.updateButtons();
-    });
+    this.runButton = this.addButton("run", "button.run",
+      () => this.run());
 
-    this.saveButton.style.display = saveAction ? "" : "none";
-
-    this.discardButton = this.addButton("cancel", "button.discard", () =>
-    {
-      this.scriptCode = this._savedScriptCode;
-      this._changed = false;
-      this.updateButtons();
-      this.clearConsole();
-
-      Toast.create("message.changes_discarded")
-        .setI18N(application.i18n).show();
-    });
-
-    this.closeButton = this.addButton("close", "button.close", () =>
-    {
-      this.hide();
-    });
-
-    this.nameField.addEventListener("input", () =>
-    {
-      this._changed = true;
-      this.updateButtons();
-    });
+    this.closeButton = this.addButton("close",
+      "button.close", () => this.hide());
   }
 
   get scriptName()
@@ -101,6 +62,7 @@ class ScriptDialog extends Dialog
   set scriptName(scriptName)
   {
     this.nameField.value = scriptName;
+    this.saveButton.disabled = !scriptName?.trim();
   }
 
   get scriptCode()
@@ -110,16 +72,29 @@ class ScriptDialog extends Dialog
 
   set scriptCode(code)
   {
-    this._savedScriptCode = code;
-    const state = this.editorView.state;
-    const tx = state.update(
-      { changes: { from: 0, to: state.doc.length, insert: code } });
-    this.editorView.dispatch(tx);
-  }
+    this._changed = false;
 
-  hasUnsavedChanges()
-  {
-    return this.scriptCode !== this._savedScriptCode;
+    if (!code || code !== this.scriptCode)
+    {
+      Controls.setCodeEditorDocument(this.editorView, code,
+      { language : "javascript" });
+
+      const { EditorView } = CM["@codemirror/view"];
+      const { StateEffect } = CM["@codemirror/state"];
+
+      const changeListener = EditorView.updateListener.of(update =>
+      {
+        if (update.docChanged && this.visible)
+        {
+          this._changed = true;
+        }
+      });
+
+      this.editorView.dispatch(
+      {
+        effects: StateEffect.appendConfig.of(changeListener)
+      });
+    }
   }
 
   onShow()
@@ -132,15 +107,66 @@ class ScriptDialog extends Dialog
     {
       this.editorView.focus();
     }
-    this._changed = this.hasUnsavedChanges();
-    this.updateButtons();
+    this._scriptName = this.scriptName;
   }
 
-  updateButtons()
+  hide()
   {
-    const disabled = !this._changed;
-    this.saveButton.disabled = disabled;
-    this.discardButton.disabled = disabled;
+    if (this._changed)
+    {
+      const application = this.fileExplorer.application;
+
+      ConfirmDialog.create("title.confirm_save",
+        "question.discard_changes", this.scriptName)
+        .setAction(() =>
+        {
+          this.scriptCode = "";
+          this._changed = false;
+          this._scriptName = null;
+          this.clearConsole();
+          super.hide();
+
+          Toast.create("message.changes_discarded")
+            .setI18N(application.i18n).show();
+        })
+        .setI18N(application.i18n)
+        .setAcceptLabel("button.yes")
+        .setCancelLabel("button.no")
+        .show();
+    }
+    else
+    {
+      super.hide();
+    }
+  }
+
+  async onSave()
+  {
+    const fileExplorer = this.fileExplorer;
+    const application = fileExplorer.application;
+
+    this.completeName();
+
+    if (fileExplorer.service)
+    {
+      const isNew = this.scriptName !== this._scriptName;
+      if (isNew)
+      {
+        if (!await fileExplorer.confirmSave(this.scriptName)) return;
+      }
+
+      fileExplorer.save(this.scriptName, this.scriptCode, () =>
+      {
+        this._changed = false;
+        this._scriptName = this.scriptName;
+      });
+    }
+    else
+    {
+      MessageDialog.create("ERROR", "message.select_directory")
+        .setClassName("error")
+        .setI18N(application.i18n).show();
+    }
   }
 
   clearConsole()
@@ -150,6 +176,7 @@ class ScriptDialog extends Dialog
 
   run()
   {
+    const application = this.fileExplorer.application;
     let error = null;
     this.enterConsole();
     try
@@ -168,7 +195,7 @@ class ScriptDialog extends Dialog
         this.log("info", "Execution completed in " + (t1 - t0) + " ms.");
         if (result !== undefined) this.log("info", "Result: " + result);
         Toast.create("message.script_executed")
-          .setI18N(this.application.i18n).show();
+          .setI18N(application.i18n).show();
       }
     }
     catch (ex)
@@ -182,12 +209,6 @@ class ScriptDialog extends Dialog
     }
     return error;
   }
-
-  endEdition()
-  {
-    this.scriptName = this.nameField.value;
-    this.scriptCode = this.editorView.state.doc.toString();
-  };
 
   log(className, ...args)
   {
@@ -215,6 +236,16 @@ class ScriptDialog extends Dialog
   exitConsole()
   {
     window.console = this.console;
+  }
+
+  completeName()
+  {
+    let scriptName = this.scriptName.trim();
+    if (!scriptName.endsWith(".js"))
+    {
+      scriptName += ".js";
+    }
+    this.scriptName = scriptName;
   }
 }
 

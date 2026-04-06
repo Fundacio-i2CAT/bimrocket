@@ -26,20 +26,10 @@ class RunReportAction extends ReportAction
 
   perform()
   {
-    const fileExplorer = this.fileExplorer;
-    const reportDialog = fileExplorer.reportDialog;
-
-    if (reportDialog.hasUnsavedChanges())
+    this.fileExplorer.open((url, result) =>
     {
-      this.showReportDialog();
-    }
-    else
-    {
-      this.fileExplorer.openSelectedEntry((url, result) =>
-      {
-        this.setReport(url, result.data, null, true);
-      });
-    }
+      this.setReport(url, result.data, null, true);
+    });
   }
 }
 

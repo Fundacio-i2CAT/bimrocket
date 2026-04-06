@@ -7,6 +7,7 @@
 import { FileExplorer } from "./FileExplorer.js";
 import { FileAction } from "./FileAction.js";
 import { Metadata } from "../../io/FileService.js";
+import { MessageDialog } from "../MessageDialog.js";
 
 class RenameFileAction extends FileAction
 {
@@ -43,12 +44,29 @@ class RenameFileAction extends FileAction
     dialog.addButton("rename_accept", "button.accept", () => dialog.onAccept());
     dialog.addButton("rename_cancel", "button.cancel", () => dialog.onCancel());
 
-    dialog.onAccept = () =>
+    dialog.onAccept = async () =>
     {
-      if (nameElem.value)
+      const newEntryName = nameElem.value.trim();
+      if (newEntryName)
       {
-        fileExplorer.rename(entryName, nameElem.value);
-        dialog.hide();
+        if (newEntryName === entryName)
+        {
+          // no change, do nothing
+          dialog.hide();
+        }
+        else if (await fileExplorer.exists(newEntryName))
+        {
+          // a file exists with that name
+          MessageDialog.create("ERROR", "message.filename_already_exists")
+           .setClassName("error")
+           .setI18N(application.i18n).show();
+        }
+        else
+        {
+          // rename file
+          fileExplorer.rename(newEntryName);
+          dialog.hide();
+        }
       }
     };
     dialog.onCancel = () =>

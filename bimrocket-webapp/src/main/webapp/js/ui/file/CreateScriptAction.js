@@ -26,17 +26,7 @@ class CreateScriptAction extends ScriptAction
 
   perform()
   {
-    const fileExplorer = this.fileExplorer;
-    const scriptDialog = fileExplorer.scriptDialog;
-
-    if (scriptDialog.hasUnsavedChanges())
-    {
-      this.showScriptDialog();
-    }
-    else
-    {
-      this.setScript("", "", false);
-    }
+    this.setScript("", "", false);
   }
 }
 

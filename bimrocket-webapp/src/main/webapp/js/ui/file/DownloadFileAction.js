@@ -27,9 +27,7 @@ class DownloadFileAction extends FileAction
 
   perform()
   {
-    const fileExplorer = this.fileExplorer;
-    const entryName = fileExplorer.selectedEntry.name;
-    fileExplorer.download(entryName);
+    this.fileExplorer.download();
   }
 }
 

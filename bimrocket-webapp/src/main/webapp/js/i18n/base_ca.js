@@ -619,12 +619,11 @@ export const translations =
   "title.delete_conversation" : "Esborra conversa",
   "title.chatgpt_setup" : "Configuració de ChatGPT",
   "title.acl_editor" : "Editor de permisos ACL",
-  "title.acl_editor_success": "Permisos desats",
+  "title.acl_editor_success" : "Permisos desats",
   "title.acl_editor_error": "Error en desar",
-  "title.acl_not_found": "No s'ha trobat l'ACL",
-  "title.confirm_save": "Confirmació",
-
-  "message.inform_unsaved_changes": "Tens canvis no desats. Desa'ls o descarta'ls abans d'editar un altre fitxer.",
+  "title.acl_not_found" : "No s'ha trobat l'ACL",
+  "title.confirm_save" : "Confirmació",
+  "title.overwrite" : "Sobreescriure fitxer",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Àrea: ${area} ${units}2`,
@@ -651,6 +650,7 @@ export const translations =
   "message.folder_deleted" : "Carpeta esborrada.",
   "message.renaming_completed" : "Reanomenat completat.",
   "message.changes_discarded" : "Canvis descartats.",
+  "message.filename_already_exists" : "Ja existeix un fitxer amb aquest nom.",
 
   "message.no_matches" : "Cap coincidència trobada.",
   "message.one_match" : "1 coincidència trobada.",
@@ -686,11 +686,12 @@ export const translations =
 
   "message.file_open_error" : (fileName, error) => `El fitxer ${fileName} no es pot obrir:\n\n${error}`,
 
-  "message.edit_acl_success": "Els permisos s'han actualitzat correctament.",
-  "message.invalid_privileges": "Hi ha errors en els privilegis introduïts.",
-  "message.edit_acl_json_error": detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
+  "message.edit_acl_success" : "Els permisos s'han actualitzat correctament.",
+  "message.invalid_privileges" : "Hi ha errors en els privilegis introduïts.",
+  "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
-  "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || " l'editor"}?`,
+  "question.overwrite_file" : filename => `Vols sobreescriure el fitxer ${filename}?`,
+  "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || "l'editor"}?`,
   "question.delete_service" : name => `Vols esborrar el servei ${name}?`,
   "question.delete_folder" : name => `Vols esborrar la carpeta ${name}?`,
   "question.delete_file" : name => `Vols esborrar el fitxer ${name}?`,

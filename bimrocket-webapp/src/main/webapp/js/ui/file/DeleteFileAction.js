@@ -50,7 +50,7 @@ class DeleteFileAction extends FileAction
         "question.delete_file" : "question.delete_folder";
 
       ConfirmDialog.create("title.delete_from_cloud", question, name)
-        .setAction(() => fileExplorer.delete(name))
+        .setAction(() => fileExplorer.remove())
         .setAcceptLabel("button.delete")
         .setI18N(application.i18n).show();
     }

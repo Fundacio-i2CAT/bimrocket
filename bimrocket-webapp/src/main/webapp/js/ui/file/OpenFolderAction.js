@@ -33,7 +33,7 @@ class OpenFolderAction extends FileAction
 
   perform()
   {
-    this.fileExplorer.openSelectedEntry();
+    this.fileExplorer.open();
   }
 }
 

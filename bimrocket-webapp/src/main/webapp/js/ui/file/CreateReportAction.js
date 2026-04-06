@@ -30,22 +30,14 @@ class CreateReportAction extends ReportAction
   {
     const fileExplorer = this.fileExplorer;
     const application = fileExplorer.application;
-    const reportDialog = fileExplorer.reportDialog;
 
-    if (reportDialog.hasUnsavedChanges())
+    const typeDialog = new ReportTypeDialog(application, reportTypeName =>
     {
-      this.showReportDialog();
-    }
-    else
-    {
-      const typeDialog = new ReportTypeDialog(application, reportTypeName =>
-      {
-        const reportType = ReportType.types[reportTypeName];
-        const source = reportType.getDefaultSource();
-        this.setReport("", source, reportTypeName, false);
-      });
-      typeDialog.show();
-    }
+      const reportType = ReportType.types[reportTypeName];
+      const source = reportType.getDefaultSource();
+      this.setReport("", source, reportTypeName, false);
+    });
+    typeDialog.show();
   }
 }
 
