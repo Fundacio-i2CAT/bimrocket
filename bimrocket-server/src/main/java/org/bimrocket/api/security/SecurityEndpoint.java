@@ -90,8 +90,7 @@ public class SecurityEndpoint
   )
   public Response login(@Valid LoginRequest loginRequest)
   {
-    if (!securityService.validateCredentialsLogin(loginRequest.getUserName(), loginRequest.getPassword()))
-      return Response.status(Response.Status.UNAUTHORIZED).build();
+    securityService.validateCredentialsLogin(loginRequest.getUserName(), loginRequest.getPassword());
 
     NewCookie authCookie = securityService.createHttpOnlyCookie(this.request, loginRequest.getUserName());
 

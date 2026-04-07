@@ -635,7 +635,7 @@ public class SecurityService
     return jwtUtils.generateToken(claims);
   }
 
-  public boolean validateCredentialsLogin(String userId, String password)
+  public User validateCredentialsLogin(String userId, String password)
   {
     User user = getUser(userId); // get from store
     if (user == null)
@@ -645,25 +645,28 @@ public class SecurityService
       user.setName(userId);
     }
 
+    if (FALSE.equals(user.getActive()))
+      throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
+
     if (ADMIN_USER.equals(userId)) // admin user
     {
       if (!adminPassword.equals(password))
-        return false;
+        throw new NotAuthorizedException();
     }
     else if (user.getPasswordHash() == null) // LDAP User
     {
       if (ldapConnector == null ||
               !ldapConnector.validateCredentials(userId, password))
-        return false;
+        throw new NotAuthorizedException();
     }
     else // check hashed password in User
     {
       String passwordHash = hash(password);
 
       if (!user.getPasswordHash().equals(passwordHash))
-        return false;
+        throw new NotAuthorizedException();
     }
-    return true;
+    return user;
   }
 
   public NewCookie destroyHttpOnlyCookie(HttpServletRequest request)
