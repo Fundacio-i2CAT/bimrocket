@@ -417,6 +417,7 @@ public class SecurityService
   public User getCurrentUser()
   {
     User user;
+    String authorization;
     HttpServletRequest request;
     Cookie cookieAuth = null;
     Claims claims = null;
@@ -436,57 +437,81 @@ public class SecurityService
     }
 
     // get User from http request
-    try
-    {
+    try {
       request = requestInstance.get();
 
-      user = (User)request.getAttribute(USER_REQUEST_ATTRIBUTE);
+      user = (User) request.getAttribute(USER_REQUEST_ATTRIBUTE);
       if (user != null) return user;
 
+      authorization = request.getHeader("Authorization");
       Cookie[] cookies = request.getCookies();
 
-      if (cookies == null)
+      if (authorization != null)
       {
-        request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
-        return anonymousUser;
-      }
+        userId = authorizationCache.get(authorization);
 
-      for (Cookie c : cookies){
-        if (c.getName().equals("auth_token"))
+        // Only checks timeout user cache if authorization is Basic, otherwise we need to
+        // check authentication Bearer for each call to the endpoints
+        //if (userId != null && authorization.contains("Basic"))
+        if (userId != null)
         {
-          cookieAuth = c;
-          break;
+          user = userCache.get(userId);
+          if (user != null)
+          {
+            if (authorization.contains("Basic")) return user;
+
+            // If access token has not expired returns current user
+            if (authorization.contains("Bearer") &&
+                    TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 2) return user;
+          }
         }
-      }
 
-      if (cookieAuth ==null)
-      {
-        request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
-        return anonymousUser;
+        user = getUserFromAuthorization(authorization);
+        userId = user.getId().trim();
       }
-      claims = jwtUtils.verifyToken(cookieAuth.getValue());
-      if (claims == null) return anonymousUser;
+      else {
+        if (cookies == null) {
+          request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
+          return anonymousUser;
+        }
 
+        for (Cookie c : cookies) {
+          if (c.getName().equals("auth_token")) {
+            cookieAuth = c;
+            break;
+          }
+        }
+
+        if (cookieAuth == null) {
+          request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
+          return anonymousUser;
+        }
+        claims = jwtUtils.verifyToken(cookieAuth.getValue());
+        if (claims == null) return anonymousUser;
+
+        userId = claims.get("userid", String.class);
+        if (userId != null) {
+          user = userCache.get(userId);
+          if (user != null) return user;
+        }
+
+        user = getUserFromCookie(claims);
+        userId = user.getId().trim();
+      }
     }
     catch (Exception ex) // not in servlet context
     {
       return anonymousUser;
     }
 
-    userId = claims.get("userid", String.class);
-    if (userId != null)
-    {
-      user = userCache.get(userId);
-      if (user != null) return user;
-    }
-
-    user = getUserFromCookie(claims);
-    userId = user.getId().trim();
-
     if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
     addUserRoles(user);
 
+    if (authorization != null)
+    {
+      authorizationCache.put(authorization, userId);
+    }
     userCache.put(userId, user);
     request.setAttribute(USER_REQUEST_ATTRIBUTE, user);
 
