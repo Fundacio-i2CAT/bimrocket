@@ -22,16 +22,26 @@ class EditACLAction extends FileAction
 
   isEnabled()
   {
-    return this.fileExplorer.isEntrySelected() &&
-           this.fileExplorer.isDirectoryList();
+    return this.fileExplorer.isDirectoryList();
   }
 
   perform()
   {
     const fileExplorer = this.fileExplorer;
     const application = fileExplorer.application;
-    const entryName = fileExplorer.selectedEntry.name;
-    const aclFilePath = fileExplorer.getFullPath(entryName);
+
+    let aclFilePath;
+
+    if (fileExplorer.selectedEntry)
+    {
+      const entryName = fileExplorer.selectedEntry.name;
+      aclFilePath = fileExplorer.getFullPath(entryName);
+    }
+    else
+    {
+      aclFilePath = fileExplorer.basePath;
+    }
+
     const dialog = new ACLEditorDialog(application, fileExplorer.service,
       aclFilePath, fileExplorer);
     dialog.load();
