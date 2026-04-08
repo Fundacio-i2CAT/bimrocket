@@ -773,6 +773,7 @@ public class SecurityService
             .maxAge(0)
             .secure(isSecureEnv)
             .httpOnly(true)
+            .sameSite(NewCookie.SameSite.NONE)
             .build();
 
     return cookie;
