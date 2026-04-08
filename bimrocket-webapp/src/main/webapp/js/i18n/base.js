@@ -379,6 +379,8 @@ export const translations =
   "tool.about.label" : "About",
   "tool.website.label" : "Website",
 
+  "tool.hide_panels.label": "Hide panels",
+
   "action.open" : "Open",
   "action.add_service" : "Add service",
   "action.edit_service" : "Edit service",

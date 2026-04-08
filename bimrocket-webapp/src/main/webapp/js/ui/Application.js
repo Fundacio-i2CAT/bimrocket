@@ -1940,6 +1940,17 @@ class Application
     return panel;
   }
 
+  hidePanels()
+  {
+    this.panelManager.panels.forEach(panel =>
+    {
+      if (!panel.isPersistent) 
+      {
+        panel.visible = false;
+      }
+    });
+  }
+
   setUserLanguage(userLanguage)
   {
     const i18n = this.i18n;
