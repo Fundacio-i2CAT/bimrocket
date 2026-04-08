@@ -15,6 +15,7 @@ export const translations =
   "button.stop" : "Atura",
   "button.create" : "Crea",
   "button.save" : "Desa",
+  "button.save_with_errors" : "Desa amb errors",
   "button.add" : "Afegeix",
   "button.maximize" : "Maximitza",
   "button.minimize" : "Minimitza",
@@ -668,7 +669,7 @@ export const translations =
   "message.instance_count" : count => `Instàncies: ${count}`,
   "message.modeled_triangle_count" : count => `Triangles modelitzats: ${count}`,
   "message.rendered_triangle_count" : count => `Triangles renderitzats: ${count}`,
-  "message.report_summary" : (errors, warnings) => `Errors: ${errors}, avisos: ${warnings}`,
+  "message.report_summary" : (errors, warnings) => `Errors: ${errors.toLocaleString('es')}, avisos: ${warnings.toLocaleString('es')}`,
 
   "message.invalid_credentials" : "Credencials incorrectes.",
   "message.access_denied" : "Accés denegat.",

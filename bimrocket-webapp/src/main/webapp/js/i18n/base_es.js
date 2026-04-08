@@ -15,6 +15,7 @@ export const translations =
   "button.stop" : "Parar",
   "button.create" : "Crear",
   "button.save" : "Guardar",
+  "button.save_with_errors" : "Guardar con errores",
   "button.add" : "Añadir",
   "button.maximize" : "Maximizar",
   "button.minimize" : "Minimizar",
@@ -668,7 +669,7 @@ export const translations =
   "message.instance_count" : count => `Instancias: ${count}`,
   "message.modeled_triangle_count" : count => `Triángulos modelizados: ${count}`,
   "message.rendered_triangle_count" : count => `Triángulos renderizados: ${count}`,
-  "message.report_summary" : (errors, warnings) => `Errores: ${errors}, avisos: ${warnings}`,
+  "message.report_summary" : (errors, warnings) => `Errores: ${errors.toLocaleString('es')}, avisos: ${warnings.toLocaleString('es')}`,
 
   "message.invalid_credentials" : "Credenciales incorrectas.",
   "message.access_denied" : "Acceso denegado.",

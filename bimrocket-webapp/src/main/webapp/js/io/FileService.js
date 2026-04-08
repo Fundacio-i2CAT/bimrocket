@@ -18,8 +18,8 @@ class FileService extends Service
    * Resources are returned in Result.entries.
    *
    * @param {string} path - the resource path
-   * @param {Object} options - the find options:
-   *   - depth: string - the search depth: "0", "1", "Infinity"
+   * @param {Object} options - the find options
+   * @param {string] [options.depth] - the search depth: "0", "1", "Infinity"
    * @param {(Result) => void} onCompleted - the function to call when the
    *   find operation completes
    */

@@ -15,6 +15,7 @@ export const translations =
   "button.stop" : "Stop",
   "button.create" : "Create",
   "button.save" : "Save",
+  "button.save_with_errors" : "Save with errors",
   "button.add" : "Add",
   "button.maximize" : "Maximize",
   "button.minimize" : "Minimize",
@@ -668,7 +669,7 @@ export const translations =
   "message.instance_count" : count => `Instances: ${count}`,
   "message.modeled_triangle_count" : count => `Modeled triangles: ${count}`,
   "message.rendered_triangle_count" : count => `Rendered triangles: ${count}`,
-  "message.report_summary" : (errors, warnings) => `Errors: ${errors}, warnings: ${warnings}`,
+  "message.report_summary" : (errors, warnings) => `Errors: ${errors.toLocaleString('en')}, warnings: ${warnings.toLocaleString('en')}`,
 
   "message.invalid_credentials" : "Invalid credentials.",
   "message.access_denied" : "Access denied.",

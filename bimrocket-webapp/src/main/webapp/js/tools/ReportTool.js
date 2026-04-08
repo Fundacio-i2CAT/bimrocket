@@ -9,6 +9,9 @@ import { FileExplorer } from "../ui/file/FileExplorer.js";
 import { RunReportAction } from "../ui/file/RunReportAction.js";
 import { EditReportAction } from "../ui/file/EditReportAction.js";
 import { CreateReportAction } from "../ui/file/CreateReportAction.js";
+import { RunScriptAction } from "../ui/file/RunScriptAction.js";
+import { EditScriptAction } from "../ui/file/EditScriptAction.js";
+import { CreateScriptAction } from "../ui/file/CreateScriptAction.js";
 
 class ReportTool extends Tool
 {
@@ -36,6 +39,10 @@ class ReportTool extends Tool
     contextMenu.addMenuItem(action(RunReportAction), "default");
     contextMenu.addMenuItem(action(EditReportAction), "edit");
     contextMenu.addMenuItem(action(CreateReportAction), "create");
+
+    contextMenu.addMenuItem(action(RunScriptAction), "default");
+    contextMenu.addMenuItem(action(EditScriptAction), "edit");
+    contextMenu.addMenuItem(action(CreateScriptAction), "create");
   }
 
   activate()

@@ -11,6 +11,7 @@ import { MessageDialog } from "./MessageDialog.js";
 import { ConfirmDialog } from "../ui/ConfirmDialog.js";
 import { Report } from "../reports/Report.js";
 import { ReportType } from "../reports/ReportType.js";
+import { I18N } from "../i18n/I18N.js";
 import "../lib/codemirror.js";
 import * as THREE from "three";
 
@@ -43,6 +44,11 @@ class ReportDialog extends Dialog
 
     this.editorView = this.addCodeEditor("editor",
       "tool.report.rules", "", { "className" : "flex_grow_1" });
+
+    this.errorElem = document.createElement("div");
+    this.bodyElem.appendChild(this.errorElem);
+    this.errorElem.style.display = "none";
+    this.errorElem.style.color = "red";
 
     this.saveButton = this.addButton("save",
       "button.save", () => this.onSave());
@@ -90,6 +96,7 @@ class ReportDialog extends Dialog
         {
           this._changed = true;
           this.runButton.disabled = true;
+          this.showError("");
         }
       });
 
@@ -111,6 +118,7 @@ class ReportDialog extends Dialog
       this.editorView.focus();
     }
     this._reportName = this.reportName;
+    this.showError("");
   }
 
   hide()
@@ -146,7 +154,7 @@ class ReportDialog extends Dialog
     const fileExplorer = this.fileExplorer;
     const application = fileExplorer.application;
 
-    if (this.validate())
+    if (this.isError() || this.validate())
     {
       this.completeName();
 
@@ -163,6 +171,7 @@ class ReportDialog extends Dialog
           this._changed = false;
           this._reportName = this.reportName;
           this.runButton.disabled = false;
+          this.showError("");
         });
       }
       else
@@ -178,10 +187,11 @@ class ReportDialog extends Dialog
   {
     super.hide();
     const reportPanel = this.reportPanel;
-    if (reportPanel)
-    {
-      reportPanel.execute(this.reportName, this.reportSource, this.reportTypeName);
-    }
+    reportPanel.runReports({
+      source : this.reportSource,
+      type : this.reportTypeName
+    });
+    reportPanel.title = this.reportName;
   }
 
   validate()
@@ -197,10 +207,7 @@ class ReportDialog extends Dialog
     }
     catch (ex)
     {
-      MessageDialog.create("ERROR", ex)
-        .setClassName("error")
-        .setI18N(this.application.i18n)
-        .show();
+      this.showError(ex);
     }
     return false;
   }
@@ -213,6 +220,34 @@ class ReportDialog extends Dialog
     if (!reportName.endsWith("." + reportTypeName))
     {
       this.reportName += "." + reportTypeName;
+    }
+  }
+
+  isError()
+  {
+    return this.errorElem.style.display === "";
+  }
+
+  showError(error)
+  {
+    const errorElem = this.errorElem;
+    const saveButton = this.saveButton;
+    const isError = this.isError();
+
+    if (error && !isError)
+    {
+      errorElem.textContent = error;
+      errorElem.style.display = "";
+      I18N.set(saveButton, "textContent", "button.save_with_errors");
+      this.fileExplorer.application.i18n.update(saveButton);
+    }
+
+    if (!error && isError)
+    {
+      errorElem.textContent = "";
+      errorElem.style.display = "none";
+      I18N.set(saveButton, "textContent", "button.save");
+      this.fileExplorer.application.i18n.update(saveButton);
     }
   }
 }
