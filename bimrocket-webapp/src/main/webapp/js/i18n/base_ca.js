@@ -379,6 +379,8 @@ export const translations =
   "tool.about.label" : "Quant a",
   "tool.website.label" : "Lloc web",
 
+  "tool.hide_panels.label": "Amagar panells",
+
   "action.open" : "Obre",
   "action.add_service" : "Afegeix servei",
   "action.edit_service" : "Edita servei",

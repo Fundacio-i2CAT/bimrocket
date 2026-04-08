@@ -71,6 +71,7 @@ import { StatisticsTool } from "../tools/StatisticsTool.js";
 import { StartControllersTool } from "../tools/StartControllersTool.js";
 import { StopControllersTool } from "../tools/StopControllersTool.js";
 import { SolarSimulatorTool } from "../tools/SolarSimulatorTool.js";
+import { HidePanelsTool } from "../tools/HidePanelsTool.js";
 import { ScriptTool } from "../tools/ScriptTool.js";
 import { AboutTool } from "../tools/AboutTool.js";
 import { OpenLinkTool } from "../tools/OpenLinkTool.js";
@@ -532,7 +533,9 @@ export function load(application)
   const solarSimulatorTool = new SolarSimulatorTool(application);
 
   const outlinerTool = new OutlinerTool(application);
+  outlinerTool.panel.isPersistent = true;
   const inspectorTool = new InspectorTool(application);
+  inspectorTool.panel.isPersistent = true;
   const statisticsTool = new StatisticsTool(application);
   const startControllersTool = new StartControllersTool(application);
   const stopControllersTool = new StopControllersTool(application);
@@ -543,6 +546,7 @@ export function load(application)
   const githubTool = new OpenLinkTool(application,
   { name : "github", label: "GitHub", url: "https://github.com/bimrocket/bimrocket",
     target : "_blank"});
+  const hidePanelsTool = new HidePanelsTool(application);
 
   // create menus
   const menuBar = application.menuBar;
@@ -693,6 +697,7 @@ export function load(application)
   panelsMenu.addMenuItem(inspectorTool);
   panelsMenu.addMenuItem(statisticsTool);
   panelsMenu.addMenuItem(chatGPTTool);
+  panelsMenu.addMenuItem(hidePanelsTool);
 
   const helpMenu = menuBar.addMenu("menu.help");
   helpMenu.addMenuItem(aboutTool);
@@ -708,6 +713,7 @@ export function load(application)
   toolBar.addToolButton(saveLocalTool);
   toolBar.addToolButton(optionsTool);
   toolBar.addToolButton(printTool);
+  toolBar.addToolButton(hidePanelsTool);
   toolBar.addToolButton(selectTool);
   toolBar.addToolButton(orbitTool);
   toolBar.addToolButton(flyTool);
