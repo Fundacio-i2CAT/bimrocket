@@ -409,7 +409,7 @@ class FileExplorer extends Panel
 
     if (result.status === Result.OK)
     {
-      if (result.entries)
+      if (result.metadata.type === Metadata.COLLECTION)
       {
         this.selectedEntry = null;
         this.showDirectory(entryName, result);
@@ -596,7 +596,7 @@ class FileExplorer extends Panel
     this.basePath = this.getFullPath(entryName);
     const FILE = Metadata.FILE;
     this.directoryElem.textContent = this.getBasePathName();
-    let entries = result.entries;
+    let entries = result.entries || [];
     entries.sort(this.entryComparator);
     this.entriesElem.innerHTML = "";
     let firstLink = null;
