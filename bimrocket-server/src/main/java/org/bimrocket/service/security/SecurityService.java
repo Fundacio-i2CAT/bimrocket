@@ -713,7 +713,7 @@ public class SecurityService
             .value(token)
             .path("/")
             .maxAge(secondsExpiration)
-            .secure(isSecureEnv)
+            .secure(true)
             .httpOnly(true)
             .sameSite(NewCookie.SameSite.NONE)
             .build();
@@ -771,7 +771,7 @@ public class SecurityService
             .value("")
             .path("/")
             .maxAge(0)
-            .secure(isSecureEnv)
+            .secure(true)
             .httpOnly(true)
             .sameSite(NewCookie.SameSite.NONE)
             .build();
