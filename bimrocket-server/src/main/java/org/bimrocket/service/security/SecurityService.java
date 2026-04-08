@@ -52,12 +52,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.bimrocket.api.security.Role;
 import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
+import org.bimrocket.dao.expression.io.odata.ODataParser;
 import org.bimrocket.exception.InvalidRequestException;
 import org.bimrocket.exception.NotAuthorizedException;
 import org.bimrocket.exception.NotFoundException;
 import org.bimrocket.service.security.store.SecurityDaoStore;
 import org.bimrocket.service.security.store.empty.SecurityEmptyDaoStore;
 import org.bimrocket.util.JWTUtils;
+import org.bimrocket.util.TextUtils;
 import org.eclipse.microprofile.config.Config;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 import org.bimrocket.util.ExpiringCache;
@@ -107,6 +109,12 @@ public class SecurityService
     "SEC006: Invalid password format.";
   static final String PASSWORD_IS_REQUIRED =
     "SEC007: Password is required.";
+  static final String TOKEN_MISSING =
+    "SEC008: No access token provided.";
+  static final String TOKEN_INVALID =
+    "SEC009: Invalid Access Token.";
+  static final String REFRESH_TOKEN_EXPIRED =
+    "SEC010: REFRESH token expired.";
 
   @Inject
   Instance<HttpServletRequest> requestInstance;
@@ -281,6 +289,12 @@ public class SecurityService
       }
       String dateString = getISODate();
       user.setModifyDate(dateString);
+
+      if (userUpdate.getAccessToken() != null) user.setAccessToken(userUpdate.getAccessToken());
+      if (userUpdate.getAccessTokenExpiresAt() != null) user.setAccessTokenExpiresAt(userUpdate.getAccessTokenExpiresAt());
+      if (userUpdate.getRefreshToken() != null) user.setRefreshToken(userUpdate.getRefreshToken());
+      if (userUpdate.getRefreshTokenExpiresAt() != null)user.setRefreshTokenExpiresAt(userUpdate.getRefreshTokenExpiresAt());
+
       user = userDao.update(user);
       return user;
     }
@@ -403,6 +417,7 @@ public class SecurityService
   public User getCurrentUser()
   {
     User user;
+    String authorization;
     HttpServletRequest request;
     Cookie cookieAuth = null;
     Claims claims = null;
@@ -422,57 +437,81 @@ public class SecurityService
     }
 
     // get User from http request
-    try
-    {
+    try {
       request = requestInstance.get();
 
-      user = (User)request.getAttribute(USER_REQUEST_ATTRIBUTE);
+      user = (User) request.getAttribute(USER_REQUEST_ATTRIBUTE);
       if (user != null) return user;
 
+      authorization = request.getHeader("Authorization");
       Cookie[] cookies = request.getCookies();
 
-      if (cookies == null)
+      if (authorization != null)
       {
-        request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
-        return anonymousUser;
-      }
+        userId = authorizationCache.get(authorization);
 
-      for (Cookie c : cookies){
-        if (c.getName().equals("auth_token"))
+        // Only checks timeout user cache if authorization is Basic, otherwise we need to
+        // check authentication Bearer for each call to the endpoints
+        //if (userId != null && authorization.contains("Basic"))
+        if (userId != null)
         {
-          cookieAuth = c;
-          break;
+          user = userCache.get(userId);
+          if (user != null)
+          {
+            if (authorization.contains("Basic")) return user;
+
+            // If access token has not expired returns current user
+            if (authorization.contains("Bearer") &&
+                    TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 2) return user;
+          }
         }
-      }
 
-      if (cookieAuth ==null)
-      {
-        request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
-        return anonymousUser;
+        user = getUserFromAuthorization(authorization);
+        userId = user.getId().trim();
       }
-      claims = jwtUtils.verifyToken(cookieAuth.getValue());
-      if (claims == null) return anonymousUser;
+      else {
+        if (cookies == null) {
+          request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
+          return anonymousUser;
+        }
 
+        for (Cookie c : cookies) {
+          if (c.getName().equals("auth_token")) {
+            cookieAuth = c;
+            break;
+          }
+        }
+
+        if (cookieAuth == null) {
+          request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
+          return anonymousUser;
+        }
+        claims = jwtUtils.verifyToken(cookieAuth.getValue());
+        if (claims == null) return anonymousUser;
+
+        userId = claims.get("userid", String.class);
+        if (userId != null) {
+          user = userCache.get(userId);
+          if (user != null) return user;
+        }
+
+        user = getUserFromCookie(claims);
+        userId = user.getId().trim();
+      }
     }
     catch (Exception ex) // not in servlet context
     {
       return anonymousUser;
     }
 
-    userId = claims.get("userid", String.class);
-    if (userId != null)
-    {
-      user = userCache.get(userId);
-      if (user != null) return user;
-    }
-
-    user = getUserFromCookie(claims);
-    userId = user.getId().trim();
-
     if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
     addUserRoles(user);
 
+    if (authorization != null)
+    {
+      authorizationCache.put(authorization, userId);
+    }
     userCache.put(userId, user);
     request.setAttribute(USER_REQUEST_ATTRIBUTE, user);
 
@@ -483,7 +522,62 @@ public class SecurityService
   }
 
   /* private methods */
+  private User getUserFromAuthorization(String authorization)
+  {
+    String[] authoParts = authorization.split(" ");
+    if (authoParts.length == 2)
+    {
+      String authoType = authoParts[0];
+      if ("basic".equalsIgnoreCase(authoType))
+      {
+        String userPassword = authoParts[1].trim();
+        String decoded = new String(Base64.getDecoder().decode(userPassword));
+        String[] userPasswordParts = decoded.split(":");
+        String userId = userPasswordParts.length > 0 ? userPasswordParts[0] : null;
+        String password = userPasswordParts.length > 1 ? userPasswordParts[1] : null;
 
+        if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
+
+        User user = validateCredentialsLogin(userId, password);
+        return user;
+      }
+      else if ("bearer".equalsIgnoreCase(authoType))
+      {
+        String token = authoParts[1].trim();
+
+        //String[] parts = token.split("\\.");
+        //if (parts.length != 3) throw new IllegalArgumentException(TOKEN_MISSING);
+
+        // find User by access token
+        ODataParser parser = new ODataParser(userFieldMap);
+        Expression filter = parser.parseFilter("access_token eq '" + token + "'");
+        List<OrderByExpression> orderBy = parser.parseOrderBy("name");
+        List<User> users = getUsers(filter, orderBy);
+        if (users.isEmpty()) // User not found
+        {
+          throw new NotAuthorizedException(TOKEN_INVALID);
+        }
+
+        User user = users.get(0);
+
+        // exist access token and is expired
+        if (TextUtils.compareDates(user.getAccessTokenExpiresAt(), getISODate()) == 1)
+        {
+          // if refresh token is expired throws exception
+          if (TextUtils.compareDates(user.getRefreshTokenExpiresAt(), getISODate()) == 1)
+           {
+             throw new NotAuthorizedException(REFRESH_TOKEN_EXPIRED);
+           }
+           // if refresh token not expired, reset access token expiration 5 minutes more
+           user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+           user = updateUser(user);
+        }
+
+        return user;
+      }
+    }
+    return anonymousUser;
+  }
   private User getUserFromCookie(Claims claims)
   {
 
@@ -635,7 +729,7 @@ public class SecurityService
     return jwtUtils.generateToken(claims);
   }
 
-  public boolean validateCredentialsLogin(String userId, String password)
+  public User validateCredentialsLogin(String userId, String password)
   {
     User user = getUser(userId); // get from store
     if (user == null)
@@ -645,25 +739,28 @@ public class SecurityService
       user.setName(userId);
     }
 
+    if (FALSE.equals(user.getActive()))
+      throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
+
     if (ADMIN_USER.equals(userId)) // admin user
     {
       if (!adminPassword.equals(password))
-        return false;
+        throw new NotAuthorizedException();
     }
     else if (user.getPasswordHash() == null) // LDAP User
     {
       if (ldapConnector == null ||
               !ldapConnector.validateCredentials(userId, password))
-        return false;
+        throw new NotAuthorizedException();
     }
     else // check hashed password in User
     {
       String passwordHash = hash(password);
 
       if (!user.getPasswordHash().equals(passwordHash))
-        return false;
+        throw new NotAuthorizedException();
     }
-    return true;
+    return user;
   }
 
   public NewCookie destroyHttpOnlyCookie(HttpServletRequest request)
@@ -676,6 +773,7 @@ public class SecurityService
             .maxAge(0)
             .secure(isSecureEnv)
             .httpOnly(true)
+            .sameSite(NewCookie.SameSite.NONE)
             .build();
 
     return cookie;

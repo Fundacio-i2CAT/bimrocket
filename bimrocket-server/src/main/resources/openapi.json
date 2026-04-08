@@ -14,5 +14,12 @@
     "version": "1.0"
   },
   "servers" : [{ "url" : "api" }],
-  "components" : {}
+  "components" :
+  {
+    "securitySchemes" : {
+      "basicAuth" : { "type" : "http", "scheme" : "basic" },
+      "bearerAuth" : { "type" : "http", "scheme" : "bearer", "bearerFormat": "JWT" }
+    }
+  },
+  "security" : [{ "basicAuth" : [] }, { "bearerAuth" : [] }]
 }
