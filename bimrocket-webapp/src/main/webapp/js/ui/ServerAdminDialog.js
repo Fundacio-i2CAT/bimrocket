@@ -90,7 +90,6 @@ class ServerAdminDialog extends Dialog
     this.service = new SecurityService({
       name: "security",
       url: securityServiceUrl,
-      credentialsAlias: Environment.SERVER_ALIAS
     });
     
     this.application.services[this.group] = this.service;

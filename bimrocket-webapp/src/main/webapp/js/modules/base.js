@@ -701,7 +701,6 @@ export function load(application)
       name: "models",
       description : "Remote",
       url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/models",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
     });
     application.addService(webdav, "model", false);
 
@@ -719,7 +718,6 @@ export function load(application)
       name : "scripts",
       description : "Remote",
       url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/scripts",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
     });
     application.addService(webdav, "script", false);
 
@@ -737,7 +735,6 @@ export function load(application)
       name : "reports",
       description : "Remote",
       url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/reports",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
     });
     application.addService(webdav, "report", false);
 
