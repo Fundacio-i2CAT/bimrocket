@@ -16,7 +16,6 @@ import { Solid } from "../core/Solid.js";
 import { ObjectBuilder } from "../builders/ObjectBuilder.js";
 import { SolidGeometry } from "../core/SolidGeometry.js";
 import { ServiceManager } from "../io/ServiceManager.js";
-import { CredentialsManager } from "../utils/CredentialsManager.js";
 import { IOManager } from "../io/IOManager.js";
 import { Selection } from "../utils/Selection.js";
 import { Setup } from "../utils/Setup.js";
@@ -2127,15 +2126,41 @@ class Application
 
     dialog.login = (username, password) =>
     {
-      let credentialAlias = params.get("credential_alias");
-      if (credentialAlias)
-      {
-        CredentialsManager.setCredentials(credentialAlias, username, password);
-      }
-      intent.basicAuthCredentials =
-      { "username" : username, "password" : password };
       application.progressBar.visible = true;
-      IOManager.load(intent);
+
+      const loginUrl = Environment.SERVER_URL + "/api/security/login";
+      const request = new XMLHttpRequest();
+      request.open("POST", loginUrl);
+      request.setRequestHeader("Accept", "application/json");
+      request.setRequestHeader("Content-Type", "application/json");
+      request.withCredentials = true;
+
+      request.onload = () =>
+      {
+        if (request.status === 200 || request.status === 204)
+        {
+          dialog.hide();
+          IOManager.load(intent);
+        }
+        else
+        {
+          application.progressBar.visible = false;
+          MessageDialog.create("ERROR", "Login failed")
+            .setClassName("error")
+            .setI18N(application.i18n).show();
+        }
+      };
+
+      request.onerror = () =>
+      {
+        application.progressBar.visible = false;
+        MessageDialog.create("ERROR", "Connection error")
+          .setClassName("error")
+          .setI18N(application.i18n).show();
+      };
+
+      const payload = { username: username, password: password };
+      request.send(JSON.stringify(payload));
     };
 
     dialog.onCancel = () =>

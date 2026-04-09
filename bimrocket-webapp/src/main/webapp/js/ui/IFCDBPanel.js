@@ -818,20 +818,50 @@ class IFCDBPanel extends Panel
 
     loginDialog.login = (username, password) =>
     {
-      const securityService = this.application.services.security.security;
+      let currentServiceUrl = this.service.url;
+      let index = currentServiceUrl.indexOf("/api");
+      let baseUrl = index !== -1 ? currentServiceUrl.substring(0, index) : currentServiceUrl;
 
-      securityService.login(username, password, () =>
+      if (baseUrl.endsWith("/"))
       {
-        if (onLogin) onLogin();
-      },
-      (error) =>
+        baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+      }
+
+      let loginUrl = baseUrl + "/api/security/login";
+
+      const request = new XMLHttpRequest();
+      request.open("POST", loginUrl);
+      request.setRequestHeader("Accept", "application/json");
+      request.setRequestHeader("Content-Type", "application/json");
+
+      request.withCredentials = true;
+
+      request.onload = () =>
       {
-        MessageDialog.create("ERROR", "Invalid credentials")
+        if (request.status === 200 || request.status === 204)
+        {
+          loginDialog.hide();
+          if (onLogin) onLogin();
+        }
+        else
+        {
+          MessageDialog.create("ERROR", "Invalid credentials for this server")
+            .setClassName("error")
+            .setI18N(this.application.i18n).show();
+          if (onFailed) onFailed();
+        }
+      };
+
+      request.onerror = () =>
+      {
+        MessageDialog.create("ERROR", "Connection error to " + loginUrl)
           .setClassName("error")
           .setI18N(this.application.i18n).show();
         if (onFailed) onFailed();
-      },
-      );
+      };
+
+      const payload = { username: username, password: password };
+      request.send(JSON.stringify(payload));
     };
 
     loginDialog.onCancel = () =>
