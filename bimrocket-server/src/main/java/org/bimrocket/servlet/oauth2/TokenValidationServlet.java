@@ -39,6 +39,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.NewCookie;
 import org.bimrocket.api.security.User;
 import org.bimrocket.service.security.SecurityService;
+import org.bimrocket.util.TextUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,6 +47,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import static org.bimrocket.util.TextUtils.getISODate;
 
 /**
  *
@@ -163,8 +166,20 @@ public class TokenValidationServlet extends HttpServlet
       newUser.setId(userToken.getUserId());
       newUser.setName(userToken.getUserId());
       newUser.setPassword(Utils.generatePassword());
+      newUser.setAccessToken(userToken.getAccessToken());
+      newUser.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+      newUser.setRefreshToken(userToken.getRefreshToken());
+      newUser.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
       newUser.setRoleIds(new HashSet<>(manager.getDefaultRoles()));
       securityService.createUser(newUser);
+    }
+    else
+    {
+      user.setAccessToken(userToken.getAccessToken());
+      user.setAccessTokenExpiresAt(TextUtils.addTime(getISODate(), 5, TextUtils.MINUTES));
+      user.setRefreshToken(userToken.getRefreshToken());
+      user.setRefreshTokenExpiresAt(TextUtils.addTime(getISODate(), 2, TextUtils.HOURS));
+      securityService.updateUser(user);
     }
   }
 

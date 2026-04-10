@@ -90,8 +90,7 @@ public class SecurityEndpoint
   )
   public Response login(@Valid LoginRequest loginRequest)
   {
-    if (!securityService.validateCredentialsLogin(loginRequest.getUserName(), loginRequest.getPassword()))
-      return Response.status(Response.Status.UNAUTHORIZED).build();
+    securityService.validateCredentialsLogin(loginRequest.getUserName(), loginRequest.getPassword());
 
     NewCookie authCookie = securityService.createHttpOnlyCookie(this.request, loginRequest.getUserName());
 
@@ -151,6 +150,17 @@ public class SecurityEndpoint
   public User getUser(@PathParam("userId") String userId)
   {
     return securityService.getUser(userId);
+  }
+
+  @GET
+  @Path("/users/currentUser")
+  @Produces(APPLICATION_JSON)
+  @Operation(summary = "Get current user")
+  public User getCurrentUser()
+  {
+    User user = securityService.getCurrentUser();
+    user.setPasswordHash("");
+    return user;
   }
 
   @POST
