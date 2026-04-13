@@ -108,38 +108,13 @@ class SecurityService extends Service
 
   login(username, password, onCompleted, onError)
   {
-    const request = new XMLHttpRequest();
-
-    if (onError)
-    {
-      request.onerror = () => onError({ code: 0, message: "Connection error" });
-    }
-
-    if (onCompleted) request.onload = () =>
-    {
-      if (request.status === 200)
-      {
-        onCompleted();
-      } 
-      else
-      {
-        if (onError) onError({ code: request.status, message: "Login failed" });
-      }
-    };
-
-    request.open("POST", this.url + "/login");
-    request.setRequestHeader("Accept", "application/json");
-    request.setRequestHeader("Content-Type", "application/json");
-
-    request.withCredentials = true;
-
     const data =
     {
       username: username,
       password: password,
     };
 
-    request.send(JSON.stringify(data));
+    this.invoke("POST", "login", data, onCompleted, onError)
   }
 
   invoke(method, path, data, onCompleted, onError)

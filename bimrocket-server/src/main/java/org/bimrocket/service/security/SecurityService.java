@@ -704,19 +704,34 @@ public class SecurityService
 
   public NewCookie createHttpOnlyCookie(HttpServletRequest request, String userId)
   {
+    NewCookie cookie = null;
     String token = createJWTToken(userId);
 
     boolean isSecureEnv = request.isSecure();
     int secondsExpiration = Math.toIntExact(hoursExpirationCookie) * 60 * 60;
 
-    NewCookie cookie = new NewCookie.Builder("auth_token")
-            .value(token)
-            .path("/")
-            .maxAge(secondsExpiration)
-            .secure(true)
-            .httpOnly(true)
-            .sameSite(NewCookie.SameSite.NONE)
-            .build();
+    if (isSecureEnv)
+    {
+      cookie = new NewCookie.Builder("auth_token")
+              .value(token)
+              .path("/")
+              .maxAge(secondsExpiration)
+              .secure(isSecureEnv)
+              .httpOnly(true)
+              .sameSite(NewCookie.SameSite.NONE)
+              .build();
+    }
+    else
+    {
+      cookie = new NewCookie.Builder("auth_token")
+              .value(token)
+              .path("/")
+              .maxAge(secondsExpiration)
+              .secure(isSecureEnv)
+              .httpOnly(true)
+              .sameSite(NewCookie.SameSite.LAX)
+              .build();
+    }
 
     return cookie;
   }
@@ -765,16 +780,31 @@ public class SecurityService
 
   public NewCookie destroyHttpOnlyCookie(HttpServletRequest request)
   {
+    NewCookie cookie = null;
     boolean isSecureEnv = request.isSecure();
 
-    NewCookie cookie = new NewCookie.Builder("auth_token")
-            .value("")
-            .path("/")
-            .maxAge(0)
-            .secure(true)
-            .httpOnly(true)
-            .sameSite(NewCookie.SameSite.NONE)
-            .build();
+    if (isSecureEnv)
+    {
+      cookie = new NewCookie.Builder("auth_token")
+              .value("")
+              .path("/")
+              .maxAge(0)
+              .secure(isSecureEnv)
+              .httpOnly(true)
+              .sameSite(NewCookie.SameSite.NONE)
+              .build();
+    }
+    else
+    {
+      cookie = new NewCookie.Builder("auth_token")
+              .value("")
+              .path("/")
+              .maxAge(0)
+              .secure(isSecureEnv)
+              .httpOnly(true)
+              .sameSite(NewCookie.SameSite.LAX)
+              .build();
+    }
 
     return cookie;
   }
