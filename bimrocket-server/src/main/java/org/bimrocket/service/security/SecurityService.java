@@ -143,6 +143,7 @@ public class SecurityService
 
   String secretKey;
   long hoursExpirationCookie;
+  boolean isSecureEnv;
 
   @PostConstruct
   public void init()
@@ -152,6 +153,7 @@ public class SecurityService
     ldapEnabled = config.getValue(BASE + "ldap.enabled", Boolean.class);
     secretKey = config.getValue(BASE + "jwtSecret", String.class);
     hoursExpirationCookie = config.getValue(BASE + "hoursExpirationCookie", Long.class);
+    isSecureEnv = config.getValue(BASE + "isSecureEnv", Boolean.class);
 
     jwtUtils = new JWTUtils(secretKey, hoursExpirationCookie);
 
@@ -704,36 +706,21 @@ public class SecurityService
 
   public NewCookie createHttpOnlyCookie(HttpServletRequest request, String userId)
   {
-    NewCookie cookie = null;
     String token = createJWTToken(userId);
-
-    boolean isSecureEnv = request.isSecure();
     int secondsExpiration = Math.toIntExact(hoursExpirationCookie) * 60 * 60;
 
-    if (isSecureEnv)
-    {
-      cookie = new NewCookie.Builder("auth_token")
-              .value(token)
-              .path("/")
-              .maxAge(secondsExpiration)
-              .secure(isSecureEnv)
-              .httpOnly(true)
-              .sameSite(NewCookie.SameSite.NONE)
-              .build();
-    }
-    else
-    {
-      cookie = new NewCookie.Builder("auth_token")
-              .value(token)
-              .path("/")
-              .maxAge(secondsExpiration)
-              .secure(isSecureEnv)
-              .httpOnly(true)
-              .sameSite(NewCookie.SameSite.LAX)
-              .build();
-    }
+    NewCookie.SameSite sameSite = isSecureEnv
+            ? NewCookie.SameSite.NONE
+            : NewCookie.SameSite.LAX;
 
-    return cookie;
+    return new NewCookie.Builder("auth_token")
+            .value(token)
+            .path("/")
+            .maxAge(secondsExpiration)
+            .secure(isSecureEnv)
+            .httpOnly(true)
+            .sameSite(sameSite)
+            .build();
   }
 
   public String createJWTToken(String userId)
@@ -780,32 +767,18 @@ public class SecurityService
 
   public NewCookie destroyHttpOnlyCookie(HttpServletRequest request)
   {
-    NewCookie cookie = null;
-    boolean isSecureEnv = request.isSecure();
 
-    if (isSecureEnv)
-    {
-      cookie = new NewCookie.Builder("auth_token")
-              .value("")
-              .path("/")
-              .maxAge(0)
-              .secure(isSecureEnv)
-              .httpOnly(true)
-              .sameSite(NewCookie.SameSite.NONE)
-              .build();
-    }
-    else
-    {
-      cookie = new NewCookie.Builder("auth_token")
-              .value("")
-              .path("/")
-              .maxAge(0)
-              .secure(isSecureEnv)
-              .httpOnly(true)
-              .sameSite(NewCookie.SameSite.LAX)
-              .build();
-    }
+    NewCookie.SameSite sameSite = isSecureEnv
+            ? NewCookie.SameSite.NONE
+            : NewCookie.SameSite.LAX;
 
-    return cookie;
+    return new NewCookie.Builder("auth_token")
+            .value("")
+            .path("/")
+            .maxAge(0)
+            .secure(isSecureEnv)
+            .httpOnly(true)
+            .sameSite(sameSite)
+            .build();
   }
 }

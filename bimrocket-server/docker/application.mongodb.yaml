@@ -26,6 +26,9 @@ services:
         database: bimdb
     jwtSecret: #JWT secret_id
     hoursExpirationCookie: 8
+    # For http: isSecureEnv: false
+    # For https: isSecureEnv: true
+    isSecureEnv: false
     oauth2:
       keycloak:
         urlAuthenticationToken: #Keycloak Authentication
