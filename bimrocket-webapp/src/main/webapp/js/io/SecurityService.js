@@ -86,6 +86,17 @@ class SecurityService extends Service
     this.invoke("GET", "users/currentUser", null, onCompleted, onError)
   }
 
+  login(username, password, onCompleted, onError)
+  {
+    const data =
+    {
+      username: username,
+      password: password,
+    };
+
+    this.invoke("POST", "login", data, onCompleted, onError)
+  }
+
   logout(onCompleted, onError)
   {
     this.invoke("POST", "logout", null, onCompleted, onError)
@@ -104,17 +115,6 @@ class SecurityService extends Service
   deleteUser(userId, onCompleted, onError)
   {
     this.invoke("DELETE", "users/" + userId, null, onCompleted, onError);
-  }
-
-  login(username, password, onCompleted, onError)
-  {
-    const data =
-    {
-      username: username,
-      password: password,
-    };
-
-    this.invoke("POST", "login", data, onCompleted, onError)
   }
 
   invoke(method, path, data, onCompleted, onError)
