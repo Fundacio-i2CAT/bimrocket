@@ -9,6 +9,16 @@ import { FileService, Metadata, Result, ACL } from "./FileService.js";
 import { ServiceManager } from "./ServiceManager.js";
 import { WebUtils } from "../utils/WebUtils.js";
 
+const OK = Result.OK;
+const ERROR = Result.ERROR;
+const INVALID_CREDENTIALS = Result.INVALID_CREDENTIALS;
+const FORBIDDEN = Result.INVALID_CREDENTIALS;
+const BAD_REQUEST = Result.BAD_REQUEST;
+const NOT_FOUND = Result.NOT_FOUND;
+
+const COLLECTION = Metadata.COLLECTION;
+const FILE = Metadata.FILE;
+
 class WebdavService extends FileService
 {
   static PROXY_URI = "/bimrocket-server/api/proxy?url=";
@@ -56,13 +66,8 @@ class WebdavService extends FileService
     this.useProxy = parameters.useProxy || false;
   }
 
-  open(path, readyCallback, progressCallback)
+  find(path, options, onCompleted)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-    const COLLECTION = Metadata.COLLECTION;
-    const FILE = Metadata.FILE;
-
     let url = this.getUrl(path);
 
     let baseUri = url;
@@ -87,7 +92,7 @@ class WebdavService extends FileService
     request.onerror = () =>
     {
       // ERROR
-      readyCallback(new Result(ERROR, "Connection error"));
+      onCompleted(new Result(ERROR, "Connection error"));
     };
     request.onload = () =>
     {
@@ -100,10 +105,9 @@ class WebdavService extends FileService
           let multiNode = xml.childNodes[0];
           let responseNodes = multiNode.childNodes;
           let metadata = new Metadata();
-          let entries = [];
-          for (let i = 0; i < responseNodes.length; i++)
+          let entries = null;
+          for (let responseNode of responseNodes)
           {
-            let responseNode = responseNodes[i];
             if (responseNode.localName === "response")
             {
               let hrefNode = responseNode.querySelector("href");
@@ -131,12 +135,12 @@ class WebdavService extends FileService
 
               let fileSize = contentLengthNode ?
                 parseInt(contentLengthNode.textContent) : 0;
-              let lastModified = lastModifiedNode ?
-                parseInt(lastModifiedNode.textContent) : 0;
+              let lastModified = lastModifiedNode ? // HTTP-Date
+                Date.parse(lastModifiedNode.textContent) : 0;
 
               if (fileName.indexOf("/") === 0) fileName = fileName.substring(1);
 
-              if (fileName.length === 0) // requested resource
+              if (fileName.length === 0) // filename is the requested resource
               {
                 let index = hrefValue.lastIndexOf("/");
                 metadata.name = hrefValue.substring(index + 1);
@@ -145,8 +149,9 @@ class WebdavService extends FileService
                 metadata.size = fileSize;
                 metadata.lastModified = lastModified;
               }
-              else
+              else // filename is a child resource
               {
+                if (!entries) entries = [];
                 let entry = new Metadata(fileName, fileName,
                   isCollectionNode ? COLLECTION : FILE, fileSize, lastModified);
                 entries.push(entry);
@@ -154,177 +159,169 @@ class WebdavService extends FileService
             }
           }
 
-          if (metadata.type === COLLECTION)
-          {
-            readyCallback(
-              new Result(OK, "", path, metadata, entries, null));
-          }
-          else // download file
-          {
-            let request = new XMLHttpRequest();
-            let formatInfo = IOManager.getFormatInfo(metadata.name);
-            let dataType = formatInfo?.dataType || "text";
-            request.responseType = dataType;
-
-            request.onload = () =>
-            {
-              if (request.status === 200)
-              {
-                if (progressCallback)
-                {
-                  progressCallback({progress : 100,
-                    message : "Download completed."});
-                }
-                setTimeout(() => readyCallback(
-                  new Result(OK, "", path, metadata, null, request.response))
-                  , 100);
-              }
-            };
-            request.onerror = error =>
-            {
-              readyCallback(new Result(ERROR, error));
-            };
-            if (progressCallback)
-            {
-              request.onprogress = event =>
-              {
-                let progress = Math.round(
-                  100 * event.loaded / event.total);
-                let message = "Downloading file...";
-                progressCallback({progress : progress, message : message});
-              };
-            }
-            this.openRequest("GET", url, request);
-            request.send();
-          }
+          onCompleted(new Result(OK, "", path, metadata, entries, null));
         }
         catch (ex)
         {
-          readyCallback(new Result(ERROR, ex));
+          onCompleted(new Result(ERROR, ex));
         }
       }
       else
       {
-        readyCallback(this.createError("Can't open", request.status));
+        onCompleted(this.createError("Can't open", request.status));
       }
     };
     this.openRequest("PROPFIND", url, request);
-    request.setRequestHeader("depth", "1");
+    request.setRequestHeader("depth", options?.depth || "1");
     request.send();
   }
 
-  save(path, data, readyCallback, progressCallback)
+  read(path, onCompleted, onProgress)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
+    let url = this.getUrl(path);
+    let metadata = new Metadata();
+    let index = path.lastIndexOf("/");
+    metadata.name = index === -1 ? path : path.substring(index + 1);
+    metadata.type = FILE;
 
+    let request = new XMLHttpRequest();
+    let formatInfo = IOManager.getFormatInfo(url);
+    let dataType = formatInfo?.dataType || "arraybuffer";
+    request.responseType = dataType;
+
+    request.onload = () =>
+    {
+      if (request.status === 200)
+      {
+        if (onProgress)
+        {
+          onProgress({ progress : 100, message : "Download completed." });
+        }
+        metadata.size = parseInt(request.getResponseHeader("Content-Length"));
+
+        onCompleted(new Result(OK, "", path, metadata, null, request.response));
+      }
+      else
+      {
+        onCompleted(this.createError("Read failed", request.status));
+      }
+    };
+    request.onerror = error =>
+    {
+      onCompleted(new Result(ERROR, error));
+    };
+    if (onProgress)
+    {
+      request.onprogress = event =>
+      {
+        let progress = Math.round(
+          100 * event.loaded / event.total);
+        let message = "Downloading file...";
+        onProgress({ progress : progress, message : message });
+      };
+    }
+    this.openRequest("GET", url, request);
+    request.send();
+  }
+
+  write(path, data, onCompleted, onProgress)
+  {
     const url = this.getUrl(path);
     const request = new XMLHttpRequest();
     request.onerror = error =>
     {
       // ERROR
-      readyCallback(new Result(ERROR, "Connection error"));
+      onCompleted(new Result(ERROR, "Connection error"));
     };
     request.onload = () =>
     {
       if (request.status === 200 || request.status === 201)
       {
-        readyCallback(new Result(OK));
+        onCompleted(new Result(OK));
       }
       else
       {
-        readyCallback(this.createError("Save failed", request.status));
+        onCompleted(this.createError("Write failed", request.status));
       }
     };
-    if (progressCallback)
+    if (onProgress)
     {
       request.onprogress = event =>
       {
         let progress = Math.round(
           100 * event.loaded / event.total);
         let message = "Uploading file...";
-        progressCallback({progress : progress, message : message});
+        onProgress({ progress : progress, message : message });
       };
     }
     this.openRequest("PUT", url, request);
     request.send(data);
   }
 
-  remove(path, readyCallback, progressCallback)
+  remove(path, onCompleted, onProgress)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-
     const url = this.getUrl(path);
     const request = new XMLHttpRequest();
     request.onerror = error =>
     {
       // ERROR
-      readyCallback(new Result(ERROR, "Connection error"));
+      onCompleted(new Result(ERROR, "Connection error"));
     };
     request.onload = () =>
     {
       if (request.status === 200 || request.status === 204)
       {
-        readyCallback(new Result(OK));
+        onCompleted(new Result(OK));
       }
       else
       {
-        readyCallback(this.createError(request.responseText, request.status));
+        onCompleted(this.createError("Remove failed", request.status));
       }
     };
     this.openRequest("DELETE", url, request);
     request.send();
   }
 
-  makeCollection(path, readyCallback, progressCallback)
+  makeCollection(path, onCompleted, onProgress)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-
     const url = this.getUrl(path);
     const request = new XMLHttpRequest();
     request.onerror = error =>
     {
-      readyCallback(new Result(ERROR, "Connection error"));
+      onCompleted(new Result(ERROR, "Connection error"));
     };
     request.onload = () =>
     {
       if (request.status === 200 || request.status === 201)
       {
-        readyCallback(new Result(OK));
+        onCompleted(new Result(OK));
       }
       else
       {
-        readyCallback(this.createError(
-          "Folder creation failed", request.status));
+        onCompleted(this.createError("Folder creation failed", request.status));
       }
     };
     this.openRequest("MKCOL", url, request);
     request.send();
   }
 
-  move(sourcePath, destinationPath, readyCallback, progressCallback)
+  move(sourcePath, destinationPath, onCompleted)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-
     const url = this.getUrl(sourcePath);
     const request = new XMLHttpRequest();
     request.onerror = error =>
     {
-      readyCallback(new Result(ERROR, "Connection error"));
+      onCompleted(new Result(ERROR, "Connection error"));
     };
     request.onload = () =>
     {
       if (request.status === 200 || request.status === 201)
       {
-        readyCallback(new Result(OK));
+        onCompleted(new Result(OK));
       }
       else
       {
-        readyCallback(this.createError(
-          "Move operation failed", request.status));
+        onCompleted(this.createError("Move operation failed", request.status));
       }
     };
     this.openRequest("MOVE", url, request);
@@ -333,27 +330,23 @@ class WebdavService extends FileService
     request.send();
   }
 
-  copy(sourcePath, destinationPath, readyCallback, progressCallback)
+  copy(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-
     const url = this.getUrl(sourcePath);
     const request = new XMLHttpRequest();
     request.onerror = error =>
     {
-      readyCallback(new Result(ERROR, "Connection error"));
+      onCompleted(new Result(ERROR, "Connection error"));
     };
     request.onload = () =>
     {
       if (request.status === 200 || request.status === 201)
       {
-        readyCallback(new Result(OK));
+        onCompleted(new Result(OK));
       }
       else
       {
-        readyCallback(this.createError(
-          "Copy operation failed", request.status));
+        onCompleted(this.createError("Copy operation failed", request.status));
       }
     };
     this.openRequest("COPY", url, request);
@@ -361,17 +354,14 @@ class WebdavService extends FileService
     request.send();
   }
 
-  getACL(path, readyCallback)
+  getACL(path, onCompleted)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-
     try
     {
       const url = this.getUrl(path);
       const request = new XMLHttpRequest();
 
-      request.onerror = () => readyCallback(new Result(ERROR, "Connection error"));
+      request.onerror = () => onCompleted(new Result(ERROR, "Connection error"));
       request.onload = () =>
       {
         if (request.status === 200 || request.status === 207)
@@ -379,16 +369,16 @@ class WebdavService extends FileService
           try
           {
             const acl = this.convertXMLToACL(request.response);
-            readyCallback(new Result(OK, "ACL read", path, null, null, acl));
+            onCompleted(new Result(OK, "ACL read", path, null, null, acl));
           }
           catch (error)
           {
-            readyCallback(new Result(ERROR, `Failed to parse ACL: ${error}`));
+            onCompleted(new Result(ERROR, `Failed to parse ACL: ${error}`));
           }
         }
         else
         {
-          readyCallback(this.createError("ACL retrieval failed", request.status));
+          onCompleted(this.createError("ACL retrieval failed", request.status));
         }
       };
 
@@ -407,31 +397,28 @@ class WebdavService extends FileService
     }
     catch (error)
     {
-      readyCallback(new Result(ERROR, `ACL request failed: ${error}`, path));
+      onCompleted(new Result(ERROR, `ACL request failed: ${error}`, path));
     }
   }
 
-  setACL(path, acl, readyCallback)
+  setACL(path, acl, onCompleted)
   {
-    const OK = Result.OK;
-    const ERROR = Result.ERROR;
-
     try
     {
       const aclXML = this.convertACLToXML(acl);
       const url = this.getUrl(path);
       const request = new XMLHttpRequest();
 
-      request.onerror = () => readyCallback(new Result(ERROR, "Connection error"));
+      request.onerror = () => onCompleted(new Result(ERROR, "Connection error"));
       request.onload = () =>
       {
         if (request.status === 200 || request.status === 201)
         {
-          readyCallback(new Result(OK));
+          onCompleted(new Result(OK));
         }
         else
         {
-          readyCallback(this.createError("ACL change failed", request.status));
+          onCompleted(this.createError("ACL change failed", request.status));
         }
       };
 
@@ -441,7 +428,7 @@ class WebdavService extends FileService
     }
     catch (error)
     {
-      readyCallback(new Result(ERROR, `ACL change failed: ${error}`, path));
+      onCompleted(new Result(ERROR, `ACL change failed: ${error}`, path));
     }
   }
 
@@ -471,10 +458,11 @@ class WebdavService extends FileService
     let resultStatus;
     switch (status)
     {
-      case 400: resultStatus = Result.BAD_REQUEST; break;
-      case 401: resultStatus = Result.INVALID_CREDENTIALS; break;
-      case 403: resultStatus = Result.FORBIDDEN; break;
-      default: resultStatus = Result.ERROR;
+      case 400: resultStatus = BAD_REQUEST; break;
+      case 401: resultStatus = INVALID_CREDENTIALS; break;
+      case 403: resultStatus = FORBIDDEN; break;
+      case 404: resultStatus = NOT_FOUND; break;
+      default: resultStatus = ERROR;
     }
     return new Result(resultStatus, message);
   }

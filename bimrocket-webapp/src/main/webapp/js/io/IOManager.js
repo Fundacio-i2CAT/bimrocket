@@ -17,6 +17,7 @@ class IOManager
       extensions : [{string}] extensions array,
       mimeType : {string} the mime type,
       dataType : {string} "text" | "arraybuffer",
+      icon : {string} icon class,
       loader :
       {
         class : {class} the loader class,

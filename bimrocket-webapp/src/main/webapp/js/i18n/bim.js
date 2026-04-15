@@ -16,6 +16,7 @@ export const translations =
   "button.new_user" : "New user",
   "button.back_topics" : "Back to projects",
   "button.new_role" : "New role",
+  "button.filter_projects": "Show only the projects loaded in the viewer",
 
   "tool.bim_inventory.label" : "BIM inventory",
   "tool.bim_inventory.help" : "BIM inventory setup",
@@ -41,6 +42,9 @@ export const translations =
   "tool.bim_reset_view.label" : "Reset view",
 
   "tool.server_admin.label" : "Admin Service",
+
+  "action.compare_snapshot" : "Compare snapshot",
+  "action.save_snapshot" : "Save snapshot",
 
   "tab.file" : "File",
   "tab.entity" : "Entity",

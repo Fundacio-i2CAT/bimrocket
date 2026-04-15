@@ -16,6 +16,7 @@ export const translations =
   "button.new_user" : "Usuario nuevo",
   "button.back_topicss" : "Volver a proyectos",
   "button.new_role" : "Rol nuevo",
+  "button.filter_projects": "Mostrar sólo los proyectos cargados en el visor",
 
   "tool.bim_inventory.label" : "Inventario BIM",
   "tool.bim_inventory.help" : "Inventario BIM",
@@ -41,6 +42,9 @@ export const translations =
   "tool.bim_reset_view.label" : "Inicializar vista",
 
   "tool.server_admin.label" : "Admin. del servicio",
+
+  "action.compare_snapshot" : "Comparar captura",
+  "action.save_snapshot" : "Guardar captura",
 
   "tab.file" : "Fichero",
   "tab.entity" : "Entidad",

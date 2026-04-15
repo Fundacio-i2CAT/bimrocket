@@ -9,8 +9,6 @@ import { I18N } from "../i18n/I18N.js";
 
 class ConfirmDialog extends Dialog
 {
-  action = null;
-
   constructor(title, message, ...args)
   {
     super(title);
@@ -39,6 +37,18 @@ class ConfirmDialog extends Dialog
     return this;
   }
 
+  setAcceptAction(action)
+  {
+    this.action = action;
+    return this;
+  }
+
+  setCancelAction(action)
+  {
+    this.cancelAction = action;
+    return this;
+  }
+
   setAcceptLabel(label)
   {
     I18N.set(this.acceptButton, "textContent", label);
@@ -58,12 +68,13 @@ class ConfirmDialog extends Dialog
 
   onAccept()
   {
-    this.action();
+    this.action?.();
     this.hide();
   }
 
   onCancel()
   {
+    this.cancelAction?.();
     this.hide();
   }
 }

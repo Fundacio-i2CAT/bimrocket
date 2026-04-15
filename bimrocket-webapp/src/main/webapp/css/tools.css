@@ -354,6 +354,28 @@
   text-align: left;
 }
 
+.report_panel .report_title
+{
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.report_panel .report_summary
+{
+  margin-bottom: 4px;
+}
+
+.report_panel .report_summary.total
+{
+  margin-bottom: 8px;
+}
+
+.report_panel .report_error
+{
+  color: red;
+  margin-bottom: 8px;
+}
+
 .report_panel .tree li.ok
 {
   background-image: url(images/report/ok.svg);

@@ -15,6 +15,7 @@ export const translations =
   "button.stop" : "Parar",
   "button.create" : "Crear",
   "button.save" : "Guardar",
+  "button.save_with_errors" : "Guardar con errores",
   "button.add" : "Añadir",
   "button.maximize" : "Maximizar",
   "button.minimize" : "Minimizar",
@@ -114,6 +115,8 @@ export const translations =
   "menu.control" : "Control",
   "menu.panels" : "Paneles",
   "menu.help" : "Ayuda",
+
+  "menu.file.create" : "Crear",
 
   "tool.new_scene.label" : "Nueva escena",
   "tool.new_scene.help" : "Nueva escena",
@@ -380,6 +383,26 @@ export const translations =
   "tool.about.label" : "Acerca de",
   "tool.website.label" : "Sitio web",
 
+  "action.open" : "Abrir",
+  "action.add_service" : "Añadir servicio",
+  "action.edit_service" : "Editar servicio",
+  "action.open_model" : "Abrir modelo",
+  "action.save_model" : "Guardar modelo",
+  "action.rename" : "Renombrar",
+  "action.delete" : "Eliminar",
+  "action.edit_acl" : "Editar permisos",
+  "action.upload_file" : "Subir fichero",
+  "action.download_file" : "Descargar fichero",
+  "action.create_folder" : "Crear carpeta",
+  "action.create_script" : "Crear programa",
+  "action.script" : "Programa",
+  "action.run_script" : "Ejecutar programa",
+  "action.edit_script" : "Editar programa",
+  "action.create_report" : "Crear informe",
+  "action.report" : "Informe",
+  "action.run_report" : "Ejecutar informe",
+  "action.edit_report" : "Editar informe",
+
   "action.ChangeMaterial" : "Cambiar material",
   "action.SetBuilder" : "Asignar constructor",
   "action.AddProperty" : "Añadir propiedad",
@@ -393,6 +416,8 @@ export const translations =
   "action.AddFeatured" : "Añadir a destacadas",
   "action.RemoveFeatured" : "Quitar de destacadas",
   "action.RemoveAllFeatured" : "Quitar todas las destacadas",
+
+  "label.file_name" : "Nombre del fichero:",
 
   "label.language" : "Idioma:",
   "label.units" : "Unidades del modelo:",
@@ -570,6 +595,7 @@ export const translations =
   "option.select_faces.add_faces" : "Añadir caras por rectángulo",
   "option.select_faces.remove_faces" : "Quitar caras por rectángulo",
 
+  "title.rename_file" : "Renombrar fichero",
   "title.add_cloud_service": "Añadir servicio de nube",
   "title.edit_cloud_service": "Editar servicio de nube",
   "title.save_to_cloud" : "Guardar en la nube",
@@ -601,7 +627,8 @@ export const translations =
   "title.acl_editor_error" : "Error al guardar",
   "title.acl_not_found": "No se ha encontrado el ACL",
   "title.confirm_save": "Confirmación",
-  "title.login_dialog": "Inicia sesión para continuar",
+  "title.overwrite" : "Sobreescribir fichero",
+  "title.login_dialog" : "Inicia sesión para continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Área: ${area} ${units}2`,
@@ -626,6 +653,9 @@ export const translations =
   "message.folder_created" : "Carpeta creada.",
   "message.file_deleted" : "Fichero borrado.",
   "message.folder_deleted" : "Carpeta borrada.",
+  "message.renaming_completed" : "Renombrado completado.",
+  "message.changes_discarded" : "Cambios descartados.",
+  "message.filename_already_exists" : "Ya existe un fichero con ese nombre.",
 
   "message.no_matches" : "Ninguna coincidencia encontrada.",
   "message.one_match" : "1 coincidencia encontrada.",
@@ -643,7 +673,7 @@ export const translations =
   "message.instance_count" : count => `Instancias: ${count}`,
   "message.modeled_triangle_count" : count => `Triángulos modelizados: ${count}`,
   "message.rendered_triangle_count" : count => `Triángulos renderizados: ${count}`,
-  "message.report_summary" : (errors, warnings) => `Errores: ${errors}, avisos: ${warnings}`,
+  "message.report_summary" : (errors, warnings) => `Errores: ${errors.toLocaleString('es')}, avisos: ${warnings.toLocaleString('es')}`,
 
   "message.invalid_credentials" : "Credenciales incorrectas.",
   "message.access_denied" : "Acceso denegado.",
@@ -662,12 +692,13 @@ export const translations =
   "message.file_open_error" : (fileName, error) => `El fichero ${fileName} no se puede abrir:\n\n${error}`,
 
   "message.edit_acl_success" : "Los permisos se han actualizado correctamente.",
-  "message.invalid_privileges": "Hay errores en los privilegios introducidos.",
-  "message.edit_acl_json_error": detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
+  "message.invalid_privileges" : "Hay errores en los privilegios introducidos.",
+  "message.edit_acl_json_error" : detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
 
-  "message.logout_failed": "Error al cerrar sesión.",
-  "message.login_failed": "Credenciales incorrectas.",
+  "message.login_failed" : "Credenciales incorrectas.",
+  "message.logout_failed" : "Error al cerrar sesión.",
 
+  "question.overwrite_file" : filename => `Quieres sobreescribir el fichero ${filename}?`,
   "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,
   "question.delete_service" : name => `Quieres borrar el servicio ${name}?`,
   "question.delete_folder" : name => `Quieres borrar la carpeta ${name}?`,

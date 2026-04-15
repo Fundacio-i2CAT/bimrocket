@@ -17,36 +17,139 @@ const MenuItemList = (BaseClass = class {}) => class extends BaseClass
     this.menuElement.setAttribute("role", "menu");
   }
 
-  addMenuItem(action, index)
+  /**
+   * Adds a new MenuItem at the specified index.
+   *
+   * @param {Action} action - the MenuItem Action
+   * @param {number|string} where - the index of the list or the separator name
+   *   where to insert the MenuItem
+   * @returns {MenuItem} the new MenuItem
+   */
+  addMenuItem(action, where)
   {
     const menuItem = new MenuItem(this.container, action);
-    this.putMenuItem(menuItem, index);
+    this.putMenuItem(menuItem, where);
 
     return menuItem;
   }
 
-  addMenu(label, index)
+  /**
+   * Adds a new Menu at the specified index.
+   *
+   * @param {string} label - the Menu label
+   * @param {number|string} where - the index of the list or the separator name
+   *   where to insert the MenuItem
+   * @returns {Menu} the new Menu
+   */
+  addMenu(label, where)
   {
     const menu = new Menu(this.container, label);
-    this.putMenuItem(menu, index);
+    this.putMenuItem(menu, where);
 
     return menu;
   }
 
-  addSeparator(name, index)
+  /**
+   * Adds a new Separator at the specified index.
+   *
+   * @param {string} name - the Separator name
+   * @param {number|string} where - the index of the list or the separator name
+   *   where to insert the MenuItem
+   * @returns {Separator} the new Separator
+   */
+  addSeparator(name, where)
   {
     const separator = new Separator(this.container, name);
-    this.putMenuItem(separator, index);
+    this.putMenuItem(separator, where);
 
     return separator;
   }
 
+  /**
+   * Indicates whether this MenuItemList has children.
+   *
+   * @returns {boolean} false if this list is empty or true otherwise.
+   */
   hasChildren()
   {
     return this.menuItems.length > 0;
   }
 
-  putMenuItem(menuItem, index)
+  /**
+   * Returns the Menu with the specified label.
+   *
+   * @param {string} label - the label of the Menu
+   * @returns {Menu} the Menu with the specified label
+   */
+  getMenu(label)
+  {
+    return this.menuItems.find(
+      menuItem => menuItem instanceof Menu && menuItem.label === label);
+  }
+
+  /**
+   * Returns the MenuItem with the specified label.
+   *
+   * @param {string} label - the label of the MenuItem
+   * @returns {MenuItem} the MenuItem with the specified label
+   */
+  getMenuItem(label)
+  {
+    return this.menuItems.find(
+      menuItem => menuItem instanceof MenuItem && menuItem.label === label);
+  }
+
+  /**
+   * Returns the Separator with the specified name.
+   *
+   * @param {string} name - the name of the Separator
+   * @returns {Separator} the Separator with the specified name
+   */
+  getSeparator(name)
+  {
+    return this.menuItems.find(
+      menuItem => menuItem instanceof Separator && menuItem.name === name);
+  }
+
+  /**
+   * Finds the index to insert a menuItem at the specified separator.
+   *
+   * @param {string} name - the separator name
+   * @param {string} position - the insertion position ["top" | "bottom"]
+   * @returns {number} the index to insert the menuItem or -1
+   *   if the separator is not found
+   */
+  getInsertionIndex(name, position = "bottom")
+  {
+    const menuItems = this.menuItems;
+
+    let index = menuItems.findIndex(menuItem => menuItem.name === name);
+    if (index === -1) return -1;
+
+    index++;
+
+    if (position === "bottom")
+    {
+      while (index < menuItems.length)
+      {
+        if (menuItems[index] instanceof Separator) break;
+        index++;
+      }
+    }
+    return index;
+  }
+
+  /**
+   * Puts a menuItem at the specified place in this list.
+   *
+   * @param {MenuItem} menuItem - the menuItem to add or insert
+   * @param {number|string} where - the place where to insert/add the
+   *   menuItem. It can be a list index (number) or a separator name optionally
+   *   followed by a colon and the insert position (top|bottom).
+   *   Examples: "save", "save:top", "default:bottom". If where is undefined,
+   *   the menuItem is added to the end of this list.
+   */
+  putMenuItem(menuItem, where)
   {
     if (menuItem.container !== this.container)
       throw "Invalid MenuItem container";
@@ -59,10 +162,24 @@ const MenuItemList = (BaseClass = class {}) => class extends BaseClass
       menuItem.parentMenu = this;
     }
 
-    const children = this.menuElement.children;
-    if (typeof index === "number" && index < children.length)
+    let index;
+    if (typeof where === "number")
     {
-      if (index < 0) index = 0;
+      index = where;
+    }
+    else if (typeof where === "string") // is where a Separator name?
+    {
+      const [name, position] = where.split(":");
+      index = this.getInsertionIndex(name, position);
+    }
+    else
+    {
+      index = -1; // bottom
+    }
+
+    const children = this.menuElement.children;
+    if (0 <= index && index < children.length)
+    {
       let oldElem = children[index];
       this.menuElement.insertBefore(menuItem.itemElement, oldElem);
       this.menuItems.splice(index, 0, menuItem);
@@ -147,6 +264,12 @@ class BaseMenuItem
   remove()
   {
     (this.parentMenu || this.container)?.removeMenuItem(this);
+  }
+
+  getIndex()
+  {
+    const parent = this.parentMenu || this.container;
+    return parent.menuItems.indexOf(this);
   }
 
   isEnabled()

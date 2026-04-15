@@ -15,6 +15,7 @@ export const translations =
   "button.stop" : "Stop",
   "button.create" : "Create",
   "button.save" : "Save",
+  "button.save_with_errors" : "Save with errors",
   "button.add" : "Add",
   "button.maximize" : "Maximize",
   "button.minimize" : "Minimize",
@@ -114,6 +115,8 @@ export const translations =
   "menu.control" : "Control",
   "menu.panels" : "Panels",
   "menu.help" : "Help",
+
+  "menu.file.create" : "Create",
 
   "tool.new_scene.label" : "New scene",
   "tool.new_scene.help" : "New scene",
@@ -380,6 +383,26 @@ export const translations =
   "tool.about.label" : "About",
   "tool.website.label" : "Website",
 
+  "action.open" : "Open",
+  "action.add_service" : "Add service",
+  "action.edit_service" : "Edit service",
+  "action.open_model" : "Open model",
+  "action.save_model" : "Save model",
+  "action.rename" : "Rename",
+  "action.delete" : "Delete",
+  "action.edit_acl" : "Edit permissions",
+  "action.upload_file" : "Upload file",
+  "action.download_file" : "Download file",
+  "action.create_folder" : "Create folder",
+  "action.create_script" : "Create script",
+  "action.script" : "Script",
+  "action.run_script" : "Run script",
+  "action.edit_script" : "Edit script",
+  "action.create_report" : "Create report",
+  "action.report" : "Report",
+  "action.run_report" : "Run report",
+  "action.edit_report" : "Edit report",
+
   "action.ChangeMaterial" : "Change material",
   "action.SetBuilder" : "Set builder",
   "action.AddProperty" : "Add property",
@@ -393,6 +416,8 @@ export const translations =
   "action.AddFeatured" : "Add to featured",
   "action.RemoveFeatured" : "Remove from featured",
   "action.RemoveAllFeatured" : "Remove all featured",
+
+  "label.file_name" : "File name:",
 
   "label.language" : "Language:",
   "label.units" : "Model units:",
@@ -570,6 +595,7 @@ export const translations =
   "option.select_faces.add_faces" : "Add faces by rectangle",
   "option.select_faces.remove_faces" : "Remove faces by rectangle",
 
+  "title.rename_file" : "Rename file",
   "title.add_cloud_service" : "Add cloud service",
   "title.edit_cloud_service" : "Edit cloud service",
   "title.save_to_cloud" : "Save to cloud",
@@ -601,7 +627,8 @@ export const translations =
   "title.acl_editor_error": "Error saving",
   "title.acl_not_found": "ACL not found",
   "title.confirm_save": "Confirmation",
-  "title.login_dialog": "Please log in to continue",
+  "title.overwrite" : "Overwrite file",
+  "title.login_dialog" : "Please log in to continue",
 
   "message.measure_length" : (length, units) => `Length: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Area: ${area} ${units}2`,
@@ -626,6 +653,9 @@ export const translations =
   "message.folder_created" : "Folder created.",
   "message.file_deleted" : "File deleted.",
   "message.folder_deleted" : "Folder deleted.",
+  "message.renaming_completed" : "Renaming completed.",
+  "message.changes_discarded" : "Changes discarded.",
+  "message.filename_already_exists" : "A file with that name already exists.",
 
   "message.no_matches" : "No matches found.",
   "message.one_match" : "1 match found.",
@@ -643,7 +673,7 @@ export const translations =
   "message.instance_count" : count => `Instances: ${count}`,
   "message.modeled_triangle_count" : count => `Modeled triangles: ${count}`,
   "message.rendered_triangle_count" : count => `Rendered triangles: ${count}`,
-  "message.report_summary" : (errors, warnings) => `Errors: ${errors}, warnings: ${warnings}`,
+  "message.report_summary" : (errors, warnings) => `Errors: ${errors.toLocaleString('en')}, warnings: ${warnings.toLocaleString('en')}`,
 
   "message.invalid_credentials" : "Invalid credentials.",
   "message.access_denied" : "Access denied.",
@@ -661,13 +691,14 @@ export const translations =
 
   "message.file_open_error" : (fileName, error) => `The file ${fileName} cannot be opened:\n\n${error}`,
 
-  "message.edit_acl_success": "Permissions were updated successfully.",
-  "message.invalid_privileges": "Errors found in the input privileges.",
-  "message.edit_acl_json_error": detail => `JSON parsing error. Please check the syntax. (${detail})`,
+  "message.edit_acl_success" : "Permissions were updated successfully.",
+  "message.invalid_privileges" : "Errors found in the input privileges.",
+  "message.edit_acl_json_error" : detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
-  "message.logout_failed": "Failed to log out.",
-  "message.login_failed": "Invalid credentials.",
+  "message.logout_failed" : "Failed to log out.",
+  "message.login_failed" : "Invalid credentials.",
 
+  "question.overwrite_file" : filename => `Do you want to overwrite the file ${filename}?`,
   "question.discard_changes" : name => `Discard unsaved changes in ${name || 'editor'}?`,
   "question.delete_service" : name => `Do you want to delete the ${name} service?`,
   "question.delete_folder" : name => `Do you want to delete the ${name} folder?`,

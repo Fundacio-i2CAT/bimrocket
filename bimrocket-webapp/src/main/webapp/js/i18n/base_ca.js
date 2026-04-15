@@ -15,6 +15,7 @@ export const translations =
   "button.stop" : "Atura",
   "button.create" : "Crea",
   "button.save" : "Desa",
+  "button.save_with_errors" : "Desa amb errors",
   "button.add" : "Afegeix",
   "button.maximize" : "Maximitza",
   "button.minimize" : "Minimitza",
@@ -114,6 +115,8 @@ export const translations =
   "menu.control" : "Control",
   "menu.panels" : "Panells",
   "menu.help" : "Ajuda",
+
+  "menu.file.create" : "Crea",
 
   "tool.new_scene.label" : "Nova escena",
   "tool.new_scene.help" : "Nova escena",
@@ -380,6 +383,26 @@ export const translations =
   "tool.about.label" : "Quant a",
   "tool.website.label" : "Lloc web",
 
+  "action.open" : "Obre",
+  "action.add_service" : "Afegeix servei",
+  "action.edit_service" : "Edita servei",
+  "action.open_model" : "Obre model",
+  "action.save_model" : "Desa model",
+  "action.rename" : "Reanomena",
+  "action.delete" : "Esborra",
+  "action.edit_acl" : "Edita permissos",
+  "action.upload_file" : "Puja fitxer",
+  "action.download_file" : "Baixa fitxer",
+  "action.create_folder" : "Crea carpeta",
+  "action.create_script" : "Crea programa",
+  "action.script" : "Programa",
+  "action.run_script" : "Executa programa",
+  "action.edit_script" : "Edita programa",
+  "action.create_report" : "Crea informe",
+  "action.report" : "Informe",
+  "action.run_report" : "Executa informe",
+  "action.edit_report" : "Edita informe",
+
   "action.ChangeMaterial" : "Canvia material",
   "action.SetBuilder" : "Assigna constructor",
   "action.AddProperty" : "Afegeix propietat",
@@ -393,6 +416,8 @@ export const translations =
   "action.AddFeatured" : "Afegeix a destacades",
   "action.RemoveFeatured" : "Treu de destacades",
   "action.RemoveAllFeatured" : "Treu totes les destacades",
+
+  "label.file_name" : "Nom del fitxer:",
 
   "label.language" : "Idioma:",
   "label.units" : "Unitats del model:",
@@ -570,6 +595,7 @@ export const translations =
   "option.select_faces.add_faces" : "Afegeix cares per rectangle",
   "option.select_faces.remove_faces" : "Treu cares per rectangle",
 
+  "title.rename_file" : "Reanomena fitxer",
   "title.add_cloud_service": "Afegeix servei del núvol",
   "title.edit_cloud_service": "Edita servei del núvol",
   "title.save_to_cloud" : "Desa al núvol",
@@ -597,11 +623,12 @@ export const translations =
   "title.delete_conversation" : "Esborra conversa",
   "title.chatgpt_setup" : "Configuració de ChatGPT",
   "title.acl_editor" : "Editor de permisos ACL",
-  "title.acl_editor_success": "Permisos desats",
+  "title.acl_editor_success" : "Permisos desats",
   "title.acl_editor_error": "Error en desar",
-  "title.acl_not_found": "No s'ha trobat l'ACL",
-  "title.confirm_save": "Confirmació",
-  "title.login_dialog": "Inicia sessió per continuar",
+  "title.acl_not_found" : "No s'ha trobat l'ACL",
+  "title.confirm_save" : "Confirmació",
+  "title.overwrite" : "Sobreescriure fitxer",
+  "title.login_dialog" : "Inicia sessió per continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Àrea: ${area} ${units}2`,
@@ -626,6 +653,9 @@ export const translations =
   "message.folder_created" : "Carpeta creada.",
   "message.file_deleted" : "Fitxer esborrat.",
   "message.folder_deleted" : "Carpeta esborrada.",
+  "message.renaming_completed" : "Reanomenat completat.",
+  "message.changes_discarded" : "Canvis descartats.",
+  "message.filename_already_exists" : "Ja existeix un fitxer amb aquest nom.",
 
   "message.no_matches" : "Cap coincidència trobada.",
   "message.one_match" : "1 coincidència trobada.",
@@ -643,7 +673,7 @@ export const translations =
   "message.instance_count" : count => `Instàncies: ${count}`,
   "message.modeled_triangle_count" : count => `Triangles modelitzats: ${count}`,
   "message.rendered_triangle_count" : count => `Triangles renderitzats: ${count}`,
-  "message.report_summary" : (errors, warnings) => `Errors: ${errors}, avisos: ${warnings}`,
+  "message.report_summary" : (errors, warnings) => `Errors: ${errors.toLocaleString('es')}, avisos: ${warnings.toLocaleString('es')}`,
 
   "message.invalid_credentials" : "Credencials incorrectes.",
   "message.access_denied" : "Accés denegat.",
@@ -661,14 +691,15 @@ export const translations =
 
   "message.file_open_error" : (fileName, error) => `El fitxer ${fileName} no es pot obrir:\n\n${error}`,
 
-  "message.edit_acl_success": "Els permisos s'han actualitzat correctament.",
-  "message.invalid_privileges": "Hi ha errors en els privilegis introduïts.",
-  "message.edit_acl_json_error": detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
+  "message.edit_acl_success" : "Els permisos s'han actualitzat correctament.",
+  "message.invalid_privileges" : "Hi ha errors en els privilegis introduïts.",
+  "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
-  "message.logout_failed": "Error en tancar sessió.",
-  "message.login_failed": "Credencials incorrectes.",
+  "message.login_failed" : "Credencials incorrectes.",
+  "message.logout_failed" : "Error en tancar sessió.",
 
-  "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || " l'editor"}?`,
+  "question.overwrite_file" : filename => `Vols sobreescriure el fitxer ${filename}?`,
+  "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || "l'editor"}?`,
   "question.delete_service" : name => `Vols esborrar el servei ${name}?`,
   "question.delete_folder" : name => `Vols esborrar la carpeta ${name}?`,
   "question.delete_file" : name => `Vols esborrar el fitxer ${name}?`,

@@ -18,6 +18,8 @@ class CenterSelectionTool extends Tool
     this.help = "tool.center_selection.help";
     this.className = "center_selection";
     this.focusOnSelection = false;
+    this.includeInvisible = true;
+
     this.setOptions(options);
     application.addTool(this);
     this.immediate = true;
@@ -38,8 +40,8 @@ class CenterSelectionTool extends Tool
       const aspect = container.clientWidth / container.clientHeight;
       const camera = application.camera;
 
-      application.scene.updateMatrixWorld(true);
-      ObjectUtils.zoomAll(camera, objects, aspect, true);
+      application.baseObject.updateMatrixWorld(true);
+      ObjectUtils.zoomAll(camera, objects, aspect, this.includeInvisible);
 
       application.notifyObjectsChanged(camera, this);
     }

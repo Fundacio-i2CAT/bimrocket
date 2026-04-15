@@ -23,6 +23,8 @@ import { IDBFileService } from "../io/IDBFileService.js";
 import { SecurityService } from "../io/SecurityService.js";
 import { IOManager } from "../io/IOManager.js";
 import { IDSReportType } from "../reports/IDSReportType.js";
+import { CompareSnapshotAction } from "../ui/file/CompareSnapshotAction.js";
+import { SaveSnapshotAction } from "../ui/file/SaveSnapshotAction.js";
 import { BundleManager } from "../i18n/BundleManager.js";
 import { Environment } from "../Environment.js";
 import "../io/ifc/schemas/IFC2X3.js";
@@ -38,6 +40,7 @@ export function load(application)
     extensions : ["ifc"],
     mimeType : "application/x-step",
     dataType : "text",
+    icon : "ifc",
     loader :
     {
       class : IFCSTEPLoader,
@@ -47,6 +50,24 @@ export function load(application)
     {
       class : IFCSTEPExporter
     }
+  };
+
+  IOManager.formats["ids"] =
+  {
+    description : "Information Delivery Specification (*.ids)",
+    extensions : ["ids"],
+    mimeType : "application/xml",
+    dataType : "text",
+    icon : "report"
+  };
+
+  IOManager.formats["snp"] =
+  {
+    description : "IFC snapshot (*.snp)",
+    extensions : ["snp"],
+    mimeType : "application/json",
+    dataType : "text",
+    icon : "snapshot"
   };
 
   // create tools
@@ -146,4 +167,13 @@ export function load(application)
   application.i18n.defaultBundle = BundleManager.getBundle("base");
   application.i18n.addSupportedLanguages("en", "es", "ca");
   application.i18n.updateTree(application.element);
+
+  const explorerTool = application.tools["cloud_explorer"];
+  if (explorerTool)
+  {
+    const contextMenu = explorerTool.fileExplorer.contextMenu;
+    const action = explorerTool.fileExplorer.createContextAction;
+    contextMenu.addMenuItem(action(CompareSnapshotAction), "default:top");
+    contextMenu.addMenuItem(action(SaveSnapshotAction), "save");
+  }
 }

@@ -10,6 +10,11 @@ import { IOManager } from "./IOManager.js";
 
 const OK = Result.OK;
 const ERROR = Result.ERROR;
+const INVALID_CREDENTIALS = Result.INVALID_CREDENTIALS;
+const FORBIDDEN = Result.INVALID_CREDENTIALS;
+const BAD_REQUEST = Result.BAD_REQUEST;
+const NOT_FOUND = Result.NOT_FOUND;
+
 const COLLECTION = Metadata.COLLECTION;
 const FILE = Metadata.FILE;
 
@@ -26,32 +31,86 @@ class IDBFileService extends FileService
     if (!this.url) this.url = "default";
   }
 
-  open(path, readyCallback, progressCallback)
+  find(path, options, onCompleted)
   {
-    const openAction = new OpenAction();
-    openAction.execute(this.url, path, readyCallback);
+    const readOperation = new ReadOperation(false);
+    readOperation.execute(this.url, path, onCompleted);
   }
 
-  save(path, data, readyCallback, progressCallback)
+  read(path, onCompleted, onProgress)
   {
-    const saveAction = new SaveAction(data);
-    saveAction.execute(this.url, path, readyCallback, data);
+    const readOperation = new ReadOperation(true);
+    readOperation.execute(this.url, path, onCompleted);
   }
 
-  remove(path, readyCallback, progressCallback)
+  write(path, data, onCompleted, onProgress)
   {
-    const removeAction = new RemoveAction();
-    removeAction.execute(this.url, path, readyCallback);
+    const writeOperation = new WriteOperation(data);
+    writeOperation.execute(this.url, path, onCompleted);
   }
 
-  makeCollection(path, readyCallback, progressCallback)
+  remove(path, onCompleted, onProgress)
   {
-    const mkColAction = new MakeCollectionAction();
-    mkColAction.execute(this.url, path, readyCallback);
+    const removeOperation = new RemoveOperation();
+    removeOperation.execute(this.url, path, onCompleted);
+  }
+
+  makeCollection(path, onCompleted, onProgress)
+  {
+    const mkColOperation = new MakeCollectionOperation();
+    mkColOperation.execute(this.url, path, onCompleted);
+  }
+
+  move(sourcePath, destinationPath, onCompleted)
+  {
+    const srcIndex = sourcePath.lastIndexOf("/");
+    let srcBase, srcName;
+    if (srcIndex === -1)
+    {
+      srcBase = "";
+      srcName = sourcePath;
+    }
+    else
+    {
+      srcBase = sourcePath.substring(0, srcIndex);
+      srcName = sourcePath.substring(srcIndex + 1);
+    }
+
+    const destIndex = destinationPath.lastIndexOf("/");
+    let destBase, destName;
+    if (destIndex === -1)
+    {
+      destBase = "";
+      destName = destinationPath;
+    }
+    else
+    {
+      destBase = destinationPath.substring(0, destIndex);
+      destName = destinationPath.substring(destIndex + 1);
+    }
+
+    if (srcBase === destBase)
+    {
+      if (srcName !== destName)
+      {
+        const renameOperation = new RenameOperation(destName);
+        renameOperation.execute(this.url, sourcePath, onCompleted);
+      }
+      else onCompleted(new Result(OK));
+    }
+    else
+    {
+      onCompleted(new Result(ERROR, "Unsupported operation."));
+    }
+  }
+
+  copy(sourcePath, destinationPath, onCompleted, onProgress)
+  {
+    onCompleted(new Result(ERROR, "Not implemented."));
   }
 }
 
-class Action
+class Operation
 {
   constructor()
   {
@@ -59,10 +118,10 @@ class Action
     this.nodeId = 0;
     this.nodes = [];
     this.pathArray = null;
-    this.readyCallback = null;
+    this.onCompleted = null;
   }
 
-  execute(dbName, path, readyCallback)
+  execute(dbName, path, onCompleted)
   {
     if (!dbName) dbName = "default";
 
@@ -70,7 +129,7 @@ class Action
     const pathArray = path === "/" ? [""] : path.split("/");
 
     this.pathArray = pathArray;
-    this.readyCallback = readyCallback;
+    this.onCompleted = onCompleted;
 
     const openReq = indexedDB.open(dbName, 1);
 
@@ -103,7 +162,7 @@ class Action
 
       tx.onerror = (event) =>
       {
-        this.error(event.error);
+        this.error(ERROR, event.error);
       };
 
       this.loadNextNode();
@@ -111,7 +170,7 @@ class Action
 
     openReq.onerror = (event) =>
     {
-      this.error(event.error);
+      this.error(ERROR, event.error);
     };
   }
 
@@ -127,7 +186,7 @@ class Action
 
       if (!node)
       {
-        this.error("Invalid path");
+        this.error(NOT_FOUND, "Invalid path.");
         return;
       }
 
@@ -154,18 +213,18 @@ class Action
         }
         else
         {
-          this.error("Invalid operation");
+          this.error(NOT_FOUND, "Not found.");
         }
       }
       else
       {
-        this.error("Invalid path");
+        this.error(NOT_FOUND, "Not found.");
       }
     };
 
     getReq.onerror = (event) =>
     {
-      this.error(event.error);
+      this.error(ERROR, event.error);
     };
   }
 
@@ -180,17 +239,17 @@ class Action
 
   onLastNode()
   {
-    this.error("Invalid operation");
+    this.error(ERROR, "Invalid operation.");
   }
 
   onNewNode()
   {
-    this.error("Invalid operation");
+    this.error(ERROR, "Invalid operation.");
   }
 
-  error(msg)
+  error(status, msg)
   {
-    this.readyCallback(new Result(ERROR, msg));
+    this.onCompleted(new Result(status, msg));
   }
 
   getSize(data)
@@ -200,11 +259,17 @@ class Action
   }
 }
 
-class OpenAction extends Action
+class ReadOperation extends Operation
 {
-  constructor()
+  constructor(loadFileData = false)
   {
     super();
+    this.loadFileData = loadFileData;
+  }
+
+  onNewNode()
+  {
+    this.error(NOT_FOUND, "Not found.");
   }
 
   async onLastNode()
@@ -246,22 +311,25 @@ class OpenAction extends Action
       metadata.type = FILE;
       metadata.size = entry.size;
       metadata.lastModified = entry.modified;
-      const mimeType = node.data.type || "text/plain";
-      const formatInfo = IOManager.getFormatInfoByMimeType(mimeType);
-      if (formatInfo?.dataType === "arraybuffer")
+      if (this.loadFileData)
       {
-        data = await node.data.arrayBuffer();
-      }
-      else
-      {
-        data = await node.data.text();
+        const mimeType = node.data.type || "text/plain";
+        const formatInfo = IOManager.getFormatInfoByMimeType(mimeType);
+        if (formatInfo?.dataType === "text")
+        {
+          data = await node.data.text();
+        }
+        else
+        {
+          data = await node.data.arrayBuffer();
+        }
       }
     }
-    this.readyCallback(new Result(OK, "", path, metadata, entries, data));
+    this.onCompleted(new Result(OK, "", path, metadata, entries, data));
   }
 }
 
-class SaveAction extends Action
+class WriteOperation extends Operation
 {
   constructor(data)
   {
@@ -272,7 +340,7 @@ class SaveAction extends Action
     }
     else if (data instanceof ArrayBuffer)
     {
-      data = new Blob([data], { type: "application/octet-stream" });
+      data = new Blob([data], { type : "application/octet-stream" });
     }
     this.data = data; // always save data as blob
   }
@@ -293,11 +361,11 @@ class SaveAction extends Action
       node.data = this.data;
       this.store.put(node);
 
-      this.readyCallback(new Result(OK));
+      this.onCompleted(new Result(OK));
     }
     else // attempt to replace collection by file
     {
-      this.error("A directory exists with the same name");
+      this.error(BAD_REQUEST, "A directory with the same name already exists.");
     }
   }
 
@@ -327,11 +395,11 @@ class SaveAction extends Action
     };
     this.store.put(fileNode);
 
-    this.readyCallback(new Result(OK));
+    this.onCompleted(new Result(OK));
   }
 }
 
-class RemoveAction extends Action
+class RemoveOperation extends Operation
 {
   constructor()
   {
@@ -349,7 +417,7 @@ class RemoveAction extends Action
     const entry = parentNode.entries[name];
     if (entry.type === COLLECTION && Object.keys(node.entries).length > 0)
     {
-      this.error("Directory is not empty");
+      this.error(BAD_REQUEST, "Directory is not empty.");
     }
     else
     {
@@ -358,12 +426,12 @@ class RemoveAction extends Action
       store.put(parentNode);
       store.delete(node.id);
 
-      this.readyCallback(new Result(OK));
+      this.onCompleted(new Result(OK));
     }
   }
 }
 
-class MakeCollectionAction extends Action
+class MakeCollectionOperation extends Operation
 {
   constructor()
   {
@@ -372,7 +440,7 @@ class MakeCollectionAction extends Action
 
   onLastNode()
   {
-    this.error("Name already exist");
+    this.error(BAD_REQUEST, "A directory with the same name already exists.");
   }
 
   onNewNode()
@@ -399,7 +467,38 @@ class MakeCollectionAction extends Action
       entries: {}
     };
     this.store.put(colNode);
-    this.readyCallback(new Result(OK));
+    this.onCompleted(new Result(OK));
+  }
+}
+
+class RenameOperation extends Operation
+{
+  constructor(newName)
+  {
+    super();
+    this.newName = newName;
+  }
+
+  onLastNode()
+  {
+    const newName = this.newName;
+    let name = this.pathArray[this.index];
+    if (name !== newName)
+    {
+      const parentNode = this.nodes[this.index - 1];
+      if (parentNode.entries[newName])
+      {
+        // a resource already exists with newName
+        this.onCompleted(new Result(ERROR, "Unsupported operation."));
+        return;
+      }
+      let entry = parentNode.entries[name];
+      delete parentNode.entries[name];
+      parentNode.entries[newName] = entry;
+
+      this.store.put(parentNode);
+    }
+    this.onCompleted(new Result(OK));
   }
 }
 

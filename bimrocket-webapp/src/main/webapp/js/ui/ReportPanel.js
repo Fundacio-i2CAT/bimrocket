@@ -9,6 +9,7 @@ import { Controls } from "./Controls.js";
 import { Report } from "../reports/Report.js";
 import { ReportType } from "../reports/ReportType.js";
 import { MessageDialog } from "./MessageDialog.js";
+import { FileService, Result } from "../io/FileService.js";
 import { Toast } from "./Toast.js";
 import { I18N } from "../i18n/I18N.js";
 import * as THREE from "three";
@@ -26,23 +27,180 @@ class ReportPanel extends Panel
     this.reportElem = document.createElement("div");
     this.bodyElem.appendChild(this.reportElem);
     this.reportElem.className = "report_panel";
+    this.summary = {};
   }
 
-  execute(name, source, reportTypeName)
+  /**
+   * @typedef {ReportDefinition} a report definition.
+   * The properties of a ReportDefinition determine how to obtain the report.
+   *
+   * @property {Report} [report] - the report to run
+   * @property {string} [source] - the report's source code.
+   *   It requires the type property
+   * @property {string} [type] - the report type (brs|ids|...)
+   *   It requires the source property
+   * @property {FileService} [service] - the file service from which to
+   *   read the report's source code. It requires the path property
+   * @property {string} [path] - the service path to the report's source code.
+   *   It requires the service property
+   * @property {string} [url] - the url to get the report's source code
+   * @property {string] [title] - the title to display for this report.
+   *   If title is '*', it will be obtained from report.title
+   */
+
+  /**
+   * Runs the specified reports asynchronously.
+   *
+   * @param {ReportDefinition|ReportDefinition[]} definitions - a
+   *   ReportDefinition or an array of ReportDefinition
+   * @param {(ReportPanel) => void} onCompleted - The function to call once
+   *   all reports have been executed.
+   */
+  runReports(definitions, onCompleted)
   {
-    this.title = name;
-    const application = this.application;
+    const queue = Array.isArray(definitions) ? [...definitions] : [definitions];
+
+    this.clear();
+
+    if (queue.length > 1)
+    {
+      // multiple reports, add the total summary element
+      const totalSummaryElem = document.createElement("div");
+      this.totalSummaryElem = totalSummaryElem;
+      totalSummaryElem.className = "report_summary total";
+      this.reportElem.appendChild(totalSummaryElem);
+
+      I18N.set(totalSummaryElem, "textContent",
+        "message.report_summary", 0, 0);
+      this.application.i18n.update(totalSummaryElem);
+    }
+    else
+    {
+      this.totalSummaryElem = null;
+    }
+
+    const run = definition =>
+    {
+      let { report, source, type, path, title, name } = definition;
+
+      try
+      {
+        if (!report)
+        {
+          const reportType = ReportType.getReportType(type);
+          if (!reportType) throw "Unsupported report type";
+
+          report = reportType.parse(source);
+          if (!report.title) report.title = name || path;
+        }
+        this.runReport(report, title);
+      }
+      catch (ex)
+      {
+        this.addError(path || title, ex);
+      }
+      processNextReport();
+    };
+
+    const processNextReport = () =>
+    {
+      let definition = queue.shift();
+      if (definition)
+      {
+        let { report, source, type, service, path, url } = definition;
+
+        if (report instanceof Report ||
+            (typeof source === "string" && typeof type === "string" ))
+        {
+          run(definition);
+        }
+        else if (service instanceof FileService && typeof path === "string")
+        {
+          service.read(path, result =>
+          {
+            if (result.status === Result.OK)
+            {
+              const name = result.metadata.name;
+              let index = name.lastIndexOf(".");
+              definition.type = index === -1 ?
+                ReportType.getDefaultReportTypeName() :
+                name.substring(index + 1).toLowerCase();
+              definition.source = result.data;
+              definition.name = name;
+              run(definition);
+            }
+            else
+            {
+              this.addError(path, result.message);
+              processNextReport();
+            }
+          });
+        }
+        else if (typeof url === "string")
+        {
+          let index = url.lastIndexOf("/");
+          const name = index === -1 ? url : url.substring(index + 1);
+          index = name.lastIndexOf(".");
+          definition.type = index === -1 ?
+            ReportType.getDefaultReportTypeName() :
+            name.substring(index + 1).toLowerCase();
+          definition.name = name;
+
+          fetch(url)
+            .then(response => response.text())
+            .then(source =>
+            {
+              definition.source = source;
+              run(definition);
+            })
+            .catch(error =>
+            {
+              this.addError(url, error);
+              processNextReport();
+            });
+        }
+        else
+        {
+          // ignore report definition, process next
+          processNextReport();
+        }
+      }
+      else
+      {
+        onCompleted?.(this);
+      }
+    };
+    processNextReport();
+  }
+
+  /**
+   * Clears the report panel and the summary object.
+   */
+  clear()
+  {
     const reportElem = this.reportElem;
     reportElem.innerHTML = "";
+    this.summary = {};
+  }
+
+  /**
+   * Runs the given report and appends the issues to the panel.
+   *
+   * @param {Report} report - the report to run
+   * @param {string} title - the title to display before de error summary. If
+   *   title is '*', it will be obtained from report.title
+   */
+  runReport(report, title = "")
+  {
+    const application = this.application;
+    const summary = this.summary;
+    const reportElem = this.reportElem;
+    const totalSummaryElem = this.totalSummaryElem;
     if (!this.visible) this.visible = true;
     else this.minimized = false;
 
     try
     {
-      const reportType = ReportType.getReportType(reportTypeName);
-      if (!reportType) throw "Unsupported report type";
-      const report = reportType.parse(source);
-
       let outputs = [];
 
       for (let rule of report.rules)
@@ -59,12 +217,19 @@ class ReportPanel extends Panel
         });
       }
 
-      let headerElem = document.createElement("div");
-      headerElem.style.padding = "2px";
+      if (title)
+      {
+        if (title === "*") title = report.title;
+        this.addTitle(title);
+      }
 
-      reportElem.appendChild(headerElem);
+      let summaryElem = document.createElement("div");
+      summaryElem.className = "report_summary";
+      reportElem.appendChild(summaryElem);
 
       let tree = new Tree(reportElem);
+      tree.addEventListener("contextmenu",
+        event => event.originalEvent.preventDefault());
 
       let infoCount = 0;
       let warnCount = 0;
@@ -123,14 +288,59 @@ class ReportPanel extends Panel
             null, ruleClassName);
         }
       }
-      I18N.set(headerElem, "textContent",
-        "message.report_summary", errorCount, warnCount);
-      application.i18n.update(headerElem);
+
+      summary[report.title] = { infoCount, warnCount, errorCount };
+
+      I18N.set(summaryElem, "textContent", "message.report_summary",
+        errorCount, warnCount);
+      application.i18n.update(summaryElem);
+
+      if (totalSummaryElem)
+      {
+        summary.total ||= { infoCount : 0, warnCount : 0, errorCount : 0 };
+        summary.total.infoCount += infoCount;
+        summary.total.warnCount += warnCount;
+        summary.total.errorCount += errorCount;
+
+        I18N.set(totalSummaryElem, "textContent", "message.report_summary",
+          summary.total.errorCount, summary.total.warnCount);
+        application.i18n.update(totalSummaryElem);
+      }
     }
     catch (ex)
     {
-      reportElem.innerHTML = "ERROR: " + ex;
+      this.addError(ex);
     }
+  }
+
+  /**
+   * Runs a report.
+   * @deprecated use runReports({source, type})
+   *
+   * @param {string} name - the report name
+   * @param {string} source - the report source
+   * @param {string} type - the report type
+   */
+  execute(name, source, type)
+  {
+    this.runReports({ source, type });
+    this.title = name;
+  }
+
+  addTitle(title)
+  {
+    const titleElem = document.createElement("div");
+    titleElem.textContent = title;
+    titleElem.className = "report_title";
+    this.reportElem.appendChild(titleElem);
+  }
+
+  addError(title, error)
+  {
+    const errorElem = document.createElement("div");
+    errorElem.textContent = title ? title + ": " + error : error;
+    errorElem.className = "report_error";
+    this.reportElem.appendChild(errorElem);
   }
 
   highlightIssues(output, issueIndex = -1)

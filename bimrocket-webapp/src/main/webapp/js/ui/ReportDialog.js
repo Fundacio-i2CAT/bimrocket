@@ -5,76 +5,110 @@
  */
 
 import { Dialog } from "./Dialog.js";
+import { Controls } from "../ui/Controls.js";
 import { Toast } from "../ui/Toast.js";
+import { MessageDialog } from "./MessageDialog.js";
+import { ConfirmDialog } from "../ui/ConfirmDialog.js";
 import { Report } from "../reports/Report.js";
 import { ReportType } from "../reports/ReportType.js";
+import { I18N } from "../i18n/I18N.js";
+import "../lib/codemirror.js";
 import * as THREE from "three";
 
 class ReportDialog extends Dialog
 {
-  constructor(application, saveAction)
+  constructor(fileExplorer)
   {
     super("title.report_editor");
-    this.application = application;
-    this.setI18N(this.application.i18n);
-    this.reportName = "";
-    this.reportSource = "";
+    this.fileExplorer = fileExplorer;
     this.reportTypeName = ReportType.getDefaultReportTypeName();
     this.reportPanel = null;
-    this.saved = true;
+    this._changed = false;
+    this._reportName = null;
+
+    const application = fileExplorer.application;
+
+    this.setI18N(application.i18n);
 
     this.setSize(760, 600);
+    this.bodyElem.classList.add("flex");
+    this.bodyElem.classList.add("flex_column");
 
     this.nameField = this.addTextField("name", "tool.report.name", "",
       "report_name");
     this.nameField.setAttribute("spellcheck", "false");
-
-    this.editorView = this.addCodeEditor("editor",
-      "tool.report.rules", "",
-      { "height" : "calc(100% - 38px)" });
-
-    this.runButton = this.addButton("run", "button.run", () =>
-    {
-      this.endEdition();
-      this.hide();
-      this.run();
-    });
-
-    this.saveButton = this.addButton("save", "button.save", () =>
-    {
-      this.endEdition();
-
-      if (this.validate())
-      {
-        this.addExtension();
-        saveAction(this.reportName, this.reportSource);
-      }
-    });
-
-    this.saveButton.style.display = saveAction ? "" : "none";
-
-    this.closeButton = this.addButton("cancel", "button.close", () =>
-    {
-      this.endEdition();
-      this.hide();
-    });
-
     this.nameField.addEventListener("input", () =>
     {
-      this.saveButton.disabled = this.nameField.value.trim().length === 0;
+      this.saveButton.disabled = !this.nameField.value.trim();
     });
+
+    this.editorView = this.addCodeEditor("editor",
+      "tool.report.rules", "", { "className" : "flex_grow_1" });
+
+    this.errorElem = document.createElement("div");
+    this.bodyElem.appendChild(this.errorElem);
+    this.errorElem.style.display = "none";
+    this.errorElem.style.color = "red";
+
+    this.saveButton = this.addButton("save",
+      "button.save", () => this.onSave());
+
+    this.runButton = this.addButton("run",
+      "button.run", () => this.run());
+
+    this.closeButton = this.addButton("close",
+      "button.close", () => this.hide());
+  }
+
+  get reportName()
+  {
+    return this.nameField.value;
+  }
+
+  set reportName(reportName)
+  {
+    this.nameField.value = reportName;
+    this.saveButton.disabled = !reportName?.trim();
+  }
+
+  get reportSource()
+  {
+    return this.editorView.state.doc.toString();
+  }
+
+  set reportSource(source)
+  {
+    this._changed = false;
+
+    if (!source || source !== this.reportSource)
+    {
+      const reportType = ReportType.getReportType(this.reportTypeName);
+
+      Controls.setCodeEditorDocument(this.editorView, source,
+      { language : reportType.getSourceLanguage() });
+
+      const { EditorView } = CM["@codemirror/view"];
+      const { StateEffect } = CM["@codemirror/state"];
+
+      const changeListener = EditorView.updateListener.of(update =>
+      {
+        if (update.docChanged && this.visible)
+        {
+          this._changed = true;
+          this.runButton.disabled = true;
+          this.showError("");
+        }
+      });
+
+      this.editorView.dispatch(
+      {
+        effects: StateEffect.appendConfig.of(changeListener)
+      });
+    }
   }
 
   onShow()
   {
-    this.nameField.value = this.reportName;
-
-    const reportType = ReportType.getReportType(this.reportTypeName);
-
-    Controls.setCodeEditorDocument(this.editorView, this.reportSource,
-      { "language" : reportType?.getSourceLanguage() });
-
-    this.saveButton.disabled = this.nameField.value.trim().length === 0;
     if (this.reportName === "")
     {
       this.nameField.focus();
@@ -83,6 +117,81 @@ class ReportDialog extends Dialog
     {
       this.editorView.focus();
     }
+    this._reportName = this.reportName;
+    this.showError("");
+  }
+
+  hide()
+  {
+    if (this._changed)
+    {
+      const application = this.fileExplorer.application;
+
+      ConfirmDialog.create("title.confirm_save",
+        "question.discard_changes", this.reportName)
+        .setAction(() =>
+        {
+          this.reportSource = "";
+          this._changed = false;
+          super.hide();
+
+          Toast.create("message.changes_discarded")
+            .setI18N(application.i18n).show();
+        })
+        .setI18N(application.i18n)
+        .setAcceptLabel("button.yes")
+        .setCancelLabel("button.no")
+        .show();
+    }
+    else
+    {
+      super.hide();
+    }
+  }
+
+  async onSave()
+  {
+    const fileExplorer = this.fileExplorer;
+    const application = fileExplorer.application;
+
+    if (this.isError() || this.validate())
+    {
+      this.completeName();
+
+      if (fileExplorer.service)
+      {
+        const isNew = this.reportName !== this._reportName;
+        if (isNew)
+        {
+          if (!await fileExplorer.confirmSave(this.reportName)) return;
+        }
+
+        fileExplorer.save(this.reportName, this.reportSource, () =>
+        {
+          this._changed = false;
+          this._reportName = this.reportName;
+          this.runButton.disabled = false;
+          this.showError("");
+        });
+      }
+      else
+      {
+        MessageDialog.create("ERROR", "message.select_directory")
+          .setClassName("error")
+          .setI18N(application.i18n).show();
+      }
+    }
+  }
+
+  run()
+  {
+    super.hide();
+    const reportPanel = this.reportPanel;
+    reportPanel.runReports({
+      source : this.reportSource,
+      type : this.reportTypeName
+    });
+    reportPanel.title = this.reportName;
   }
 
   validate()
@@ -98,47 +207,47 @@ class ReportDialog extends Dialog
     }
     catch (ex)
     {
-      MessageDialog.create("ERROR", ex)
-        .setClassName("error")
-        .setI18N(this.application.i18n)
-        .show();
+      this.showError(ex);
     }
     return false;
   }
 
-  endEdition()
+  completeName()
   {
-    this.reportName = this.nameField.value;
-    let source = this.editorView.state.doc.toString();
-    if (source !== this.reportSource)
-    {
-      this.reportSource = source;
-      this.saved = false;
-    }
-  }
-
-  run()
-  {
-    const reportPanel = this.reportPanel;
-    if (reportPanel)
-    {
-      reportPanel.execute(this.reportName, this.reportSource, this.reportTypeName);
-    }
-  }
-
-  addExtension()
-  {
-    const defaultReportTypeName = ReportType.getDefaultReportTypeName();
     const reportTypeName = this.reportTypeName;
     const reportName = this.reportName.toLowerCase();
 
-    if (reportTypeName !== defaultReportTypeName
-        || reportName.includes("."))
+    if (!reportName.endsWith("." + reportTypeName))
     {
-      if (!reportName.endsWith("." + reportTypeName))
-      {
-        this.reportName += "." + reportTypeName;
-      }
+      this.reportName += "." + reportTypeName;
+    }
+  }
+
+  isError()
+  {
+    return this.errorElem.style.display === "";
+  }
+
+  showError(error)
+  {
+    const errorElem = this.errorElem;
+    const saveButton = this.saveButton;
+    const isError = this.isError();
+
+    if (error && !isError)
+    {
+      errorElem.textContent = error;
+      errorElem.style.display = "";
+      I18N.set(saveButton, "textContent", "button.save_with_errors");
+      this.fileExplorer.application.i18n.update(saveButton);
+    }
+
+    if (!error && isError)
+    {
+      errorElem.textContent = "";
+      errorElem.style.display = "none";
+      I18N.set(saveButton, "textContent", "button.save");
+      this.fileExplorer.application.i18n.update(saveButton);
     }
   }
 }
