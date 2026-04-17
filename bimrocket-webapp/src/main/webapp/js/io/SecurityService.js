@@ -8,6 +8,7 @@
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
 import { WebUtils } from "../utils/WebUtils.js";
+import { LoginDialog } from "../ui/LoginDialog.js";
 
 class SecurityService extends Service
 {
@@ -100,6 +101,46 @@ class SecurityService extends Service
   logout(onCompleted, onError)
   {
     this.invoke("POST", "logout", null, onCompleted, onError)
+  }
+
+  static requestCredentials(application, serviceUrl, message, onLogin, onFailed)
+  {
+    const loginDialog = new LoginDialog(application, message);
+
+    loginDialog.login = (username, password) =>
+    {
+      let index = serviceUrl.indexOf("/api");
+      let baseUrl = index !== -1 ? serviceUrl.substring(0, index) : serviceUrl;
+
+      if (baseUrl.endsWith("/"))
+      {
+        baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+      }
+
+      const temporarySecurityService = new SecurityService({
+        url: baseUrl + "/api/security"
+      });
+
+      temporarySecurityService.login(username, password, () =>
+      {
+        loginDialog.hide();
+        application.setup.sessionActive = true;
+        application.checkCurrentSession();
+        if (onLogin) onLogin();
+      },
+      (error) =>
+      {
+        const errorMessage = application.i18n.get("message.login_failed");
+        SecurityService.requestCredentials(application, serviceUrl, errorMessage, onLogin, onFailed)
+      });
+    };
+
+    loginDialog.onCancel = () => {
+      loginDialog.hide();
+      if (onFailed) onFailed();
+    }
+
+    loginDialog.show();
   }
 
   createUser(user, onCompleted, onError)

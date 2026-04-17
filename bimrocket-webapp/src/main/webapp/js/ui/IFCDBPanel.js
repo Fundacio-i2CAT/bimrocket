@@ -21,6 +21,7 @@ import { I18N } from "../i18n/I18N.js";
 import { ServiceManager } from "../io/ServiceManager.js";
 import { IFCDBService } from "../io/IFCDBService.js";
 import * as THREE from "three";
+import { SecurityService } from "../io/SecurityService.js";
 
 class IFCDBPanel extends Panel
 {
@@ -797,11 +798,21 @@ class IFCDBPanel extends Panel
 
     if (error.code === 401)
     {
-      this.requestCredentials("message.invalid_credentials", onLogin);
+      SecurityService.requestCredentials(
+        this.application,
+        this.service.url,
+        "message.invalid_credentials",
+        onLogin,
+      );
     }
     else if (error.code === 403)
     {
-      this.requestCredentials("message.action_denied", onLogin);
+      SecurityService.requestCredentials(
+        this.application,
+        this.service.url,
+        "message.action_denied",
+        onLogin
+        );
     }
     else
     {
@@ -810,69 +821,6 @@ class IFCDBPanel extends Panel
         .setClassName("error")
         .setI18N(this.application.i18n).show();
     }
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-
-    loginDialog.login = (username, password) =>
-    {
-      let currentServiceUrl = this.service.url;
-      let index = currentServiceUrl.indexOf("/api");
-      let baseUrl = index !== -1 ? currentServiceUrl.substring(0, index) : currentServiceUrl;
-
-      if (baseUrl.endsWith("/"))
-      {
-        baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-      }
-
-      let loginUrl = baseUrl + "/api/security/login";
-
-      const request = new XMLHttpRequest();
-      request.open("POST", loginUrl);
-      request.setRequestHeader("Accept", "application/json");
-      request.setRequestHeader("Content-Type", "application/json");
-
-      request.withCredentials = true;
-
-      request.onload = () =>
-      {
-        if (request.status === 200 || request.status === 204)
-        {
-          loginDialog.hide();
-          this.application.setup.sessionActive = true;
-          this.application.checkCurrentSession();
-          if (onLogin) onLogin();
-        }
-        else
-        {
-          MessageDialog.create("ERROR", "Invalid credentials for this server")
-            .setClassName("error")
-            .setI18N(this.application.i18n).show();
-          if (onFailed) onFailed();
-        }
-      };
-
-      request.onerror = () =>
-      {
-        MessageDialog.create("ERROR", "Connection error to " + loginUrl)
-          .setClassName("error")
-          .setI18N(this.application.i18n).show();
-        if (onFailed) onFailed();
-      };
-
-      const payload = { username: username, password: password };
-      request.send(JSON.stringify(payload));
-    };
-
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-
-    loginDialog.show();
   }
 
   showProgressBar(message = "")
