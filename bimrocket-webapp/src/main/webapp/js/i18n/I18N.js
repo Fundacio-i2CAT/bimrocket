@@ -1,11 +1,24 @@
 /**
- * Localizer.js
+ * I18N.js
  *
  * @author realor
  */
 
 import { Bundle } from "./Bundle.js";
 import { BundleManager } from "./BundleManager.js";
+
+const setProperty = (element, property, key) =>
+{
+  if (property.startsWith("aria-"))
+  {
+    element.setAttribute(property, key);
+  }
+  else
+  {
+    element[property] = key;
+  }
+};
+
 
 class I18N
 {
@@ -31,7 +44,7 @@ class I18N
       "key" : key,
       "args" : args
     };
-    element[property] = key;
+    setProperty(element, property, key);
   }
 
   addSupportedLanguages(...languages)
@@ -111,7 +124,7 @@ class I18N
     return bundle ? bundle.get(this.requestedLanguages, key, ...args) : key;
   }
 
-  updateTree(rootElement)
+  async updateTree(rootElement)
   {
     const promises = [];
     const bundles = BundleManager.getBundles();
@@ -121,14 +134,13 @@ class I18N
       promises.push(promise);
     });
 
-    Promise.allSettled(promises).finally(() =>
+    await Promise.allSettled(promises);
+
+    const elements = rootElement.getElementsByTagName("*");
+    for (let element of elements)
     {
-      const elements = rootElement.getElementsByTagName("*");
-      for (let element of elements)
-      {
-        this.update(element);
-      }
-    });
+      this.update(element);
+    }
   }
 
   update(element)
@@ -138,7 +150,7 @@ class I18N
       for (let property in element.i18n)
       {
         let def = element.i18n[property];
-        element[property] = this.get(def.key, ...def.args);
+        setProperty(element, property, this.get(def.key, ...def.args));
       }
     }
   }
