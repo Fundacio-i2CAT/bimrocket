@@ -414,6 +414,7 @@ export const translations =
   "action.RemoveAllFeatured" : "Remove all featured",
 
   "label.file_name" : "File name:",
+  "label.context_menu" : "Context menu",
 
   "label.language" : "Language:",
   "label.units" : "Model units:",
