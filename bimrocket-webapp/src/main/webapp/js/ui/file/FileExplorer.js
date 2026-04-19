@@ -44,6 +44,7 @@ class FileExplorer extends Panel
     this.basePath = "/";
     this.selectedEntry = null;
     this._nextEntryName = null;
+    this._lastClick = 0;
 
     this.showFileSize = true;
 
@@ -81,11 +82,14 @@ class FileExplorer extends Panel
     this.headerElem.appendChild(this.backButtonElem);
     this.headerElem.appendChild(this.directoryElem);
 
-    this.footerElem.appendChild(this.buttonsPanelElem);
-    this.showButtonsPanel();
-
     this.contextMenu = new ContextMenu(this.application);
-    this.createContextAction = (contextActionClass, options) => {
+    this.contextMenuButton = this.contextMenu.createButton(
+      () => !application.progressBar.visible);
+    this.contextMenuButton.style.marginLeft = "6px";
+    this.contextMenuButton.style.marginRight = "6px";
+
+    this.createContextAction = (contextActionClass, options) =>
+    {
       return new contextActionClass(this, options);
     };
 
@@ -97,11 +101,6 @@ class FileExplorer extends Panel
     this.entriesElem.addEventListener("click", event =>
     {
       this.onClick(event);
-    });
-
-    this.entriesElem.addEventListener("dblclick", event =>
-    {
-      this.onDoubleClick(event);
     });
 
     this.entriesElem.addEventListener("contextmenu", event =>
@@ -405,7 +404,7 @@ class FileExplorer extends Panel
 
   handleOpenResult(entryName, result, onSuccess)
   {
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -431,7 +430,7 @@ class FileExplorer extends Panel
   handleSaveResult(entryName, data, result, onSuccess)
   {
     const application = this.application;
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -454,7 +453,7 @@ class FileExplorer extends Panel
   handleRemoveResult(entryName, result, onSuccess)
   {
     const application = this.application;
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -483,7 +482,7 @@ class FileExplorer extends Panel
   handleMakeFolderResult(entryName, result, onSuccess)
   {
     const application = this.application;
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -505,7 +504,7 @@ class FileExplorer extends Panel
   handleRenameResult(entryName, newEntryName, result, onSuccess)
   {
     const application = this.application;
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -527,7 +526,7 @@ class FileExplorer extends Panel
 
   handleDownloadResult(entryName, result, onSuccess)
   {
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -545,7 +544,7 @@ class FileExplorer extends Panel
   handleUploadResult(file, result, onSuccess)
   {
     const application = this.application;
-    this.showButtonsPanel();
+    this.hideProgressBar();
 
     if (result.status === Result.OK)
     {
@@ -584,8 +583,8 @@ class FileExplorer extends Panel
       if (firstLink === null) firstLink = linkElem;
       this.entriesElem.appendChild(entryElem);
     }
+    this.addLastEntry();
     this.highlight();
-    this.updateButtons();
     if (firstLink) firstLink.focus();
   }
 
@@ -639,6 +638,8 @@ class FileExplorer extends Panel
         this.selectedEntry = entry;
       }
     }
+    this.addLastEntry();
+
     if (entryName)
     {
       if (firstLink) firstLink.focus();
@@ -647,7 +648,6 @@ class FileExplorer extends Panel
     {
       this.highlight(true);
     }
-    this.updateButtons();
     this._nextEntryName = null;
   }
 
@@ -655,11 +655,17 @@ class FileExplorer extends Panel
   {
     const entriesElem = this.entriesElem;
     const entryName = this.selectedEntry?.name || "";
+
+    if (!entryName)
+    {
+      this.contextMenuButton.remove();
+    }
+
     for (let childNode of entriesElem.childNodes)
     {
       if (childNode.nodeName === "LI")
       {
-        if (childNode.entry.name === entryName)
+        if (childNode.entry?.name === entryName)
         {
           childNode.classList.add("selected");
           childNode.focus();
@@ -670,6 +676,12 @@ class FileExplorer extends Panel
                behavior: "smooth",
                block: "center"
             });
+          }
+          if (this.contextMenuButton.parentElement !== childNode)
+          {
+            this.contextMenuButton.remove();
+            childNode.appendChild(this.contextMenuButton);
+            this.application.i18n.update(this.contextMenuButton);
           }
         }
         else
@@ -685,19 +697,38 @@ class FileExplorer extends Panel
     event.preventDefault();
     if (this.application.progressBar.visible) return;
 
-    const entryElem = event.target.parentElement;
-    this.selectedEntry = entryElem?.entry || null;
-    this.highlight();
-    this.updateButtons();
+    const changed = this.selectEntry(event.target);
+
+    const isLinkClicked = event.target.nodeName === "A";
+    if (isLinkClicked)
+    {
+      if (!changed)
+      {
+        const ellapsed = Date.now() - this._lastClick;
+
+        if (ellapsed < 500)
+        {
+          this.executeSelectedEntry();
+        }
+      }
+      this._lastClick = Date.now();
+    }
   }
 
-  onDoubleClick(event)
+  onContextMenu(event)
   {
     event.preventDefault();
+
     if (this.application.progressBar.visible) return;
 
-    const contextMenu = this.contextMenu;
-    for (let menuItem of contextMenu.menuItems)
+    this.selectEntry(event.target);
+    this.contextMenu.show(event);
+  }
+
+  executeSelectedEntry()
+  {
+    // double click, execute default action
+    for (let menuItem of this.contextMenu.menuItems)
     {
       if (menuItem instanceof MenuItem)
       {
@@ -711,25 +742,42 @@ class FileExplorer extends Panel
     }
   }
 
-  onContextMenu(event)
+  selectEntry(element)
   {
-    event.preventDefault();
-
-    if (this.application.progressBar.visible) return;
-
-    const entryElem = event.target.parentElement;
-    this.selectedEntry = entryElem?.entry || null;
-    this.highlight();
-    this.contextMenu.show(event);
+    const prevSelectedEntry = this.selectedEntry;
+    this.selectedEntry = element.entry || element.parentElement.entry || null;
+    if (this.selectedEntry !== prevSelectedEntry)
+    {
+      this.highlight();
+      return true;
+    }
+    return false;
   }
 
-  updateButtons()
+  addLastEntry()
   {
+   // last entry with the contextMenu button
+    const application = this.application;
+    const contextMenu = this.contextMenu;
+    let lastEntryElem = document.createElement("li");
+    lastEntryElem.className = "entry last";
+    lastEntryElem.entry = null;
+    const button = this.contextMenu.createButton(() =>
+    {
+      if (application.progressBar.visible) return false;
+
+      this.selectedEntry = null;
+      this.highlight();
+      return true;
+    });
+    button.style.marginLeft = "3px";
+    lastEntryElem.appendChild(button);
+    this.application.i18n.update(button);
+    this.entriesElem.appendChild(lastEntryElem);
   }
 
-  showButtonsPanel()
+  hideProgressBar()
   {
-    this.buttonsPanelElem.style.display = "block";
     this.application.progressBar.visible = false;
   }
 

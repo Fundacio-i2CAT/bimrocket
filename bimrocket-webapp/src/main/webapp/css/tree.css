@@ -30,7 +30,7 @@ ul.tree li
   background-repeat: no-repeat;
 }
 
-ul.tree li > button
+ul.tree li > button.ec
 {
   padding:0;
   width:9px;
@@ -47,23 +47,23 @@ ul.tree li > button
   box-shadow: none;
 }
 
-ul.tree li.expanded > button
+ul.tree li.expanded > button.ec
 {
   background-image: url(images/collapse.svg);
 }
 
-ul.tree li.collapsed > button
+ul.tree li.collapsed > button.ec
 {
   background-image: url(images/expand.svg);
 }
 
-ul.tree li > button:hover
+ul.tree li > button.ec:hover
 {
   background-color: transparent;
   cursor: pointer;
 }
 
-ul.tree li > button:focus
+ul.tree li > button.ec:focus
 {
   outline-style: dotted;
   outline-color: black;
@@ -89,7 +89,7 @@ ul.tree li a
 ul.tree li a:hover
 {
   animation: item_hover 1s;
-  background-color: #D0D0D0;
+  background-color: #E0E0E0;
   color:black;
 }
 
@@ -109,5 +109,11 @@ ul.tree li.collapsed > ul
 ul.tree li.expanded > ul
 {
   display: block;
+}
+
+ul.tree li > button.contextmenu_button
+{
+  margin-left: 8px;
+  vertical-align: middle;
 }
 

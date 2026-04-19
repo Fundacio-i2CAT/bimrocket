@@ -23,6 +23,7 @@ class Outliner extends Panel
     this.autoScroll = true;
 
     this.contextMenu = new ContextMenu(application);
+    this.contextMenuButton = this.contextMenu.createButton();
 
     this.tree = new Tree(this.bodyElem);
     this.tree.rootsElem.className = "tree outliner";
@@ -174,6 +175,7 @@ class Outliner extends Panel
   {
     // clear previous selectes nodes
     this.clearNodeStyle("selected");
+    this.contextMenuButton.remove();
 
     // mark new selection
     const selection = this.application.selection;
@@ -187,6 +189,10 @@ class Outliner extends Panel
         treeNode.addClass("selected");
         let makeVisible = object === lastObject && this.autoScroll;
         treeNode.expandAncestors(makeVisible);
+        if (object === lastObject)
+        {
+          treeNode.addElement(this.contextMenuButton);
+        }
       }
     }
     this.bodyElem.scrollLeft = 0;

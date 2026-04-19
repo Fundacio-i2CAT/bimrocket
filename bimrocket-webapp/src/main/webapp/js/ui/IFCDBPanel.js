@@ -35,14 +35,6 @@ class IFCDBPanel extends Panel
 
     this.service = null;
     this.inputFile = null;
-    this.processing = false;
-
-    this.contextMenu = new ContextMenu(this.application);
-
-    this.addContextAction(OpenModelAction);
-    this.addContextAction(EditModelAction);
-    this.addContextAction(DeleteModelAction);
-    this.addContextAction(DownloadModelAction);
 
     // main panel
     this.mainPanelElem = document.createElement("div");
@@ -128,20 +120,34 @@ class IFCDBPanel extends Panel
     };
     this.modelTree.addEventListener("expand",
       event => this.expandVersions(event));
-    this.modelTree.addEventListener("click",
-      event => this.selectNode(event));
-    this.modelTree.addEventListener("dblclick",
-      event => this.openModelByDblClick(event));
-    this.modelTree.addEventListener("contextmenu", event =>
+
+    this.modelTree.addEventListener("click", event =>
+    {
+      if (application.progressBar.visible) return;
+
+      const prevSelectedNode = this.selectedNode;
+      this.selectNode(event);
+      if (this.selectedNode === prevSelectedNode)
       {
-        const originalEvent = event.originalEvent;
-        this.selectNode(event);
-        originalEvent.preventDefault();
-        if (!this.processing)
+        const ellapsed = Date.now() - this._lastClick;
+        if (ellapsed < 500)
         {
-          this.contextMenu.show(originalEvent);
+          this.openSelectedModel();
         }
-      });
+      }
+      this._lastClick = Date.now();
+    });
+
+    this.modelTree.addEventListener("contextmenu", event =>
+    {
+      const originalEvent = event.originalEvent;
+      originalEvent.preventDefault();
+
+      if (application.progressBar.visible) return;
+
+      this.selectNode(event);
+      this.contextMenu.show(originalEvent);
+    });
 
     this.uploadModelButton = Controls.addButton(modelButtonsElem, "up_ifc",
       "button.upload", () => this.selectFile());
@@ -234,6 +240,14 @@ class IFCDBPanel extends Panel
 
     this.saveButton = Controls.addButton(modelFooterPanelElem,
       "updateModel", "button.save", () => this.updateModel());
+
+    this.contextMenu = new ContextMenu(this.application);
+    this.contextMenuButton = this.contextMenu.createButton();
+
+    this.addContextAction(OpenModelAction);
+    this.addContextAction(EditModelAction);
+    this.addContextAction(DeleteModelAction);
+    this.addContextAction(DownloadModelAction);
 
     this.updateButtons();
   }
@@ -337,7 +351,7 @@ class IFCDBPanel extends Panel
 
   async searchModels()
   {
-    if (this.processing) return;
+    if (this.application.progressBar.visible) return;
 
     try
     {
@@ -385,7 +399,7 @@ class IFCDBPanel extends Panel
 
   async execute(format = "step", download = false)
   {
-    if (this.processing) return;
+    if (this.application.progressBar.visible) return;
 
     try
     {
@@ -439,19 +453,18 @@ class IFCDBPanel extends Panel
     const node = event.node;
     if (node.value instanceof HTMLElement) return;
 
+    this.contextMenuButton.remove();
+
     if (this.selectedNode)
     {
       this.selectedNode.removeClass("selected");
     }
     this.selectedNode = node;
     node.addClass("selected");
-    this.updateButtons();
-  }
 
-  openModelByDblClick(event)
-  {
-    event.originalEvent.preventDefault();
-    this.openSelectedModel();
+    node.addElement(this.contextMenuButton);
+
+    this.updateButtons();
   }
 
   openSelectedModel()
@@ -528,7 +541,7 @@ class IFCDBPanel extends Panel
 
   async uploadModel(data)
   {
-    if (this.processing) return;
+    if (this.application.progressBar.visible) return;
 
     try
     {
@@ -550,7 +563,7 @@ class IFCDBPanel extends Panel
 
   async openModel(modelId, version = 0)
   {
-    if (this.processing) return;
+    if (this.application.progressBar.visible) return;
 
     try
     {
@@ -588,7 +601,7 @@ class IFCDBPanel extends Panel
 
   async deleteModel(modelId, version = 0)
   {
-    if (this.processing) return;
+    if (this.application.progressBar.visible) return;
 
     try
     {
@@ -611,7 +624,7 @@ class IFCDBPanel extends Panel
   async expandVersions(event)
   {
     const node = event.node;
-    if (this.processing || node.hasChildren()) return;
+    if (this.application.progressBar.visible || node.hasChildren()) return;
 
     try
     {
@@ -636,6 +649,8 @@ class IFCDBPanel extends Panel
 
   async updateModel()
   {
+    if (this.application.progressBar.visible) return;
+
     const model = {
       id : this.modelIdElem.value,
       name : this.modelNameElem.value,
@@ -696,7 +711,7 @@ class IFCDBPanel extends Panel
 
   selectFile()
   {
-    if (this.processing) return;
+    if (this.application.progressBar.visible) return;
 
     this.removeInputFile();
 
@@ -833,20 +848,18 @@ class IFCDBPanel extends Panel
     this.application.progressBar.message = message;
     this.application.progressBar.progress = undefined;
     this.application.progressBar.visible = true;
-    this.processing = true;
     this.updateButtons();
   }
 
   hideProgressBar()
   {
     this.application.progressBar.visible = false;
-    this.processing = false;
     this.updateButtons();
   }
 
   updateButtons()
   {
-    const processing = this.processing;
+    const processing = this.application.progressBar.visible;
     this.searchModelsButton.disabled = processing;
     this.uploadModelButton.disabled = processing;
     this.executeStepButton.disabled = processing;

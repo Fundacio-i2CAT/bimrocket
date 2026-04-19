@@ -69,7 +69,6 @@ class OpenModelAction extends FileAction
 
       application.notifyObjectsChanged([baseObject, camera], this);
       application.progressBar.visible = false;
-      fileExplorer.showButtonsPanel();
     };
 
     // read FILE
@@ -82,7 +81,7 @@ class OpenModelAction extends FileAction
       onError : error =>
       {
         console.error(error);
-        fileExplorer.showButtonsPanel();
+        application.progressBar.visible = false;
         MessageDialog.create("ERROR", error)
           .setClassName("error")
           .setI18N(application.i18n).show();

@@ -19,7 +19,6 @@ class Tree
     this.listeners =
     {
       "click" : [],
-      "dblclick" : [],
       "contextmenu" : [],
       "expand" : [],
       "collapse" : [],
@@ -27,7 +26,7 @@ class Tree
       "remove": []
     };
 
-    for (let type of ["click", "dblclick", "contextmenu"])
+    for (let type of ["click", "contextmenu"])
     {
       this.rootsElem.addEventListener(type, event =>
       {
@@ -379,6 +378,7 @@ class TreeNode
     if (this.buttonElem === null)
     {
       this.buttonElem = document.createElement("button");
+      this.buttonElem.className = "ec";
       this.buttonElem.addEventListener("click", () => this.toggle());
       this.itemElem.insertBefore(this.buttonElem, this.linkElem);
       this.itemElem.classList.add("collapsed");
@@ -391,6 +391,18 @@ class TreeNode
     this.buttonElem = null;
     this.itemElem.classList.remove("collapsed");
     this.itemElem.classList.remove("expanded");
+  }
+
+  addElement(element)
+  {
+    if (this.childrenElem)
+    {
+      this.itemElem.insertBefore(element, this.childrenElem);
+    }
+    else
+    {
+      this.itemElem.appendChild(element);
+    }
   }
 
   addChildrenList()
