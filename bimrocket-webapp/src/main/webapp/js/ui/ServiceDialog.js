@@ -26,6 +26,7 @@ class ServiceDialog extends Dialog
     this.urlElem = this.addTextField("svcUrl", "label.service_url",
       service?.url);
     this.urlElem.spellcheck = false;
+    this.authElem = this.addCheckBoxField("svcAuth", "label.service_auth", service?.useBasicAuth);
 
     this.saveButton = this.addButton("save", "button.save", () =>
     {
@@ -35,6 +36,7 @@ class ServiceDialog extends Dialog
         name : this.nameElem.value.trim(),
         description : this.descriptionElem.value,
         url : this.urlElem.value,
+        useBasicAuth: this.authElem.checked,
       };
 
       this.onSave(this.serviceTypeSelect.value, parameters);

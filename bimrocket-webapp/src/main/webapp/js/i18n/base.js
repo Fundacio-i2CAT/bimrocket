@@ -446,6 +446,7 @@ export const translations =
   "label.service_name" : "Service name:",
   "label.service_desc" : "Service description:",
   "label.service_url" : "URL:",
+  "label.service_auth": "Use native authentication",
   "label.service_user" : "Username:",
   "label.service_pass" : "Password:",
 
