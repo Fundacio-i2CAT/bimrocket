@@ -2006,13 +2006,15 @@ class BCFPanel extends Panel
   {
     this.hideProgressBar();
 
+    if (this.service.useBasicAuth && (error.code === 401 || error.code === 403)) return;
+
     if (error.code === 401)
     {
       SecurityService.requestCredentials(
-      this.application,
-      this.service.url,
-      "message.invalid_credentials",
-      onLogin
+        this.application,
+        this.service.url,
+        "message.invalid_credentials",
+        onLogin
       );
     }
     else if (error.code === 403)

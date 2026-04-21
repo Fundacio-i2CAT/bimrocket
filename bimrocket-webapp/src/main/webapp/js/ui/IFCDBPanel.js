@@ -796,6 +796,8 @@ class IFCDBPanel extends Panel
 
     this.hideProgressBar();
 
+    if (this.service.useBasicAuth && (error.code === 401 || error.code === 403)) return; 
+
     if (error.code === 401)
     {
       SecurityService.requestCredentials(

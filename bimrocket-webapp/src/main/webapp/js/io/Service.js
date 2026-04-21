@@ -18,7 +18,7 @@ class Service
    * Gets the persistent service parameters.
    *
    * @returns {object} the service paramaters that contains these properties:
-   * name, description, url
+   * name, description, url, useBasicAuth
    */
   getParameters()
   {
@@ -26,6 +26,7 @@ class Service
       name : this.name,
       description : this.description,
       url : this.url,
+      useBasicAuth : this.useBasicAuth,
     };
   }
 
@@ -33,13 +34,14 @@ class Service
    * Sets the persistent service parameters.
    *
    * @param {object} parameters - the service paramaters to set that contains
-   * these properties: name, description and url
+   * these properties: name, description, url and useBasicAuth
    */
   setParameters(parameters)
   {
     this.name = parameters.name;
     this.description = parameters.description;
     this.url = parameters.url;
+    this.useBasicAuth = parameters.useBasicAuth || false;
   }
 }
 

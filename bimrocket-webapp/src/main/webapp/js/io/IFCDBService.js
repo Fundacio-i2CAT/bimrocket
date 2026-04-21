@@ -80,9 +80,16 @@ class IFCDBService extends Service
     if (!url.endsWith("/")) url += "/";
     url += path;
 
+    const fetchHeaders = { ...headers };
+
+    if (!this.useBasicAuth)
+    {
+      fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
+    }
+
     const fetchOptions = {
       method : method,
-      headers : headers,
+      headers : fetchHeaders,
       credentials: "include",
     };
 

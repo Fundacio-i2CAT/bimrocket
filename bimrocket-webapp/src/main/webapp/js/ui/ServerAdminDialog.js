@@ -892,6 +892,8 @@ class ServerAdminDialog extends Dialog
   {
     this.hideProgressBar();
 
+    if (this.service.useBasicAuth && (error.code === 401 || error.code === 403)) return; 
+
     if (error.code === 401)
     {
       this.requestCredentials("message.access_denied", onLogin);

@@ -441,9 +441,13 @@ class WebdavService extends FileService
       url = WebdavService.PROXY_URI + url;
     }
     request.open(method, encodeURI(url), true);
-    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     
     request.withCredentials = true;
+
+    if (!this.useBasicAuth)
+    {
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
   }
 
   createError(message, status)

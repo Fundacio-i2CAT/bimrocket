@@ -7,7 +7,6 @@
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 import { LoginDialog } from "../ui/LoginDialog.js";
 
 class SecurityService extends Service
@@ -207,15 +206,16 @@ class SecurityService extends Service
     request.open(method, this.url + "/" + path);
     request.setRequestHeader("Accept", "application/json");
 
+    request.withCredentials = true;
+
+    if (!this.useBasicAuth)
+    {
+        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
+
     if (data)
     {
       request.setRequestHeader("Content-Type", "application/json");
-    }
-
-    request.withCredentials = true;
-
-    if (data)
-    {
       request.send(JSON.stringify(data));
     }
     else

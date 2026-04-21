@@ -46,7 +46,6 @@ class BCFService extends Service
     this.invoke("GET", "projects" + query, null, onCompleted, onError);
   }
     
-
   getProject(projectId, onCompleted, onError)
   {
     this.invoke("GET", "projects/" + projectId, null, onCompleted, onError);
@@ -261,6 +260,11 @@ class BCFService extends Service
     request.setRequestHeader("Content-Type", "application/json");
 
     request.withCredentials = true;
+
+    if (!this.useBasicAuth)
+    {
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
 
     if (data)
     {
