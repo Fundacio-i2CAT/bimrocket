@@ -24,7 +24,7 @@ services:
       class: org.bimrocket.service.security.store.orient.SecurityOrientDaoStore
       orient:
         database: bimdb
-    jwtSecret: #JWT secret_id
+    jwtSecret: q7Tn9ov+apI8nJBK2xul3SU8v4oL+Q5xQfJ+l9yW2R4=
     hoursExpirationCookie: 8
     # For http: isSecureEnv: false
     # For https: isSecureEnv: true

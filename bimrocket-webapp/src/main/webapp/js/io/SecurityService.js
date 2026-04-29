@@ -210,7 +210,7 @@ class SecurityService extends Service
 
     if (!this.useBasicAuth)
     {
-        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     }
 
     if (data)
