@@ -10,7 +10,10 @@ services:
   security:
     adminPassword: bimrocket
     passwordPattern: '^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=_\-\.])(?=\S+$).{8,}$'
+    jwtSecret: q7Tn9ov+apI8nJBK2xul3SU8v4oL+Q5xQfJ+l9yW2R4=
+    isSecureEnv: false #Set to true for HTTPS connections or false for HTTP connections
     authorizationCacheTimeout: 300
+    hoursExpirationCookie: 8
     userCacheTimeout: 300
     roleCacheTimeout: 300
     ldap:
@@ -24,11 +27,6 @@ services:
       class: org.bimrocket.service.security.store.orient.SecurityOrientDaoStore
       orient:
         database: bimdb
-    jwtSecret: q7Tn9ov+apI8nJBK2xul3SU8v4oL+Q5xQfJ+l9yW2R4=
-    hoursExpirationCookie: 8
-    # For http: isSecureEnv: false
-    # For https: isSecureEnv: true
-    isSecureEnv: false
     oauth2:
       keycloak:
         urlAuthenticationToken: #Keycloak Authentication
