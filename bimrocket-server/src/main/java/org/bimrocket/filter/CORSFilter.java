@@ -87,7 +87,7 @@ public class CORSFilter implements ContainerResponseFilter
     headers.add("Vary", "Origin");
     headers.add("Access-Control-Allow-Credentials", "true");
     headers.add("Access-Control-Allow-Headers",
-     "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match");
+      "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match,x-requested-with");
     headers.add("Access-Control-Allow-Methods",
       "HEAD,GET,POST,PUT,DELETE,OPTIONS,PROPFIND,MKCOL");
   }

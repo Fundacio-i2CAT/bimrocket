@@ -21,7 +21,7 @@ export class Auth
   static init()
   {
     const origin = window.location.origin;
-    Auth.currentConfig = Environment.AUTH_ENVIRONMENT[origin];
+    Auth.currentConfig = Environment.AUTH_ENVIRONMENT?.[origin];
 
     if (!Auth.currentConfig) return;
 

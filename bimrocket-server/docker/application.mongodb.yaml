@@ -24,16 +24,16 @@ services:
       class: org.bimrocket.service.security.store.mongo.SecurityMongoDaoStore
       mongo:
         database: bimdb
-    jwtSecret: #JWT secret_id
+    jwtSecret: q7Tn9ov+apI8nJBK2xul3SU8v4oL+Q5xQfJ+l9yW2R4=
     hoursExpirationCookie: 8
     # For http: isSecureEnv: false
     # For https: isSecureEnv: true
     isSecureEnv: false
     oauth2:
       keycloak:
-        urlAuthenticationToken: #Keycloak Authentication
-        clientId: #Keycloak client_id
-        secretId: #Keycloak secret_id
+        urlAuthenticationToken: https://iam.i2cat.net/auth/realms/SEG/protocol/openid-connect/token
+        clientId: bim
+        secretId: SibGBtmT9yWfH0BwKcXx3n1sbU9lAOIL
       valid:
         urlAuthenticationToken: #Valid Authentication
         urlGetUserInfo: #Valid User info
