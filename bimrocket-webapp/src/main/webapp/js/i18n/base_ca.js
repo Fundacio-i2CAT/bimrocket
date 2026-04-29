@@ -418,6 +418,7 @@ export const translations =
   "action.RemoveAllFeatured" : "Treu totes les destacades",
 
   "label.file_name" : "Nom del fitxer:",
+  "label.context_menu" : "Menú contextual",
 
   "label.language" : "Idioma:",
   "label.units" : "Unitats del model:",

@@ -456,7 +456,7 @@ table.data > tbody > tr:hover
 @keyframes item_hover
 {
   from {background-color: transparent;}
-  to {background-color: #C0C0C0;color: black;}
+  to {background-color: #E0E0E0; color: black;}
 }
 
 @keyframes fade_in

@@ -214,7 +214,7 @@ const MenuItemList = (BaseClass = class {}) => class extends BaseClass
 
     if (menuElement.checkVisibility())
     {
-      bounds =  menuElement.getBoundingClientRect();
+      bounds = menuElement.getBoundingClientRect();
     }
     else
     {
@@ -1216,7 +1216,7 @@ class MenuBar extends MenuItemContainer
 }
 
 /**
- * A ContextMenu that is activated by a contextmenu event.
+ * A ContextMenu.
  *
  * @extends MenuItemContainer
  */
@@ -1227,9 +1227,71 @@ class ContextMenu extends MenuItemContainer
     super(application);
 
     this.menuElement.className = "contextmenu";
+    this.menuElement.id = "contextmenu";
   }
 
-  show(event)
+  createButton(action)
+  {
+    const button = document.createElement("button");
+    button.className = "contextmenu_button";
+    I18N.set(button, "aria-label", "label.context_menu");
+    button.setAttribute("aria-haspopup", "menu");
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", "contextmenu");
+
+    button.addEventListener("click", event =>
+    {
+      event.preventDefault();
+      if (button._disabled)
+      {
+        button._disabled = false;
+        return;
+      }
+
+      if (typeof action === "function")
+      {
+        if (action())
+        {
+          this.showOnButton(button);
+        }
+      }
+      else this.showOnButton(button);
+    });
+
+    button.addEventListener("pointerdown", event =>
+    {
+      event.preventDefault();
+      if (this.isVisible())
+      {
+        this.hide();
+        button._disabled = true;
+      }
+    });
+    return button;
+  }
+
+  async show(event)
+  {
+    this.showAtPosition(event.pageX, event.pageY);
+  }
+
+  async showOnElement(element, offsetX = 0, offsetY = 0)
+  {
+    const bounds = element.getBoundingClientRect();
+    const { x, y } = bounds;
+    this.showAtPosition(x + offsetX, y + offsetY);
+  }
+
+  async showOnButton(button)
+  {
+    const buttonBounds = button.getBoundingClientRect();
+    const { x, y, height } = buttonBounds;
+    this.showAtPosition(x, y + height + 2);
+    this._button = button;
+    button.setAttribute("aria-expanded", "true");
+  }
+
+  async showAtPosition(x, y, maxX = window.innerWidth, maxY = window.innerHeight)
   {
     const menuElement = this.menuElement;
     if (menuElement.parentElement)
@@ -1239,26 +1301,22 @@ class ContextMenu extends MenuItemContainer
 
     let firstMenuItem = this.hideDisabledMenuItems(this.menuItems);
 
-    this.application.i18n.updateTree(menuElement);
+    await this.application.i18n.updateTree(menuElement);
 
     if (firstMenuItem)
     {
       document.body.appendChild(menuElement);
       firstMenuItem.buttonElement.focus();
 
-      const rect = this.getBounds();
+      const bounds = this.getBounds();
 
-      let x = event.pageX;
-      let y = event.pageY;
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const menuWidth = rect.width;
-      const menuHeight = rect.height;
+      const menuWidth = bounds.width;
+      const menuHeight = bounds.height;
       const menuMaxX = x + menuWidth;
       const menuMaxY = y + menuHeight;
 
-      if (menuMaxX > windowWidth) x -= (menuMaxX - windowWidth);
-      if (menuMaxY > windowHeight) y -= (menuMaxY - windowHeight);
+      if (menuMaxX > maxX) x -= (menuMaxX - maxX);
+      if (menuMaxY > maxY) y -= (menuMaxY - maxY);
 
       menuElement.style.left = x + "px";
       menuElement.style.top = y + "px";
@@ -1267,11 +1325,18 @@ class ContextMenu extends MenuItemContainer
 
   hide()
   {
-    const menuElement = this.menuElement;
-    if (document.body.contains(menuElement))
+    this.menuElement.remove();
+    if (this._button)
     {
-      document.body.removeChild(menuElement);
+      this._button.setAttribute("aria-expanded", "false");
+      this._button.focus();
+      this._button = null;
     }
+  }
+
+  isVisible()
+  {
+    return Boolean(this.menuElement.parentElement);
   }
 
   onMenuItemFocused(menuItem, event)

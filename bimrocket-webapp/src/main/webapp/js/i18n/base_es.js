@@ -418,6 +418,7 @@ export const translations =
   "action.RemoveAllFeatured" : "Quitar todas las destacadas",
 
   "label.file_name" : "Nombre del fichero:",
+  "label.context_menu" : "Menú contextual",
 
   "label.language" : "Idioma:",
   "label.units" : "Unidades del modelo:",

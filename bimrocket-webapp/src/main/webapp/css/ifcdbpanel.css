@@ -89,10 +89,12 @@
   overflow-x: auto;
 }
 
-.ifcdb_panel ul.tree a.selected
+.ifcdb_panel ul.tree a.selected,
+.ifcdb_panel ul.tree a.selected:hover
 {
   background-color: #F0A0A0;
   color: black;
+  animation: none;
 }
 
 .ifcdb_panel ul.tree li.IfcModelVersion

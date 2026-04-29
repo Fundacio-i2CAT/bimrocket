@@ -160,7 +160,7 @@ div.panel > .body.padding
 
 .animate > div.panel
 {
-  transition: height 1s, bottom 1s;
+  transition: height 0.5s, bottom 0.5s;
 }
 
 div.resizer

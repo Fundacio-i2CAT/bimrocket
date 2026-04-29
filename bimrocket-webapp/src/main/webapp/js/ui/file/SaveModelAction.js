@@ -72,7 +72,7 @@ class SaveModelAction extends FileAction
       onProgress : data => fileExplorer.setProgress(data.progress, data.message),
       onError : message =>
       {
-        fileExplorer.showButtonsPanel();
+        application.progressBar.visible = false;
         MessageDialog.create("ERROR", message)
           .setClassName("error")
           .setI18N(application.i18n).show();
