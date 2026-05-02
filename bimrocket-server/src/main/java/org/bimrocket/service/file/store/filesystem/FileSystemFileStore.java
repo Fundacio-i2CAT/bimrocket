@@ -257,8 +257,11 @@ public class FileSystemFileStore implements FileStore
     if (isACLFile(sourceFile) || isACLFile(destFile))
       throw new InvalidRequestException("Invalid path");
 
-    if (!sourceFile.renameTo(destFile))
-      throw new IOException("Move opration failed");
+    Files.move(
+      sourceFile.toPath(),
+      destFile.toPath(),
+      StandardCopyOption.REPLACE_EXISTING
+    );
   }
 
   @Override
@@ -276,8 +279,11 @@ public class FileSystemFileStore implements FileStore
       if (destFile.exists())
         throw new InvalidRequestException("File already exists");
     }
-    Files.copy(sourceFile.toPath(), destFile.toPath(),
-      StandardCopyOption.REPLACE_EXISTING);
+    Files.copy(
+      sourceFile.toPath(),
+      destFile.toPath(),
+      StandardCopyOption.REPLACE_EXISTING
+    );
   }
 
   /* internal methods */

@@ -188,6 +188,27 @@
   color: black;
 }
 
+.fileexplorer_panel .entry.copy > a,
+.fileexplorer_panel .entry.copy:hover > a
+{
+  font-style: italic;
+  color: #404080;
+}
+
+.fileexplorer_panel .entry.cut > a,
+.fileexplorer_panel .entry.cut:hover > a
+{
+  font-style: italic;
+  color: #804040;
+}
+
+.fileexplorer_panel .entry a span.size
+{
+  margin-left: 4px;
+  white-space: nowrap;
+  color: #408040;
+}
+
 .fileexplorer_panel .entry.file.brf > a
 {
   background-image: url(images/file/brf.svg);

@@ -22,6 +22,9 @@ import { AddServiceAction } from "./AddServiceAction.js";
 import { CreateFolderAction } from "./CreateFolderAction.js";
 import { RenameFileAction } from "./RenameFileAction.js";
 import { DeleteFileAction } from "./DeleteFileAction.js";
+import { CopyFileAction } from "./CopyFileAction.js";
+import { CutFileAction } from "./CutFileAction.js";
+import { PasteFileAction } from "./PasteFileAction.js";
 import { DownloadFileAction } from "./DownloadFileAction.js";
 import { EditACLAction } from "./EditACLAction.js";
 import { EditServiceAction } from "./EditServiceAction.js";
@@ -45,6 +48,8 @@ class FileExplorer extends Panel
     this.selectedEntry = null;
     this._nextEntryName = null;
     this._lastClick = 0;
+    this._source = null;
+    this._isCopy = false;
 
     this.showFileSize = true;
 
@@ -122,6 +127,11 @@ class FileExplorer extends Panel
     contextMenu.addSeparator("general");
     contextMenu.addMenuItem(action(RenameFileAction));
     contextMenu.addMenuItem(action(DeleteFileAction));
+
+    contextMenu.addSeparator("copy_cut_paste");
+    contextMenu.addMenuItem(action(CopyFileAction));
+    contextMenu.addMenuItem(action(CutFileAction));
+    contextMenu.addMenuItem(action(PasteFileAction));
 
     contextMenu.addSeparator("acl");
     contextMenu.addMenuItem(action(EditACLAction));
@@ -368,6 +378,99 @@ class FileExplorer extends Panel
     }
   }
 
+  copy()
+  {
+    if (this.selectedEntry)
+    {
+      this._source = {
+        service : this.service,
+        basePath : this.basePath,
+        entryName : this.selectedEntry.name
+      };
+      this._isCopy = true;
+    }
+    this.highlight();
+  }
+
+  cut()
+  {
+    if (this.selectedEntry)
+    {
+      this._source = {
+        service : this.service,
+        basePath : this.basePath,
+        entryName : this.selectedEntry.name
+      };
+      this._isCopy = false;
+    }
+    this.highlight();
+  }
+
+  isPasteEnabled()
+  {
+    return this._source !== null;
+  }
+
+  paste(onSuccess)
+  {
+    const service = this._source.service;
+    const sourceBasePath = this._source.basePath;
+    const sourceEntryName = this._source.entryName;
+
+    if (service === this.service)
+    {
+      if (sourceBasePath === this.basePath)
+      {
+        if (this._isCopy)
+        {
+          const targetEntryName = this.getCopyEntryName(sourceEntryName);
+          const sourcePath = sourceBasePath + "/" + sourceEntryName;
+          const destinationPath = this.basePath + "/" + targetEntryName;
+          this.showProgressBar("Copying file...");
+          this.service.copy(sourcePath, destinationPath, result =>
+            this.handlePasteResult(targetEntryName, result, onSuccess));
+        }
+        else
+        {
+          // cancel paste
+          this._source = null;
+          this.highlight();
+        }
+      }
+      else // paste to other folder
+      {
+        const sourcePath = sourceBasePath + "/" + sourceEntryName;
+        const destinationPath = this.basePath + "/" + sourceEntryName;
+
+        if (this._isCopy)
+        {
+          this.showProgressBar("Copying file...");
+          this.service.copy(sourcePath, destinationPath, result =>
+            this.handlePasteResult(sourceEntryName, result, onSuccess));
+        }
+        else
+        {
+          this.showProgressBar("Moving file...");
+          this.service.move(sourcePath, destinationPath, result =>
+            this.handlePasteResult(sourceEntryName, result, onSuccess));
+        }
+      }
+    }
+  }
+
+  async confirmPaste(onSuccess)
+  {
+    const source = this._source;
+    if (source.basePath === this.basePath)
+    {
+      this.paste(onSuccess);
+    }
+    else if (await this.confirmSave(source.entryName))
+    {
+      this.paste(onSuccess);
+    }
+  }
+
   confirmSave(entryName)
   {
     return new Promise(async resolve =>
@@ -385,6 +488,21 @@ class FileExplorer extends Panel
       }
       else resolve(true);
     });
+  }
+
+  getCopyEntryName(sourceEntryName)
+  {
+    const suffix = "_copy";
+    const index = sourceEntryName.lastIndexOf(".");
+    if (index === -1)
+    {
+      return sourceEntryName + suffix;
+    }
+    else
+    {
+      return sourceEntryName.substring(0, index) + suffix +
+             sourceEntryName.substring(index);
+    }
   }
 
   exists(entryName, onSuccess)
@@ -472,6 +590,8 @@ class FileExplorer extends Panel
       onSuccess?.(this.getAbsolutePath(entryName), result);
 
       this.list();
+
+      this._source = null;
     }
     else
     {
@@ -560,6 +680,30 @@ class FileExplorer extends Panel
     }
   }
 
+  handlePasteResult(entryName, result, onSuccess)
+  {
+    const application = this.application;
+    this.hideProgressBar();
+
+    if (result.status === Result.OK)
+    {
+      onSuccess?.(this.getAbsolutePath(entryName), result);
+
+      const message = this._isCopy ?
+        "message.copy_completed" : "message.move_completed";
+
+      Toast.create(message).setI18N(application.i18n).show();
+
+      this._nextEntryName = entryName;
+      this.list();
+      this._source = null;
+    }
+    else
+    {
+      this.handleError(result, true, () => this.paste(onSuccess));
+    }
+  }
+
   refreshServices()
   {
     const application = this.application;
@@ -620,16 +764,20 @@ class FileExplorer extends Panel
       let linkElem = document.createElement("a");
       linkElem.href= "#";
       let label = entry.description;
-      let size = entry.size;
-      if (entry.type === FILE && size > 0 && this.showFileSize)
+      linkElem.textContent = label;
+      const size = entry.size;
+      if (entry.type === FILE && this.showFileSize)
       {
-        label += " (";
-        if (size > 1000000) label += (size / 1000000).toFixed(0) + "&nbsp;Mb";
-        else if (size > 1000) label += (size / 1000).toFixed(0) + "&nbsp;Kb";
-        else label += "1&nbsp;Kb";
-        label += ")";
+        const sizeElem = document.createElement("span");
+        sizeElem.className = "size";
+        let sizeText = "(";
+        if (size > 1000000) sizeText += (size / 1000000).toFixed(0) + " Mb";
+        else if (size > 1000) sizeText += (size / 1000).toFixed(0) + " Kb";
+        else sizeText += (size + " bytes");
+        sizeText += ")";
+        sizeElem.textContent = sizeText;
+        linkElem.appendChild(sizeElem);
       }
-      linkElem.innerHTML = label;
       entryElem.appendChild(linkElem);
       if (firstLink === null) firstLink = linkElem;
       this.entriesElem.appendChild(entryElem);
@@ -644,10 +792,7 @@ class FileExplorer extends Panel
     {
       if (firstLink) firstLink.focus();
     }
-    else
-    {
-      this.highlight(true);
-    }
+    this.highlight(true);
     this._nextEntryName = null;
   }
 
@@ -665,7 +810,8 @@ class FileExplorer extends Panel
     {
       if (childNode.nodeName === "LI")
       {
-        if (childNode.entry?.name === entryName)
+        let currentEntryName = childNode.entry?.name;
+        if (currentEntryName === entryName)
         {
           childNode.classList.add("selected");
           childNode.focus();
@@ -688,6 +834,15 @@ class FileExplorer extends Panel
         {
           childNode.classList.remove("selected");
         }
+
+        childNode.classList.remove("cut");
+        childNode.classList.remove("copy");
+
+        if (this._source && this._source.basePath === this.basePath &&
+            currentEntryName === this._source.entryName)
+        {
+          childNode.classList.add(this._isCopy ? "copy" : "cut");
+        }
       }
     }
   }
@@ -699,7 +854,9 @@ class FileExplorer extends Panel
 
     const changed = this.selectEntry(event.target);
 
-    const isLinkClicked = event.target.nodeName === "A";
+    const isLinkClicked = event.target.nodeName === "A" ||
+      event.target.parentElement?.nodeName === "A";
+
     if (isLinkClicked)
     {
       if (!changed)
@@ -745,7 +902,12 @@ class FileExplorer extends Panel
   selectEntry(element)
   {
     const prevSelectedEntry = this.selectedEntry;
-    this.selectedEntry = element.entry || element.parentElement.entry || null;
+    this.selectedEntry =
+      element.entry ||
+      element.parentElement?.entry ||
+      element.parentElement?.parentElement?.entry ||
+      null;
+
     if (this.selectedEntry !== prevSelectedEntry)
     {
       this.highlight();

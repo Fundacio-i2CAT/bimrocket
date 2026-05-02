@@ -39,6 +39,8 @@ class CloudExplorerTool extends Tool
 
     application.panelManager.addPanel(fileExplorer);
 
+    this._onPointerDown = this.onPointerDown.bind(this);
+
     const contextMenu = fileExplorer.contextMenu;
     const action = fileExplorer.createContextAction;
 
@@ -61,16 +63,35 @@ class CloudExplorerTool extends Tool
 
   activate()
   {
-    this.fileExplorer.visible = true;
-    if (this.fileExplorer.service === null)
+    const application = this.application;
+    const fileExplorer = this.fileExplorer;
+
+    fileExplorer.visible = true;
+    if (fileExplorer.service === null)
     {
-      this.fileExplorer.goHome();
+      fileExplorer.goHome();
     }
+    application.container.addEventListener("pointerdown", this._onPointerDown);
   }
 
   deactivate()
   {
-    this.fileExplorer.visible = false;
+    const application = this.application;
+    const fileExplorer = this.fileExplorer;
+
+    fileExplorer.visible = false;
+    application.container.removeEventListener("pointerdown", this._onPointerDown);
+  }
+
+  onPointerDown(event)
+  {
+    const application = this.application;
+
+    if (application.isCanvasEvent(event) &&
+        !this.fileExplorer.contextMenu.isVisible())
+    {
+      application.useTool(null);
+    }
   }
 }
 
