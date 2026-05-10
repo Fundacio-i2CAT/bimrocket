@@ -28,39 +28,33 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
+package org.bimrocket.service.security;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author realor
  */
-public class TextUtils
+public class Digester
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+  static String algorithm = "SHA-256";
 
-  public static String getISODate()
+  static String hash(String value)
   {
-    return getISODate(new Date());
-  }
+    if (StringUtils.isBlank(value)) return null;
 
-  public static String getISODate(Date date)
-  {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
-  }
-
-  public static Date parseISODate(String dateString)
-  {
     try
     {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
+      MessageDigest digest = MessageDigest.getInstance(algorithm);
+      byte[] bytes = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+      return Base64.getEncoder().encodeToString(bytes);
     }
-    catch (ParseException ex)
+    catch (NoSuchAlgorithmException ex)
     {
       throw new RuntimeException(ex);
     }

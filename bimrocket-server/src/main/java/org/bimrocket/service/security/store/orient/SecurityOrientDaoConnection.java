@@ -36,6 +36,7 @@ import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
 import org.bimrocket.dao.orient.OrientDao;
 import org.bimrocket.dao.orient.OrientDaoConnection;
+import org.bimrocket.service.security.Token;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 
 /**
@@ -60,5 +61,11 @@ public class SecurityOrientDaoConnection extends OrientDaoConnection
   public Dao<Role, String> getRoleDao()
   {
     return new OrientDao<>(db, Role.class);
+  }
+
+  @Override
+  public Dao<Token, String> getTokenDao()
+  {
+    return new OrientDao<>(db, Token.class);
   }
 }

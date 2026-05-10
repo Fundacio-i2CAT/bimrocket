@@ -37,6 +37,7 @@ import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
 import org.bimrocket.dao.mongo.MongoDao;
 import org.bimrocket.dao.mongo.MongoDaoConnection;
+import org.bimrocket.service.security.Token;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 
 /**
@@ -61,5 +62,11 @@ public class SecurityMongoDaoConnection extends MongoDaoConnection
   public Dao<Role, String> getRoleDao()
   {
     return new MongoDao<>(session, db, Role.class);
+  }
+
+  @Override
+  public Dao<Token, String> getTokenDao()
+  {
+    return new MongoDao<>(session, db, Token.class);
   }
 }

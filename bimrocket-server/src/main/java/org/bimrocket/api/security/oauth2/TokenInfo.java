@@ -28,41 +28,54 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
+package org.bimrocket.api.security.oauth2;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author realor
  */
-public class TextUtils
+public class TokenInfo
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+  private String accessToken;
+  private String refreshToken;
+  private String error;
+  private final Map<String, Object> properties = new HashMap<>();
 
-  public static String getISODate()
+  public String getAccessToken()
   {
-    return getISODate(new Date());
+    return accessToken;
   }
 
-  public static String getISODate(Date date)
+  public void setAccessToken(String accessToken)
   {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
+    this.accessToken = accessToken;
   }
 
-  public static Date parseISODate(String dateString)
+  public String getRefreshToken()
   {
-    try
-    {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
-    }
-    catch (ParseException ex)
-    {
-      throw new RuntimeException(ex);
-    }
+    return refreshToken;
+  }
+
+  public void setRefreshToken(String refreshToken)
+  {
+    this.refreshToken = refreshToken;
+  }
+
+  public Map<String, Object> getProperties()
+  {
+    return properties;
+  }
+
+  public String getError()
+  {
+    return error;
+  }
+
+  public void setError(String error)
+  {
+    this.error = error;
   }
 }

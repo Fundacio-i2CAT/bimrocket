@@ -40,6 +40,7 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import org.bimrocket.dao.orient.OrientSetup;
+import org.bimrocket.service.security.Token;
 
 /**
  *
@@ -63,6 +64,7 @@ public class SecurityOrientDaoStore extends OrientDaoStore<SecurityDaoConnection
     // generate schema
     OClass userClass = orientSetup.createClass(User.class);
     OClass roleClass = orientSetup.createClass(Role.class);
+    OClass tokenClass = orientSetup.createClass(Token.class);
 
     orientSetup.createIndex(userClass,
       "UserIdIdx", OClass.INDEX_TYPE.UNIQUE, "id");
@@ -72,6 +74,10 @@ public class SecurityOrientDaoStore extends OrientDaoStore<SecurityDaoConnection
       "RoleIdIdx", OClass.INDEX_TYPE.UNIQUE, "id");
     orientSetup.createIndex(roleClass,
       "RoleDescriptionIdx", OClass.INDEX_TYPE.NOTUNIQUE, "description");
+    orientSetup.createIndex(tokenClass,
+      "TokenIdIdx", OClass.INDEX_TYPE.UNIQUE, "id");
+    orientSetup.createIndex(tokenClass,
+      "TokenExpirationIdx", OClass.INDEX_TYPE.NOTUNIQUE, "expirationDate");
   }
 
   @Override

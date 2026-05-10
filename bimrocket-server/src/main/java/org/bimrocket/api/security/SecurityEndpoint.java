@@ -36,6 +36,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -44,8 +45,14 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.TEXT_HTML;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import static org.bimrocket.api.ApiResult.OK;
 import org.bimrocket.dao.expression.Expression;
@@ -54,6 +61,11 @@ import org.bimrocket.dao.expression.io.odata.ODataParser;
 import org.bimrocket.service.security.SecurityService;
 import static org.bimrocket.service.security.SecurityService.roleFieldMap;
 import static org.bimrocket.service.security.SecurityService.userFieldMap;
+import static org.bimrocket.api.security.SessionCookieManager.SESSION_COOKIE;
+import org.bimrocket.api.security.oauth2.OAuth2Provider;
+import org.bimrocket.api.security.oauth2.OAuth2ProviderRegistry;
+import org.bimrocket.api.security.oauth2.TokenInfo;
+import org.eclipse.microprofile.config.Config;
 
 /**
  *
@@ -65,6 +77,121 @@ public class SecurityEndpoint
 {
   @Inject
   SecurityService securityService;
+
+  @Inject
+  OAuth2ProviderRegistry oauth2ProviderRegistry;
+
+  @Inject
+  SessionCookieManager sessionCookieManager;
+
+  @Inject
+  Config config;
+
+  /* Login */
+
+  @POST
+  @Path("/login")
+  @Consumes(APPLICATION_JSON)
+  @Produces(APPLICATION_JSON)
+  @PermitAll
+  @Operation(summary = "Login")
+  public Response login(LoginRequest loginRequest)
+  {
+    String userId = loginRequest.getUserId();
+    String password = loginRequest.getPassword();
+    securityService.validateCredentials(userId, password);
+    String token = securityService.createToken(userId);
+    if (loginRequest.isGenerateCookie())
+    {
+      NewCookie cookie = sessionCookieManager.createCookie(token);
+      return Response.ok().cookie(cookie).build();
+    }
+    else
+    {
+      return Response.ok(new LoginResponse(token)).build();
+    }
+  }
+
+  @GET
+  @Path("/logout")
+  @Produces(APPLICATION_JSON)
+  @PermitAll
+  @Operation(summary = "Logout")
+  public Response logout(
+    @QueryParam(SESSION_COOKIE) String tokenParam,
+    @CookieParam(SESSION_COOKIE) String tokenCookie)
+  {
+    String token = tokenParam == null ? tokenCookie : tokenParam;
+    if (token != null)
+    {
+      securityService.destroyToken(token);
+    }
+    return Response.ok(OK)
+      .header("Set-Cookie", sessionCookieManager.getDestroyCookieString())
+      .build();
+  }
+
+  @GET
+  @Path("/oauth2/providers")
+  @Produces(APPLICATION_JSON)
+  @PermitAll
+  @Operation(summary = "List OAuth2 providers")
+  public List<OAuth2ProviderInfo> oauth2Providers()
+  {
+    List<OAuth2Provider> providers = oauth2ProviderRegistry.getAll();
+    List<OAuth2ProviderInfo> providerInfos = new ArrayList<>();
+    for (OAuth2Provider provider : providers)
+    {
+      providerInfos.add(
+        new OAuth2ProviderInfo(provider.getName(), provider.getLogoUrl()));
+    }
+    return providerInfos;
+  }
+
+  @GET
+  @Path("/oauth2/login/{provider}")
+  @Produces(TEXT_HTML)
+  @PermitAll
+  @Operation(summary = "OAuth2 login")
+  public Response oauth2Login(
+    @PathParam("provider") String provider,
+    @Context UriInfo uriInfo)
+    throws Exception
+  {
+    OAuth2Provider oauthProvider = oauth2ProviderRegistry.get(provider);
+    String redirectUri = uriInfo.getRequestUri().toString();
+    redirectUri = redirectUri.replaceFirst("/login/", "/token/");
+    String url = oauthProvider.getAuthorizationUrl(redirectUri, "");
+    return Response.seeOther(new URI(url)).build();
+  }
+
+  @GET
+  @Path("/oauth2/token/{provider}")
+  @Produces(TEXT_HTML)
+  @PermitAll
+  @Operation(summary = "Get OAuth2 token")
+  public Response oauth2ExchangeCode(
+    @PathParam("provider") String provider,
+    @QueryParam("code") String code,
+    @QueryParam("state") String state,
+    @Context UriInfo uriInfo)
+    throws Exception
+  {
+    OAuth2Provider oauthProvider = oauth2ProviderRegistry.get(provider);
+    String requestUri = uriInfo.getRequestUri().toString();
+    TokenInfo tokenInfo = oauthProvider.exchangeCode(code, requestUri);
+    User user = oauthProvider.getUser(tokenInfo);
+    String userId = user.getId();
+    User dbUser = securityService.getUser(userId);
+    if (dbUser == null)
+    {
+      // create new user
+      securityService.createUser(user);
+    }
+    String token = securityService.createToken(userId);
+    NewCookie cookie = sessionCookieManager.createCookie(token);
+    return Response.ok(getLoginSuccessPage()).cookie(cookie).build();
+  }
 
   /* Users */
 
@@ -200,5 +327,37 @@ public class SecurityEndpoint
   {
     securityService.deleteRole(roleId);
     return Response.ok(OK).build();
+  }
+
+  private String getLoginSuccessPage()
+  {
+    String message = "Login successfull.";
+    String targetOrigin = "*";
+
+    return """
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>Authentication completed</title>
+        </head>
+        <body>
+          <script>
+            (function() {
+              const message = "%s";
+              if (window.opener)
+              {
+                window.opener.postMessage(message, "%s");
+                window.close();
+              }
+              else
+              {
+                document.body.textContent = message;
+              }
+            })();
+          </script>
+        </body>
+      </html>
+    """.formatted(message, targetOrigin);
   }
 }

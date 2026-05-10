@@ -28,41 +28,21 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
+package org.bimrocket.api.security.oauth2;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import org.bimrocket.api.security.User;
 
 /**
  *
+ * @author jordi.hernandez@i2cat.net
  * @author realor
  */
-public class TextUtils
+public interface OAuth2Provider
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
-
-  public static String getISODate()
-  {
-    return getISODate(new Date());
-  }
-
-  public static String getISODate(Date date)
-  {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
-  }
-
-  public static Date parseISODate(String dateString)
-  {
-    try
-    {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
-    }
-    catch (ParseException ex)
-    {
-      throw new RuntimeException(ex);
-    }
-  }
+  String getName();
+  String getLogoUrl();
+  String getAuthorizationUrl(String redirectUri, String state) throws Exception;
+  TokenInfo exchangeCode(String code, String redirectUri) throws Exception;
+  User getUser(TokenInfo tokenInfo) throws Exception;
 }
+

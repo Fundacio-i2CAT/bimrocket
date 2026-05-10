@@ -28,41 +28,52 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
+package org.bimrocket.api.security;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  *
  * @author realor
  */
-public class TextUtils
+public class LoginRequest
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+  @JsonProperty("user")
+  String userId;
 
-  public static String getISODate()
+  @JsonProperty("password")
+  String password;
+
+  @JsonProperty("generate_cookie")
+  boolean generateCookie;
+
+  public String getUserId()
   {
-    return getISODate(new Date());
+    return userId;
   }
 
-  public static String getISODate(Date date)
+  public void setUserId(String userId)
   {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
+    this.userId = userId;
   }
 
-  public static Date parseISODate(String dateString)
+  public String getPassword()
   {
-    try
-    {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
-    }
-    catch (ParseException ex)
-    {
-      throw new RuntimeException(ex);
-    }
+    return password;
+  }
+
+  public void setPassword(String password)
+  {
+    this.password = password;
+  }
+
+  public boolean isGenerateCookie()
+  {
+    return generateCookie;
+  }
+
+  public void setGenerateCookie(boolean generateCookie)
+  {
+    this.generateCookie = generateCookie;
   }
 }

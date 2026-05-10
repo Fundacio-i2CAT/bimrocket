@@ -61,6 +61,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bimrocket.service.file.util.MutableACL;
+import org.bimrocket.api.security.SessionCookieManager;
 
 
 /**
@@ -86,6 +87,9 @@ public class WebdavServlet extends HttpServlet
 
   @Inject
   transient SecurityService securityService;
+
+  @Inject
+  transient SessionCookieManager sessionCookieManager;
 
   @Override
   protected void doOptions(HttpServletRequest request, HttpServletResponse response)
@@ -352,6 +356,8 @@ public class WebdavServlet extends HttpServlet
     }
     catch (NotAuthorizedException ex)
     {
+      response.setHeader("Set-Cookie",
+        sessionCookieManager.getDestroyCookieString());
       response.sendError(401, ex.getMessage());
     }
     catch (AccessDeniedException ex)
@@ -364,9 +370,9 @@ public class WebdavServlet extends HttpServlet
     }
     catch (IOException ex)
     {
-        response.setStatus(HttpServletResponse.SC_CONFLICT);
-        response.setContentType("text/plain");
-        response.getWriter().write(ex.getMessage());
+      response.setStatus(HttpServletResponse.SC_CONFLICT);
+      response.setContentType("text/plain");
+      response.getWriter().write(ex.getMessage());
     }
     catch (LockedFileException ex)
     {

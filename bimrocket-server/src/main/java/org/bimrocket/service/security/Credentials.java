@@ -28,41 +28,41 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+package org.bimrocket.service.security;
 
 /**
  *
  * @author realor
  */
-public class TextUtils
+public class Credentials
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+  public static final String BASIC = "basic";
+  public static final String BEARER = "bearer";
+  public static final String COOKIE = "cookie";
 
-  public static String getISODate()
+  private final String type;
+  private final String value;
+  private final String hash;
+
+  public Credentials(String type, String value)
   {
-    return getISODate(new Date());
+    this.type = type;
+    this.value = value;
+    this.hash = Digester.hash(value);
   }
 
-  public static String getISODate(Date date)
+  public String getType()
   {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
+    return type;
   }
 
-  public static Date parseISODate(String dateString)
+  public String getValue()
   {
-    try
-    {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
-    }
-    catch (ParseException ex)
-    {
-      throw new RuntimeException(ex);
-    }
+    return value;
+  }
+
+  public String getHash()
+  {
+    return hash;
   }
 }

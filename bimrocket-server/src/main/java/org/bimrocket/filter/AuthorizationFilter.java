@@ -36,6 +36,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
@@ -54,19 +56,24 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static jakarta.ws.rs.core.MediaType.TEXT_XML;
 import static org.bimrocket.service.security.SecurityConstants.ANONYMOUS_USER;
 import static org.bimrocket.service.security.SecurityConstants.AUTHENTICATED_ROLE;
+import org.bimrocket.api.security.SessionCookieManager;
 
 /**
  *
  * @author realor
  */
 @Provider
-public class AuthenticationFilter implements ContainerRequestFilter
+public class AuthorizationFilter
+  implements ContainerRequestFilter, ContainerResponseFilter
 {
   @Context
   private ResourceInfo resourceInfo;
 
   @Inject
   SecurityService securityService;
+
+  @Inject
+  SessionCookieManager sessionCookieManager;
 
   @Override
   public void filter(ContainerRequestContext context) throws IOException
@@ -87,7 +94,7 @@ public class AuthenticationFilter implements ContainerRequestFilter
     }
     catch (NotAuthorizedException ex)
     {
-      context.abortWith(getErrorResponse(401, "Not authorized."));
+      context.abortWith(getErrorResponse(401, ex.getMessage()));
       return;
     }
 
@@ -98,6 +105,18 @@ public class AuthenticationFilter implements ContainerRequestFilter
     if (Collections.disjoint(allowedRoleIds, user.getRoleIds()))
     {
       context.abortWith(getErrorResponse(403, "Access denied."));
+    }
+  }
+
+  @Override
+  public void filter(ContainerRequestContext requestContext,
+    ContainerResponseContext responseContext)
+    throws IOException
+  {
+    if (responseContext.getStatus() == 401)
+    {
+      responseContext.getHeaders().add("Set-Cookie",
+        sessionCookieManager.getDestroyCookieString());
     }
   }
 

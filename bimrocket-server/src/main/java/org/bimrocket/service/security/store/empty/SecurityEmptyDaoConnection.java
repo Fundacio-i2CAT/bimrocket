@@ -35,6 +35,7 @@ import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
 import org.bimrocket.dao.empty.EmptyDao;
 import org.bimrocket.dao.empty.EmptyDaoConnection;
+import org.bimrocket.service.security.Token;
 import org.bimrocket.service.security.store.SecurityDaoConnection;
 
 /**
@@ -52,6 +53,12 @@ public class SecurityEmptyDaoConnection extends EmptyDaoConnection
 
   @Override
   public Dao<Role, String> getRoleDao()
+  {
+    return new EmptyDao<>();
+  }
+
+  @Override
+  public Dao<Token, String> getTokenDao()
   {
     return new EmptyDao<>();
   }

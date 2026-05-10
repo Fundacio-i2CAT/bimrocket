@@ -28,41 +28,54 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
+package org.bimrocket.api.security;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.NewCookie;
+import org.eclipse.microprofile.config.Config;
 
 /**
  *
  * @author realor
  */
-public class TextUtils
+@ApplicationScoped
+public class SessionCookieManager
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+  public static final String SESSION_COOKIE = "SESSION_TOKEN";
 
-  public static String getISODate()
+  @Inject
+  Config config;
+
+  boolean secure;
+  boolean httpOnly;
+  String sameSite;
+
+  @PostConstruct
+  public void init()
   {
-    return getISODate(new Date());
+    String path = "services.security.cookie.";
+    this.secure = config.getValue(path + "secure", Boolean.class);
+    this.httpOnly = config.getValue(path + "httpOnly", Boolean.class);
+    this.sameSite = config.getValue(path + "sameSite", String.class);
   }
 
-  public static String getISODate(Date date)
+  public NewCookie createCookie(String token)
   {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
+    NewCookie cookie = new NewCookie.Builder(SESSION_COOKIE)
+      .value(token)
+      .path("/")
+      .secure(secure)
+      .httpOnly(httpOnly)
+      .sameSite(NewCookie.SameSite.valueOf(sameSite))
+      .build();
+    return cookie;
   }
 
-  public static Date parseISODate(String dateString)
+  public String getDestroyCookieString()
   {
-    try
-    {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
-    }
-    catch (ParseException ex)
-    {
-      throw new RuntimeException(ex);
-    }
+    return "%s=; Max-Age=0; Path=/; %sSameSite=%s"
+      .formatted(SESSION_COOKIE, httpOnly ? "HttpOnly; " : "", sameSite);
   }
 }

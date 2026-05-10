@@ -37,9 +37,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -65,10 +62,14 @@ import static org.bimrocket.service.security.SecurityConstants.*;
 import static org.bimrocket.util.TextUtils.getISODate;
 import static java.lang.Boolean.FALSE;
 import java.lang.reflect.Field;
+import java.util.Date;
+import java.util.UUID;
 import org.bimrocket.dao.expression.Expression;
 import org.bimrocket.dao.expression.OrderByExpression;
 import org.bimrocket.dao.expression.io.log.LogExpressionPrinter;
+import static org.bimrocket.service.security.Credentials.*;
 import org.bimrocket.util.EntityDefinition;
+import org.bimrocket.util.TextUtils;
 
 /**
  *
@@ -81,13 +82,15 @@ public class SecurityService
     Logger.getLogger(SecurityService.class.getName());
 
   static final String BASE = "services.security.";
-  static final String USER_REQUEST_ATTRIBUTE = "_user";
 
   public static final Map<String, Field> userFieldMap =
     EntityDefinition.getInstance(User.class).getFieldMap();
 
   public static final Map<String, Field> roleFieldMap =
     EntityDefinition.getInstance(Role.class).getFieldMap();
+
+  static final String USER_ATTRIBUTE = "_user_";
+  static final String CREDENTIALS_ATTRIBUTE = "_credentials_";
 
 // Exceptions
 
@@ -117,14 +120,15 @@ public class SecurityService
 
   String adminPassword;
 
-  ExpiringCache<String> authorizationCache;
+  ExpiringCache<String> credentialsCache;
   ExpiringCache<User> userCache;
   ExpiringCache<Role> roleCache;
   ConcurrentHashMap<Thread, String> userIdByThread;
 
-  long authorizationCacheTimeout; // seconds
+  long credentialsCacheTimeout; // seconds
   long userCacheTimeout; // seconds
   long roleCacheTimeout; // seconds
+  long tokenTimeout; // seconds
 
   User anonymousUser;
 
@@ -166,9 +170,9 @@ public class SecurityService
 
     adminPassword = config.getValue(BASE + "adminPassword", String.class);
 
-    authorizationCacheTimeout = config.getValue(BASE + "authorizationCacheTimeout", Long.class);
-    authorizationCache = new ExpiringCache<>(authorizationCacheTimeout * 1000);
-    LOGGER.log(Level.INFO, "authorizationCacheTimeout: {0}", authorizationCacheTimeout);
+    credentialsCacheTimeout = config.getValue(BASE + "credentialsCacheTimeout", Long.class);
+    credentialsCache = new ExpiringCache<>(credentialsCacheTimeout * 1000);
+    LOGGER.log(Level.INFO, "credentialsCacheTimeout: {0}", credentialsCacheTimeout);
 
     userCacheTimeout = config.getValue(BASE + "userCacheTimeout", Long.class);
     userCache = new ExpiringCache<>(userCacheTimeout * 1000);
@@ -177,6 +181,9 @@ public class SecurityService
     roleCacheTimeout = config.getValue(BASE + "roleCacheTimeout", Long.class);
     roleCache = new ExpiringCache<>(roleCacheTimeout * 1000);
     LOGGER.log(Level.INFO, "roleCacheTimeout: {0}", roleCacheTimeout);
+
+    tokenTimeout = config.getValue(BASE + "tokenTimeout", Long.class);
+    LOGGER.log(Level.INFO, "tokenTimeout: {0}", tokenTimeout);
 
     userIdByThread = new ConcurrentHashMap<>();
 
@@ -191,6 +198,89 @@ public class SecurityService
   {
     LOGGER.log(Level.INFO, "Destroying SecurityService");
     daoStore.close();
+  }
+
+  public User validateCredentials(String userId, String password)
+  {
+    LOGGER.log(Level.FINE, "userId: {0}", userId);
+
+    if (ADMIN_USER.equals(userId)) // admin user
+    {
+      if (!adminPassword.equals(password))
+        throw new NotAuthorizedException();
+
+      User user = getUser(userId); // get from store
+      if (user == null)
+      {
+        user = new User();
+        user.setId(userId);
+        user.setName(userId);
+      }
+      return user;
+    }
+
+    User user = getUser(userId); // get from store
+    if (user == null) // user not found in database
+    {
+      if (ldapConnector == null)
+        throw new NotAuthorizedException();
+
+      user = ldapConnector.validateCredentials(userId, password);
+
+      createUser(user);
+      userCache.put(userId, user);
+    }
+    else // user found in database
+    {
+      if (FALSE.equals(user.getActive()))
+        throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
+
+      if (user.getPasswordHash() == null) // LDAP User
+      {
+        if (ldapConnector == null)
+          throw new NotAuthorizedException();
+
+        ldapConnector.validateCredentials(userId, password);
+      }
+      else // check hashed password in User
+      {
+        String passwordHash = Digester.hash(password);
+
+        if (!user.getPasswordHash().equals(passwordHash))
+          throw new NotAuthorizedException();
+      }
+    }
+    return user;
+  }
+
+  public String createToken(String userId)
+  {
+    LOGGER.log(Level.FINE, "userId: {0}", userId);
+
+    String tokenValue = UUID.randomUUID().toString().replace("-", "");
+    String hash = Digester.hash(tokenValue);
+
+    Token token = Token.create(hash, userId, 2 * tokenTimeout);
+    try (var conn = daoStore.getConnection())
+    {
+      var tokenDao = conn.getTokenDao();
+      tokenDao.insert(token);
+    }
+    return tokenValue;
+  }
+
+  public boolean destroyToken(String tokenValue)
+  {
+    LOGGER.log(Level.FINE, "token: {0}", tokenValue);
+
+    String hash = Digester.hash(tokenValue);
+    credentialsCache.remove(hash);
+
+    try (var conn = daoStore.getConnection())
+    {
+      var tokenDao = conn.getTokenDao();
+      return tokenDao.deleteById(hash);
+    }
   }
 
   public List<User> getUsers(Expression filter, List<OrderByExpression> orderBy)
@@ -256,7 +346,7 @@ public class SecurityService
       User user = userDao.findById(userUpdate.getId());
       if (user == null) throw new NotFoundException(USER_NOT_FOUND);
 
-      userCache.remove(userId);
+      userCache.remove(userId); // User may exist in cache
 
       user.setName(userUpdate.getName());
       user.setEmail(userUpdate.getEmail());
@@ -361,11 +451,11 @@ public class SecurityService
       User user = userDao.findById(userId);
 
       if (user == null ||
-          !Objects.equals(hash(oldPassword), user.getPasswordHash()))
+          !Objects.equals(Digester.hash(oldPassword), user.getPasswordHash()))
         throw new InvalidRequestException(CAN_NOT_CHANGE_PASSWORD);
 
       checkPasswordFormat(newPassword);
-      user.setPasswordHash(hash(newPassword));
+      user.setPasswordHash(Digester.hash(newPassword));
 
       userDao.update(user);
     }
@@ -390,63 +480,50 @@ public class SecurityService
     return user.getId();
   }
 
+  public void setCredentials(Credentials credentials)
+  {
+    HttpServletRequest request = requestInstance.get();
+    request.setAttribute(CREDENTIALS_ATTRIBUTE, credentials);
+  }
+
   public User getCurrentUser()
   {
-    User user;
-    String authorization;
-    HttpServletRequest request;
-
-    // get User from thread map
-    String userId = userIdByThread.get(Thread.currentThread());
-    if (userId != null)
+    User user = getUserFromThread();
+    if (user == null)
     {
-      user = userCache.get(userId);
-      if (user != null) return user;
-
-      user = getUser(userId);
-      addUserRoles(user);
-      userCache.put(userId, user);
-
-      return user;
+      return getUserFromRequest();
     }
+    return anonymousUser;
+  }
 
-    // get User from http request
-    try
-    {
-      request = requestInstance.get();
-      user = (User)request.getAttribute(USER_REQUEST_ATTRIBUTE);
-      if (user != null) return user;
+  /* private methods */
 
-      authorization = request.getHeader("Authorization");
-      if (authorization == null)
-      {
-        request.setAttribute(USER_REQUEST_ATTRIBUTE, anonymousUser);
-        return anonymousUser;
-      }
-    }
-    catch (Exception ex) // not in servlet context
-    {
-      return anonymousUser;
-    }
+  private User getUserFromRequest()
+  {
+    HttpServletRequest request = requestInstance.get();
+    User user = (User)request.getAttribute(USER_ATTRIBUTE);
+    if (user != null) return user;
 
-    userId = authorizationCache.get(authorization);
+    Credentials credentials =
+      (Credentials)request.getAttribute(CREDENTIALS_ATTRIBUTE);
+    if (credentials == null) return anonymousUser;
 
+    String userId = credentialsCache.get(credentials.getHash());
     if (userId != null)
     {
       user = userCache.get(userId);
       if (user != null) return user;
     }
 
-    user = getUserFromAuthorization(authorization);
+    user = getUserFromCredentials(credentials);
     userId = user.getId().trim();
+    request.setAttribute(USER_ATTRIBUTE, user);
 
     if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
     addUserRoles(user);
-
-    authorizationCache.put(authorization, userId);
+    credentialsCache.put(credentials.getHash(), userId);
     userCache.put(userId, user);
-    request.setAttribute(USER_REQUEST_ATTRIBUTE, user);
 
     LOGGER.log(Level.FINE, "User {0} identified with roles {1}",
       new Object[] { userId, user.getRoleIds() });
@@ -454,62 +531,93 @@ public class SecurityService
     return user;
   }
 
-  /* private methods */
-
-  private User getUserFromAuthorization(String authorization)
+  private User getUserFromThread()
   {
-    String[] authoParts = authorization.split(" ");
-    if (authoParts.length == 2)
+    String userId = userIdByThread.get(Thread.currentThread());
+    if (userId != null)
     {
-      String authoType = authoParts[0];
-      if ("basic".equalsIgnoreCase(authoType))
-      {
-        String userPassword = authoParts[1].trim();
+      User user = userCache.get(userId);
+      if (user != null) return user;
+
+      user = getUser(userId);
+      addUserRoles(user);
+
+      userCache.put(userId, user);
+
+      return user;
+    }
+    return null;
+  }
+
+  private User getUserFromCredentials(Credentials credentials)
+  {
+    switch (credentials.getType())
+    {
+      case BASIC:
+        String userPassword = credentials.getValue();
         String decoded = new String(Base64.getDecoder().decode(userPassword));
         String[] userPasswordParts = decoded.split(":");
         String userId = userPasswordParts.length > 0 ? userPasswordParts[0] : null;
         String password = userPasswordParts.length > 1 ? userPasswordParts[1] : null;
 
-        if (userId == null || ANONYMOUS_USER.equals(userId)) return anonymousUser;
+        if (userId == null || ANONYMOUS_USER.equals(userId))
+          return anonymousUser;
 
-        User user = getUser(userId); // get from store
-        if (user == null)
-        {
-          user = new User();
-          user.setId(userId);
-          user.setName(userId);
-        }
+        return validateCredentials(userId, password);
+
+      case BEARER:
+      case COOKIE:
+        return getUserFromToken(credentials.getHash());
+    }
+    return anonymousUser;
+  }
+
+  private User getUserFromToken(String tokenHash)
+  {
+    try (var conn = daoStore.getConnection())
+    {
+      var tokenDao = conn.getTokenDao();
+      var userDao = conn.getUserDao();
+
+      var token = tokenDao.findById(tokenHash);
+
+      if (token == null) return anonymousUser;
+
+      Date expirationDate = TextUtils.parseISODate(token.getExpirationDate());
+      Date now = new Date();
+
+      if (now.after(expirationDate)) return anonymousUser;
+
+      String userId = token.getUserId();
+
+      User user;
+      if (ANONYMOUS_USER.equals(userId))
+      {
+        return anonymousUser;
+      }
+      else if (ADMIN_USER.equals(userId))
+      {
+        user = new User();
+        user.setId(userId);
+        user.setName(userId);
+      }
+      else
+      {
+        user = userDao.findById(userId);
+        if (user == null) throw new NotAuthorizedException(USER_NOT_FOUND);
 
         if (FALSE.equals(user.getActive()))
           throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
-
-        if (ADMIN_USER.equals(userId)) // admin user
-        {
-          if (!adminPassword.equals(password))
-            throw new NotAuthorizedException();
-        }
-        else if (user.getPasswordHash() == null) // LDAP User
-        {
-          if (ldapConnector == null ||
-              !ldapConnector.validateCredentials(userId, password))
-            throw new NotAuthorizedException();
-        }
-        else // check hashed password in User
-        {
-          String passwordHash = hash(password);
-
-          if (!user.getPasswordHash().equals(passwordHash))
-            throw new NotAuthorizedException();
-        }
-        return user;
       }
-      else if ("bearer".equalsIgnoreCase(authoType))
+
+      long timeToExpiration = expirationDate.getTime() - now.getTime();
+      if (timeToExpiration < 1000 * tokenTimeout)
       {
-        String token = authoParts[1].trim();
-        //TODO: find User by token
+        token.updateExpirationDate(2 * tokenTimeout);
+        tokenDao.update(token);
       }
+      return user;
     }
-    return anonymousUser;
   }
 
   private void addUserRoles(User user)
@@ -539,7 +647,7 @@ public class SecurityService
     if (!StringUtils.isBlank(password))
     {
       checkPasswordFormat(password);
-      user.setPasswordHash(hash(password));
+      user.setPasswordHash(Digester.hash(password));
       user.setPassword(null);
     }
   }
@@ -551,22 +659,6 @@ public class SecurityService
 
     if (!password.matches(passwordPattern))
       throw new InvalidRequestException(INVALID_PASSWORD_FORMAT);
-  }
-
-  private String hash(String password)
-  {
-    if (StringUtils.isBlank(password)) return null;
-
-    try
-    {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] bytes = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-      return Base64.getEncoder().encodeToString(bytes);
-    }
-    catch (NoSuchAlgorithmException ex)
-    {
-      throw new RuntimeException(ex);
-    }
   }
 
   private void explodeRoles(Set<String> roleIds)
@@ -599,5 +691,4 @@ public class SecurityService
       }
     }
   }
-
 }

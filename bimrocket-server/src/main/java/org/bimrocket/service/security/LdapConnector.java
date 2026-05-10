@@ -38,12 +38,15 @@ import java.util.Set;
 import javax.naming.AuthenticationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import org.bimrocket.api.security.User;
+import org.bimrocket.exception.NotAuthorizedException;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -123,7 +126,7 @@ public class LdapConnector
     this.adminPassword = adminPassword;
   }
 
-  public boolean validateCredentials(String username, String password)
+  public User validateCredentials(String username, String password)
   {
     try
     {
@@ -140,14 +143,23 @@ public class LdapConnector
         searchCtls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
         // Search objects in GC using filters
-        NamingEnumeration<?> answer =
+        NamingEnumeration<SearchResult> answer =
           context.search(searchBase, searchFilter, searchCtls);
 
-        boolean userFound = answer.hasMoreElements();
+        if (!answer.hasMore())
+          throw new NotAuthorizedException();
+
+        SearchResult result = answer.next();
+        Attributes attrs = result.getAttributes();
+
+        User user = new User();
+        user.setId(username);
+        user.setName(getAttribute(attrs, "displayName", username));
+        user.setEmail(getAttribute(attrs, "mail", null));
 
         answer.close();
 
-        return userFound;
+        return user;
       }
       finally
       {
@@ -156,7 +168,11 @@ public class LdapConnector
     }
     catch (AuthenticationException ae)
     {
-      return false;
+      throw new NotAuthorizedException();
+    }
+    catch (RuntimeException ex)
+    {
+      throw ex;
     }
     catch (Exception ex)
     {
@@ -222,6 +238,17 @@ public class LdapConnector
       throw new RuntimeException(ex);
     }
     return roles;
+  }
+
+  private String getAttribute(Attributes attrs, String name, String defaultValue)
+    throws NamingException
+  {
+    Attribute attr = attrs.get(name);
+    if (attr == null || attr.get() == null)
+    {
+      return defaultValue;
+    }
+    return attr.get().toString();
   }
 
   private LdapContext createLdapContext(String username, String password)

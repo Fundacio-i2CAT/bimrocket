@@ -36,6 +36,7 @@ package org.bimrocket.exception;
  */
 public class ParseException extends InvalidRequestException
 {
+  private static final long serialVersionUID = 13250243L;
   int errorOffset = -1;
 
   public ParseException(String message)

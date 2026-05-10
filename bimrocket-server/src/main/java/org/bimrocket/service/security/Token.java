@@ -28,41 +28,57 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.util;
+package org.bimrocket.service.security;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import jakarta.persistence.Id;
 import java.util.Date;
+import org.bimrocket.util.TextUtils;
 
 /**
  *
  * @author realor
  */
-public class TextUtils
+public class Token
 {
-  static final String ISO_DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+  @Id
+  private String id;
+  private String userId;
+  private String creationDate;
+  private String expirationDate;
 
-  public static String getISODate()
+  static Token create(String id, String userId, long tokenTimeout)
   {
-    return getISODate(new Date());
+    Token token = new Token();
+    token.id = id;
+    token.userId = userId;
+    token.creationDate = TextUtils.getISODate();
+    token.updateExpirationDate(tokenTimeout);
+    return token;
   }
 
-  public static String getISODate(Date date)
+  public String Id()
   {
-    SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-    return df.format(date);
+    return id;
   }
 
-  public static Date parseISODate(String dateString)
+  public String getUserId()
   {
-    try
-    {
-      SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_PATTERN);
-      return df.parse(dateString);
-    }
-    catch (ParseException ex)
-    {
-      throw new RuntimeException(ex);
-    }
+    return userId;
+  }
+
+  public String getCreationDate()
+  {
+    return creationDate;
+  }
+
+  public String getExpirationDate()
+  {
+    return expirationDate;
+  }
+
+  public void updateExpirationDate(long timeout)
+  {
+    long expirationTime = System.currentTimeMillis() + 1000 * timeout;
+    this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
   }
 }

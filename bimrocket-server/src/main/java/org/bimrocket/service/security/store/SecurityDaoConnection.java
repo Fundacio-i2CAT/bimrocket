@@ -34,6 +34,7 @@ import org.bimrocket.api.security.Role;
 import org.bimrocket.api.security.User;
 import org.bimrocket.dao.Dao;
 import org.bimrocket.dao.DaoConnection;
+import org.bimrocket.service.security.Token;
 
 /**
  *
@@ -44,4 +45,6 @@ public interface SecurityDaoConnection extends DaoConnection
   Dao<User, String> getUserDao();
 
   Dao<Role, String> getRoleDao();
+
+  Dao<Token, String> getTokenDao();
 }
