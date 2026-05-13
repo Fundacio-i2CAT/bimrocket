@@ -237,27 +237,6 @@ menu.menubar > li.menu > button > i
   display: none;
 }
 
-/* User Profile */
-
-.user_profile
-{
-  margin-left: auto;
-  padding: 0 15px; 
-  cursor: pointer;
-}
-
-.user_profile:hover
-{
-  background-color: var(--menuitem-hover-background);
-}
-
-.user_profile:focus
-{
-  color: var(--menuitem-color);
-  background-color: var(--focused-menuitem-background);
-  outline: none;
-}
-
 /* mobile mode rules */
 @media all and (max-width : 950px)
 {

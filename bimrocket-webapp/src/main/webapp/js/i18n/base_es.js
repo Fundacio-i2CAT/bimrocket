@@ -82,10 +82,6 @@ export const translations =
   "button.menu_show" : "MENÚ",
   "button.menu_hide" : "CERRAR",
 
-  "button.login": "Iniciar sesión",
-  "button.logout": "Cerrar sesión",
-  "button.user": "Usuario",
-
   "units.km" : "kilometros",
   "units.m" : "metros",
   "units.cm" : "centímetros",
@@ -699,7 +695,6 @@ export const translations =
   "message.edit_acl_json_error" : detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
 
   "message.login_failed" : "Credenciales incorrectas.",
-  "message.logout_failed" : "Error al cerrar sesión.",
 
   "question.overwrite_file" : filename => `Quieres sobreescribir el fichero ${filename}?`,
   "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,

@@ -97,18 +97,6 @@ class ServiceLoginDialog extends LoginDialog
     });
   }
 
-  checkIfLocalAndActivateSession()
-  {
-    const baseUrl = this.getBaseUrl();
-    const isLocalServer = baseUrl.includes(window.location.hostname) || baseUrl.startsWith("/");
-
-    if (isLocalServer)
-    {
-      this.application.setup.sessionActive = true;
-      this.application.checkCurrentSession();
-    }
-  }
-
   loadOAuthProviders()
   {
     const securityService = this.getSecurityService();
@@ -150,10 +138,8 @@ class ServiceLoginDialog extends LoginDialog
   handleOAuthSuccess()
   {
     this.hide();
-    this.checkIfLocalAndActivateSession();
-
     if (this.onLogin) this.onLogin();
-  };
+  }
 
 	login(username, password) 
 	{
@@ -163,7 +149,6 @@ class ServiceLoginDialog extends LoginDialog
 
     temporarySecurityService.login(username, password, () => {
       this.hide();
-      this.checkIfLocalAndActivateSession();
       if (this.onLogin) this.onLogin();
 		}, 
 		(error) => 

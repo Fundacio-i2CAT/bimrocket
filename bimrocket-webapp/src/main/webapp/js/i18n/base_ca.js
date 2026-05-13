@@ -82,10 +82,6 @@ export const translations =
   "button.menu_show" : "MENÚ",
   "button.menu_hide" : "TANCA",
 
-  "button.login": "Inicia sessió",
-  "button.logout": "Tanca sessió",
-  "button.user": "Usuari",
-
   "units.km" : "kilometres",
   "units.m" : "metres",
   "units.cm" : "centímetres",
@@ -699,7 +695,6 @@ export const translations =
   "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
   "message.login_failed" : "Credencials incorrectes.",
-  "message.logout_failed" : "Error en tancar sessió.",
 
   "question.overwrite_file" : filename => `Vols sobreescriure el fitxer ${filename}?`,
   "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || "l'editor"}?`,

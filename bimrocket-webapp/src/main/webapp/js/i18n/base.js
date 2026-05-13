@@ -82,10 +82,6 @@ export const translations =
   "button.menu_show" : "MENU",
   "button.menu_hide" : "CLOSE",
 
-  "button.login": "Login",
-  "button.logout": "Logout",
-  "button.user": "User",
-
   "units.km" : "kilometers",
   "units.m" : "meters",
   "units.cm" : "centimeters",
@@ -698,7 +694,6 @@ export const translations =
   "message.invalid_privileges" : "Errors found in the input privileges.",
   "message.edit_acl_json_error" : detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
-  "message.logout_failed" : "Failed to log out.",
   "message.login_failed" : "Invalid credentials.",
 
   "question.overwrite_file" : filename => `Do you want to overwrite the file ${filename}?`,

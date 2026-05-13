@@ -236,14 +236,6 @@ class Application
 
     // toolBar
     this.toolBar = new ToolBar(this, toolBarElem);
-    
-    // profile
-    const profileButton = document.createElement("button");
-    this.profileButton = profileButton;
-    profileButton.className = "user_profile"
-    this.currentUsername = null;
-    profileButton.textContent = this.currentUsername ? this.currentUsername : "Login";
-    headerElem.appendChild(profileButton)
 
     /* selection materials */
 
@@ -2023,7 +2015,6 @@ class Application
         this.logoPanel.querySelector(".info").innerHTML = "";
         this.menuBar.updadeTabindex();
         this.hideLogo();
-        this.checkCurrentSession();
         this.loadModelFromUrl();
       };
     };
@@ -2047,72 +2038,6 @@ class Application
       this.logoPanel.classList.remove("show");
       this.logoPanel.setAttribute("tabindex", -1);
     }
-  }
-
-  checkCurrentSession()
-  {
-    const securityService = this.services?.security?.security;
-    const isLoggedIn = this.setup.sessionActive;
-    
-    const onCompleted = (user) =>
-    { 
-      const { name, id } = user;
-
-      this.setup.sessionActive = true;
-      this.currentUsername = name || id || this.i18n.get("button.user");
-      this.profileButton.textContent = this.currentUsername;
-
-      this.profileButton.onclick = () =>
-        {
-          if (confirm(this.i18n.get("question.confirm_logout")))
-          {
-            securityService.logout(
-              () => {
-                this.currentUsername = null;
-                this.checkCurrentSession();
-              },
-              (error) => {
-                MessageDialog.create("ERROR", this.i18n.get("message.logout_failed"))
-                  .setClassName("error")
-                  .setI18N(this.i18n).show();
-              }
-            );
-          }
-        }
-    }
-
-    const onError = (error) =>
-    {
-      this.currentUsername = null;
-      this.setup.sessionActive = false;
-      this.profileButton.textContent = this.i18n.get("button.login");
-      this.profileButton.blur();
-
-      this.profileButton.onclick = () =>
-      {
-        const loginDialog = new LoginDialog(this, this.i18n.get("title.login_dialog"));
-
-        loginDialog.login = (username, password) =>
-        {
-          securityService.login(username, password, () =>
-          {
-            this.setup.sessionActive = true;
-            this.checkCurrentSession();
-          },
-          (error) =>
-          {
-            MessageDialog.create("ERROR", this.i18n.get("message.login_failed"))
-            .setClassName("error")
-            .setI18N(this.i18n).show();
-          });
-        }
-
-        loginDialog.onCancel = () => loginDialog.hide();
-        loginDialog.show();
-      }
-    }
-
-    isLoggedIn ? securityService.getCurrentUser(onCompleted, onError) : onError({ message: "No active session flag" })
   }
 
   enterPresentationMode()

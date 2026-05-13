@@ -104,8 +104,9 @@ class SecurityService extends Service
   {
     const data =
     {
-      username: username,
+      user: username,
       password: password,
+      generate_cookie: true,
     };
 
     this.invoke("POST", "login", data, onCompleted, onError)

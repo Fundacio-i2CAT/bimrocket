@@ -4,7 +4,6 @@
  * @author realor
  */
 
-import { Auth } from "./Auth.js";
 import { Dialog } from "./Dialog.js";
 
 class LoginDialog extends Dialog
