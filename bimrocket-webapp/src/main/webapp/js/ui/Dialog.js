@@ -70,6 +70,14 @@ class Dialog
     this.closeButtonElem.addEventListener("click",
       () => this.hide());
 
+    this._escapeHandler = (event) =>
+    {
+      if (event.key === "Escape")
+      {
+        this.hide();
+      }
+    }
+
     this.setSize(300, 200);
   }
 
@@ -104,6 +112,9 @@ class Dialog
       parentNode = parentNode || document.body;
       parentNode.appendChild(this.curtainElem);
       parentNode.appendChild(this.dialogElem);
+
+      document.addEventListener("keydown", this._escapeHandler);
+
       if (this.onShow) this.onShow();
     }
     return this;
@@ -116,6 +127,9 @@ class Dialog
     {
       parentNode.removeChild(this.dialogElem);
       parentNode.removeChild(this.curtainElem);
+
+      document.removeEventListener("keydown", this._escapeHandler);
+
       if (this.onHide) this.onHide();
     }
     return this;

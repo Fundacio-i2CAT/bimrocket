@@ -6,7 +6,6 @@
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class IFCDBService extends Service
 {
@@ -76,27 +75,28 @@ class IFCDBService extends Service
 
   async invoke(method, path = "", headers = {}, body)
   {
-    const username = this.username;
-    const password = this.password;
     let url = this.url;
 
     if (!url.endsWith("/")) url += "/";
     url += path;
 
+    const fetchHeaders = { ...headers };
+
+    if (!this.useBasicAuth)
+    {
+      fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
+    }
+
     const fetchOptions = {
       method : method,
-      headers : headers
+      headers : fetchHeaders,
+      credentials: this.useBasicAuth ? "omit" : "include",
     };
 
     if (body)
     {
       fetchOptions.body = body;
     }
-
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(fetchOptions.headers,
-      credentials.username, credentials.password);
 
     const response = await fetch(url, fetchOptions);
     if (!response.ok) throw await response.json();

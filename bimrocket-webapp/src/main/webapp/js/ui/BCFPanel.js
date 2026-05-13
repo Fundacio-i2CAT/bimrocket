@@ -24,6 +24,7 @@ import { WebUtils } from "../utils/WebUtils.js";
 import { I18N } from "../i18n/I18N.js";
 import { Tree } from "./Tree.js";
 import * as THREE from "three";
+import { ServiceLoginDialog } from "./ServiceLoginDialog.js";
 
 class BCFPanel extends Panel
 {
@@ -2005,13 +2006,30 @@ class BCFPanel extends Panel
   {
     this.hideProgressBar();
 
+    if (this.service.useBasicAuth && (error.code === 401 || error.code === 403))
+    {
+      MessageDialog.create("ERROR", "message.service_auth_error")
+        .setClassName("error")
+        .setI18N(this.application.i18n).show();
+
+      return;
+    }
+
     if (error.code === 401)
     {
-      this.requestCredentials("message.invalid_credentials", onLogin);
+      new ServiceLoginDialog(this.application)
+        .setService(this.service)
+        .setMessage("message.invalid_credentials")
+        .setOnLogin(onLogin)
+        .show();
     }
     else if (error.code === 403)
     {
-      this.requestCredentials("message.action_denied", onLogin);
+      new ServiceLoginDialog(this.application)
+        .setService(this.service)
+        .setMessage("message.action_denied")
+        .setOnLogin(onLogin)
+        .show();
     }
     else
     {
@@ -2020,22 +2038,6 @@ class BCFPanel extends Panel
         .setClassName("error")
         .setI18N(this.application.i18n).show();
     }
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-    loginDialog.login = (username, password) =>
-    {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
-    };
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-    loginDialog.show();
   }
 
   showProgressBar()

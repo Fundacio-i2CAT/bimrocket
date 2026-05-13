@@ -16,7 +16,6 @@ import { Solid } from "../core/Solid.js";
 import { ObjectBuilder } from "../builders/ObjectBuilder.js";
 import { SolidGeometry } from "../core/SolidGeometry.js";
 import { ServiceManager } from "../io/ServiceManager.js";
-import { CredentialsManager } from "../utils/CredentialsManager.js";
 import { IOManager } from "../io/IOManager.js";
 import { Selection } from "../utils/Selection.js";
 import { Setup } from "../utils/Setup.js";
@@ -40,6 +39,7 @@ import { I18N } from "../i18n/I18N.js";
 import WebGL from "../utils/WebGL.js";
 import { Environment } from "../Environment.js";
 import * as THREE from "three";
+import { Auth } from "./Auth.js";
 
 class Application
 {
@@ -126,6 +126,10 @@ class Application
    	THREE.Object3D.DEFAULT_MATRIX_AUTO_UPDATE = false;
    	THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
     THREE.Object3D.HIDDEN_PREFIX = ".";
+
+    /* oauth */
+
+    Auth.init();
 
     /* create sub elements */
 
@@ -230,8 +234,16 @@ class Application
     // menuBar
     this.menuBar = new MenuBar(this, headerElem);
 
-     // toolBar
+    // toolBar
     this.toolBar = new ToolBar(this, toolBarElem);
+    
+    // profile
+    const profileButton = document.createElement("button");
+    this.profileButton = profileButton;
+    profileButton.className = "user_profile"
+    this.currentUsername = null;
+    profileButton.textContent = this.currentUsername ? this.currentUsername : "Login";
+    headerElem.appendChild(profileButton)
 
     /* selection materials */
 
@@ -351,6 +363,15 @@ class Application
         event.returnValue = "";
       }
     });
+
+    window.addEventListener("storage", event =>
+    {
+      if (event.key === Setup.PREFIX + Setup.SESSION_ACTIVE)
+      {
+        window.location.reload();
+      }
+    }
+    )
 
     // animation
     let animationClock = new THREE.Clock();
@@ -2002,6 +2023,7 @@ class Application
         this.logoPanel.querySelector(".info").innerHTML = "";
         this.menuBar.updadeTabindex();
         this.hideLogo();
+        this.checkCurrentSession();
         this.loadModelFromUrl();
       };
     };
@@ -2025,6 +2047,72 @@ class Application
       this.logoPanel.classList.remove("show");
       this.logoPanel.setAttribute("tabindex", -1);
     }
+  }
+
+  checkCurrentSession()
+  {
+    const securityService = this.services?.security?.security;
+    const isLoggedIn = this.setup.sessionActive;
+    
+    const onCompleted = (user) =>
+    { 
+      const { name, id } = user;
+
+      this.setup.sessionActive = true;
+      this.currentUsername = name || id || this.i18n.get("button.user");
+      this.profileButton.textContent = this.currentUsername;
+
+      this.profileButton.onclick = () =>
+        {
+          if (confirm(this.i18n.get("question.confirm_logout")))
+          {
+            securityService.logout(
+              () => {
+                this.currentUsername = null;
+                this.checkCurrentSession();
+              },
+              (error) => {
+                MessageDialog.create("ERROR", this.i18n.get("message.logout_failed"))
+                  .setClassName("error")
+                  .setI18N(this.i18n).show();
+              }
+            );
+          }
+        }
+    }
+
+    const onError = (error) =>
+    {
+      this.currentUsername = null;
+      this.setup.sessionActive = false;
+      this.profileButton.textContent = this.i18n.get("button.login");
+      this.profileButton.blur();
+
+      this.profileButton.onclick = () =>
+      {
+        const loginDialog = new LoginDialog(this, this.i18n.get("title.login_dialog"));
+
+        loginDialog.login = (username, password) =>
+        {
+          securityService.login(username, password, () =>
+          {
+            this.setup.sessionActive = true;
+            this.checkCurrentSession();
+          },
+          (error) =>
+          {
+            MessageDialog.create("ERROR", this.i18n.get("message.login_failed"))
+            .setClassName("error")
+            .setI18N(this.i18n).show();
+          });
+        }
+
+        loginDialog.onCancel = () => loginDialog.hide();
+        loginDialog.show();
+      }
+    }
+
+    isLoggedIn ? securityService.getCurrentUser(onCompleted, onError) : onError({ message: "No active session flag" })
   }
 
   enterPresentationMode()
@@ -2127,15 +2215,41 @@ class Application
 
     dialog.login = (username, password) =>
     {
-      let credentialAlias = params.get("credential_alias");
-      if (credentialAlias)
-      {
-        CredentialsManager.setCredentials(credentialAlias, username, password);
-      }
-      intent.basicAuthCredentials =
-      { "username" : username, "password" : password };
       application.progressBar.visible = true;
-      IOManager.load(intent);
+
+      const loginUrl = Environment.SERVER_URL + "/api/security/login";
+      const request = new XMLHttpRequest();
+      request.open("POST", loginUrl);
+      request.setRequestHeader("Accept", "application/json");
+      request.setRequestHeader("Content-Type", "application/json");
+      request.withCredentials = true;
+
+      request.onload = () =>
+      {
+        if (request.status === 200 || request.status === 204)
+        {
+          dialog.hide();
+          IOManager.load(intent);
+        }
+        else
+        {
+          application.progressBar.visible = false;
+          MessageDialog.create("ERROR", "Login failed")
+            .setClassName("error")
+            .setI18N(application.i18n).show();
+        }
+      };
+
+      request.onerror = () =>
+      {
+        application.progressBar.visible = false;
+        MessageDialog.create("ERROR", "Connection error")
+          .setClassName("error")
+          .setI18N(application.i18n).show();
+      };
+
+      const payload = { username: username, password: password };
+      request.send(JSON.stringify(payload));
     };
 
     dialog.onCancel = () =>

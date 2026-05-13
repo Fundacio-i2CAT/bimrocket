@@ -2,11 +2,11 @@
  * BCFService.js
  *
  * @author realor
+ * @author alexis-i2cat
  */
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class BCFService extends Service
 {
@@ -46,7 +46,6 @@ class BCFService extends Service
     this.invoke("GET", "projects" + query, null, onCompleted, onError);
   }
     
-
   getProject(projectId, onCompleted, onError)
   {
     this.invoke("GET", "projects/" + projectId, null, onCompleted, onError);
@@ -259,11 +258,12 @@ class BCFService extends Service
     request.open(method, this.url + "/bcf/2.1/" + path);
     request.setRequestHeader("Accept", "application/json");
     request.setRequestHeader("Content-Type", "application/json");
+    request.withCredentials = true;
 
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
+    if (!this.useBasicAuth)
+    {
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
 
     if (data)
     {

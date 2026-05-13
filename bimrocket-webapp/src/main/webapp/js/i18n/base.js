@@ -82,6 +82,10 @@ export const translations =
   "button.menu_show" : "MENU",
   "button.menu_hide" : "CLOSE",
 
+  "button.login": "Login",
+  "button.logout": "Logout",
+  "button.user": "User",
+
   "units.km" : "kilometers",
   "units.m" : "meters",
   "units.cm" : "centimeters",
@@ -386,9 +390,6 @@ export const translations =
   "action.save_model" : "Save model",
   "action.rename" : "Rename",
   "action.delete" : "Delete",
-  "action.copy" : "Copy",
-  "action.cut" : "Cut",
-  "action.paste" : "Paste",
   "action.edit_acl" : "Edit permissions",
   "action.upload_file" : "Upload file",
   "action.download_file" : "Download file",
@@ -446,7 +447,7 @@ export const translations =
   "label.service_name" : "Service name:",
   "label.service_desc" : "Service description:",
   "label.service_url" : "URL:",
-  "label.service_credentials_alias" : "Credentials alias:",
+  "label.service_auth": "Use native authentication",
   "label.service_user" : "Username:",
   "label.service_pass" : "Password:",
 
@@ -629,6 +630,7 @@ export const translations =
   "title.acl_not_found": "ACL not found",
   "title.confirm_save": "Confirmation",
   "title.overwrite" : "Overwrite file",
+  "title.login_dialog" : "Please log in to continue",
 
   "message.measure_length" : (length, units) => `Length: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Area: ${area} ${units}2`,
@@ -653,8 +655,6 @@ export const translations =
   "message.folder_created" : "Folder created.",
   "message.file_deleted" : "File deleted.",
   "message.folder_deleted" : "Folder deleted.",
-  "message.copy_completed" : "Copy completed.",
-  "message.move_completed" : "Move completed.",
   "message.renaming_completed" : "Renaming completed.",
   "message.changes_discarded" : "Changes discarded.",
   "message.filename_already_exists" : "A file with that name already exists.",
@@ -680,6 +680,7 @@ export const translations =
   "message.invalid_credentials" : "Invalid credentials.",
   "message.access_denied" : "Access denied.",
   "message.action_denied" : "Action denied.",
+  "message.service_auth_error": "This server doesn't allow basic authentication",
 
   "message.invalid_revolution_axis" : "Invalid axis of revolution. This axis can not be projected onto the plane of the profile.",
 
@@ -697,6 +698,9 @@ export const translations =
   "message.invalid_privileges" : "Errors found in the input privileges.",
   "message.edit_acl_json_error" : detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
+  "message.logout_failed" : "Failed to log out.",
+  "message.login_failed" : "Invalid credentials.",
+
   "question.overwrite_file" : filename => `Do you want to overwrite the file ${filename}?`,
   "question.discard_changes" : name => `Discard unsaved changes in ${name || 'editor'}?`,
   "question.delete_service" : name => `Do you want to delete the ${name} service?`,
@@ -708,6 +712,7 @@ export const translations =
   "question.create_new_scene" : "Do you want to create a new scene?",
   "question.delete_conversation" : "Do you want to delete the conversation?",
   "question.confirm_save_changes": "Do you want to confirm the changes?",
+  "question.confirm_logout": "Are you sure you want to log out?",
 
   "controller.AutoPilotController" : "Drives an object.",
   "controller.Brain4itPostController" : "Posts a value to Brain4it.",

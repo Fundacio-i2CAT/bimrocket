@@ -23,6 +23,7 @@ class Setup
   static SHOW_LOCAL_AXES = "showLocalAxes";
   static AO_ENABLED = "aoEnabled";
   static AO_INTENSITY = "aoIntensity";
+  static SESSION_ACTIVE = "sessionActive";
 
   constructor(application)
   {
@@ -67,6 +68,8 @@ class Setup
     this._ambientOcclusionEnabled = this.getItem(Setup.AO_ENABLED) === "true";
 
     this._ambientOcclusionIntensity = parseFloat(this.getItem(Setup.AO_INTENSITY) || "0.3");
+
+    this._sessionActive = this.getItem(Setup.SESSION_ACTIVE) === "true";
   }
 
   get userLanguage()
@@ -250,6 +253,17 @@ class Setup
     this.setItem(Setup.AO_INTENSITY, String(intensity));
     this.application.ambientOcclusionParams.saoIntensity = intensity;
     this.application.repaint();
+  }
+
+  get sessionActive()
+  {
+    return this._sessionActive;
+  }
+
+  set sessionActive(active)
+  {
+    this._sessionActive = active;
+    this.setItem(Setup.SESSION_ACTIVE, active ? "true" : "false");
   }
 
   applyBackground()

@@ -10,8 +10,8 @@ import { SecurityService } from "../io/SecurityService.js";
 import { Environment } from "../Environment.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { Toast } from "./Toast.js";
-import { LoginDialog } from "./LoginDialog.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
+import { ServiceLoginDialog } from "./ServiceLoginDialog.js";
 
 class ServerAdminDialog extends Dialog
 {
@@ -45,8 +45,8 @@ class ServerAdminDialog extends Dialog
 
     this.apiServiceElem = Controls.addTextField(connPanel,
       "securityService", "bim|label.admin_service", "securityServiceUrl");
-    this.apiServiceElem.value = `${Environment.SERVER_URL}/api`;
-    this.apiServiceElem.placeholder = "https://bim.santfeliu.cat/api";
+    this.apiServiceElem.value = `${Environment.SERVER_URL}/api/security`;
+    this.apiServiceElem.placeholder = "https://bim.santfeliu.cat/api/security";
   
     const buttonsContainer = this.createContainer('admin_buttons', connPanel);
     this.connButtonsElem = buttonsContainer;
@@ -90,10 +90,9 @@ class ServerAdminDialog extends Dialog
     this.service = new SecurityService({
       name: "security",
       url: securityServiceUrl,
-      credentialsAlias: Environment.SERVER_ALIAS
     });
     
-    this.application.services[this.group] = this.service;
+    this.application.services[this.group][this.service.name] = this.service;
   }
 
   createTab(container, tabClassName, toolbarClassName, buttonId, buttonLabel, buttonCallback, tabContainerProperty, toolbarProperty, tableContainerProperty) 
@@ -893,13 +892,30 @@ class ServerAdminDialog extends Dialog
   {
     this.hideProgressBar();
 
+    if (this.service.useBasicAuth && (error.code === 401 || error.code === 403))
+    {
+      MessageDialog.create("ERROR", "message.service_auth_error")
+        .setClassName("error")
+        .setI18N(this.application.i18n).show();
+
+      return;
+    }
+
     if (error.code === 401)
     {
-      this.requestCredentials("message.access_denied", onLogin);
+      new ServiceLoginDialog(this.application)
+        .setService(this.service)
+        .setMessage("message.invalid_credentials")
+        .setOnLogin(onLogin)
+        .show();
     }
     else if (error.code === 403)
     {
-      this.requestCredentials("message.action_denied", onLogin);
+      new ServiceLoginDialog(this.application)
+        .setService(this.service)
+        .setMessage("message.action_denied")
+        .setOnLogin(onLogin)
+        .show();
     }
     else
     {
@@ -931,22 +947,6 @@ class ServerAdminDialog extends Dialog
     }
 
     return errorMessage;
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-    loginDialog.login = (username, password) =>
-    {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
-    };
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-    loginDialog.show();
   }
 
   toggleVisibility(container, toolbar, detailPanelElem, parentContainer) 

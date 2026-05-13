@@ -1,12 +1,12 @@
 /**
  * SecurityService.js
  *
- * @author i2CAT
+ * @author nuriaescudei2cat
+ * @author alexis-i2cat
  */
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class SecurityService extends Service
 {
@@ -71,13 +71,18 @@ class SecurityService extends Service
         query += "$orderBy=" + odataOrderBy;
       }
     }
-    
+
     this.invoke("GET", "users" + query, null, onCompleted, onError);
   }
 
   getUser(userId, onCompleted, onError)
   {
     this.invoke("GET", "users/" + userId, null, onCompleted, onError);
+  }
+
+  getCurrentUser(onCompleted, onError)
+  {
+    this.invoke("GET", "users/currentUser", null, onCompleted, onError)
   }
 
   createUser(user, onCompleted, onError)
@@ -95,6 +100,27 @@ class SecurityService extends Service
     this.invoke("DELETE", "users/" + userId, null, onCompleted, onError);
   }
 
+  login(username, password, onCompleted, onError)
+  {
+    const data =
+    {
+      username: username,
+      password: password,
+    };
+
+    this.invoke("POST", "login", data, onCompleted, onError)
+  }
+
+  logout(onCompleted, onError)
+  {
+    this.invoke("POST", "logout", null, onCompleted, onError)
+  }
+
+  getOAuth2Providers(onCompleted, onError)
+  {
+    this.invoke("GET", "oauth2/providers", null, onCompleted, onError)
+  }
+
   invoke(method, path, data, onCompleted, onError)
   {
     const request = new XMLHttpRequest();
@@ -102,7 +128,7 @@ class SecurityService extends Service
     {
       request.onerror = error =>
       {
-        onError({code: 0, message: "Connection error"});
+        onError({ code: 0, message: "Connection error" });
       };
     }
 
@@ -118,7 +144,7 @@ class SecurityService extends Service
           }
           catch (ex)
           {
-            if (onError) onError({code: 0, message: ex});
+            if (onError) onError({ code: 0, message: ex });
           }
         }
         else
@@ -135,27 +161,24 @@ class SecurityService extends Service
         }
         catch (ex)
         {
-          error = {code: request.status, message: "Error " + request.status};
+          error = { code: request.status, message: "Error " + request.status };
         }
         if (onError) onError(error);
       }
     };
 
-    request.open(method, this.url + "/security/" + path);
+    request.open(method, this.url + "/" + path);
     request.setRequestHeader("Accept", "application/json");
-    
+    request.withCredentials = true;
+
+    if (!this.useBasicAuth)
+    {
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
+
     if (data)
     {
       request.setRequestHeader("Content-Type", "application/json");
-    }
-
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
-
-    if (data)
-    {
       request.send(JSON.stringify(data));
     }
     else
