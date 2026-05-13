@@ -35,6 +35,9 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.Provider;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import java.io.IOException;
 
 /**
@@ -44,12 +47,17 @@ import java.io.IOException;
 @Provider
 public class CORSFilter implements ContainerResponseFilter
 {
+  static final String BASE = "filter.cors.";
+
   @Override
   public void filter(ContainerRequestContext requestContext,
     ContainerResponseContext responseContext) throws IOException
   {
+    Config config = ConfigProvider.getConfig();
+    String allowOrigin = config.getValue(BASE + "accessControlAllowOrigin", String.class);
+
     MultivaluedMap<String, Object> headers = responseContext.getHeaders();
-    headers.add("Access-Control-Allow-Origin", "*");
+    headers.add("Access-Control-Allow-Origin", allowOrigin);
     headers.add("Access-Control-Allow-Credentials", "true");
     headers.add("Access-Control-Allow-Headers",
      "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match,x-requested-with,destination");

@@ -3,6 +3,11 @@
 # BIMROCKET_DATA_PATH is set by default to ${user.home}/bimrocket
 # but can be changed via JVM property or environ variable.
 
+# filter config
+filter:
+  cors:
+    accessControlAllowOrigin: changeit
+
 # service config
 services:
 
