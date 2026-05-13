@@ -42,18 +42,6 @@ class LoginDialog extends Dialog
 
     this.cancelButton = this.addButton("login_cancel", "button.cancel",
       () => this.onCancel());
-
-    Auth.addAuthButtons(this.footerElem)
-
-    this.authSuccessHandler = (event) =>
-      {
-        this.hide();
-        this.application.setup.sessionActive = true;
-        this.application.checkCurrentSession();
-        window.removeEventListener("auth-success", this.authSuccessHandler);
-      };
-  
-    window.addEventListener("auth-success", this.authSuccessHandler);
   }
 
   onShow()
