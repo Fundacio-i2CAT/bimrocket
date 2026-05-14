@@ -352,11 +352,11 @@ div.dialog > .header > button:focus
     background: transparent;
     border-radius: 2px;
     cursor: pointer;
-  }
 
-  & button.oauth_logo_btn img
-  {
-    max-height: 32px;
+    & img
+    {
+      max-height: 32px;
+    }
   }
 }
 

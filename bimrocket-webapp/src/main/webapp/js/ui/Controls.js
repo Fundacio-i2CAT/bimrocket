@@ -390,7 +390,7 @@ class Controls
     imgElem.alt = label;
 
     buttonElem.appendChild(imgElem);
-    buttonElem.addEventListener("click", event => action(event), false);
+    buttonElem.addEventListener("click", event => action(event));
     parent.appendChild(buttonElem);
 
     return buttonElem;
