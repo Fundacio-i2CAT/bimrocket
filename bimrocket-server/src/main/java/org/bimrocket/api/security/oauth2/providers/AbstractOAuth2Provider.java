@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -87,12 +88,19 @@ public abstract class AbstractOAuth2Provider implements OAuth2Provider
   public TokenInfo exchangeCode(String code, String redirectUri)
     throws Exception
   {
+    // We are receiving the redirectUri with parameters, but at the moment to get the autorization
+    // we declared redirectUri without partameters. For this we remove from the url all the parameters
+    //begining with ?
+    int idx = redirectUri.indexOf('?');
+    redirectUri = idx >= 0 ? redirectUri.substring(0, idx) : redirectUri;
+
     String baseUrl = getValue("baseUrl", "");
     String tokenUrl = getValue("tokenUrl");
     String clientId = getValue("clientId");
     String secretId = getValue("secretId");
 
     if (tokenUrl.startsWith("/")) tokenUrl = baseUrl + tokenUrl;
+
 
     String params = "grant_type=authorization_code"
       + "&client_id=" + clientId
