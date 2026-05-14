@@ -114,8 +114,8 @@ class ServiceLoginDialog extends LoginDialog
     if (!this.oauthContainer)
     {
       this.oauthContainer = document.createElement("div");
-      this.oauthContainer.className =  "oauth_buttons";
-      this.bodyElem.append(this.oauthContainer);
+      this.oauthContainer.className = "oauth_buttons";
+      this.footerElem.append(this.oauthContainer);
     }
     else
     {
@@ -126,13 +126,27 @@ class ServiceLoginDialog extends LoginDialog
       const buttonLabel = provider.name.toUpperCase();
       const authUrl = `${securityBaseUrl}/oauth2/login/${provider.name}`;
 
-      Controls.addButton(
-        this.oauthContainer,
-        `auth_${provider.name}`,
-        buttonLabel,
-        () => Auth.openAuthPopup(authUrl)
-      );
-    });
+      if (provider.logoUrl) 
+        {
+          Controls.addButtonWithLogo(
+            this.oauthContainer,
+            `auth_${provider.name}`,
+            buttonLabel,
+            provider.logoUrl,
+            () => Auth.openAuthPopup(authUrl),
+            "oauth_logo_btn"
+          );
+        } 
+        else 
+        {
+          Controls.addButton(
+            this.oauthContainer,
+            `auth_${provider.name}`,
+            buttonLabel,
+            () => Auth.openAuthPopup(authUrl)
+          );
+        }
+      });
   }
 
   handleOAuthSuccess()

@@ -371,6 +371,31 @@ class Controls
     return buttonElem;
   }
 
+  static addButtonWithLogo(parent, name, label, imageUrl, action, className)
+  {
+    const buttonElem = document.createElement("button");
+    buttonElem.name = name;
+    I18N.set(buttonElem, "title", label);
+    if (className) buttonElem.className = className;
+
+    const imgElem = document.createElement("img");
+
+    imgElem.onerror = () => 
+    {
+      imgElem.remove();
+      I18N.set(buttonElem, "textContent", label);
+    };
+
+    imgElem.src = imageUrl;
+    imgElem.alt = label;
+
+    buttonElem.appendChild(imgElem);
+    buttonElem.addEventListener("click", event => action(event), false);
+    parent.appendChild(buttonElem);
+
+    return buttonElem;
+  }
+
   static addImageButton(parent, name, label, action, className)
   {
     const buttonElem = document.createElement("button");
