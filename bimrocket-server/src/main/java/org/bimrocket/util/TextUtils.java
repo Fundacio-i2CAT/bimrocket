@@ -33,6 +33,8 @@ package org.bimrocket.util;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.security.SecureRandom;
+import java.util.Locale;
 
 /**
  *
@@ -64,5 +66,26 @@ public class TextUtils
     {
       throw new RuntimeException(ex);
     }
+  }
+
+  public static String generatePassword()
+  {
+    SecureRandom RANDOM = new SecureRandom();
+
+    /**
+     * Generate paswrod with format: prefix + zero-padded digits + specialChar
+     * Example: Prova000#
+     */
+    String prefix = "Bimrocket";
+    int digits = 4;
+    String specials = "#";
+
+    int max = (int) Math.pow(10, digits);
+    int number = RANDOM.nextInt(max);
+
+    String format = "%0" + digits + "d";
+    String numStr = String.format(Locale.ROOT, format, number);
+
+    return prefix + numStr + specials;
   }
 }

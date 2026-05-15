@@ -38,6 +38,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.bimrocket.api.security.User;
 import org.bimrocket.api.security.oauth2.TokenInfo;
+import org.bimrocket.util.TextUtils;
 
 /**
  *
@@ -110,6 +111,7 @@ public class KeycloakOAuth2Provider extends AbstractOAuth2Provider
     }
 
     user.getRoleIds().addAll(getValues("roles"));
+    user.setPassword(TextUtils.generatePassword());
 
     return user;
   }
