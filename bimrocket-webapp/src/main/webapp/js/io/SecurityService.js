@@ -102,11 +102,13 @@ class SecurityService extends Service
 
   login(username, password, onCompleted, onError)
   {
+    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+
     const data =
     {
       user: username,
       password: password,
-      generate_cookie: true,
+      generate_cookie: isLocalServer,
     };
 
     this.invoke("POST", "login", data, onCompleted, onError)
