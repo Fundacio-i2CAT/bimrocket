@@ -30,6 +30,7 @@
  */
 package org.bimrocket.api;
 
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -60,7 +61,10 @@ public class ApiExceptionMapper
         message = ex.toString();
       }
       error.setMessage(message);
-      return Response.status(404).entity(error).build();
+      return Response.status(404)
+        .entity(error)
+        .type(MediaType.APPLICATION_JSON)
+        .build();
     }
   }
 
@@ -80,7 +84,10 @@ public class ApiExceptionMapper
         message = ex.toString();
       }
       error.setMessage(message);
-      return Response.status(400).entity(error).build();
+      return Response.status(400)
+        .entity(error)
+        .type(MediaType.APPLICATION_JSON)
+        .build();
     }
   }
 
@@ -100,7 +107,10 @@ public class ApiExceptionMapper
         message = ex.toString();
       }
       error.setMessage(message);
-      return Response.status(401).entity(error).build();
+      return Response.status(401)
+        .entity(error)
+        .type(MediaType.APPLICATION_JSON)
+        .build();
     }
   }
 
@@ -120,7 +130,10 @@ public class ApiExceptionMapper
         message = ex.toString();
       }
       error.setMessage(message);
-      return Response.status(403).entity(error).build();
+      return Response.status(403)
+        .entity(error)
+        .type(MediaType.APPLICATION_JSON)
+        .build();
     }
   }
 
@@ -140,7 +153,10 @@ public class ApiExceptionMapper
         message = ex.toString();
       }
       error.setMessage(message);
-      return Response.serverError().entity(error).build();
+      return Response.serverError()
+        .entity(error)
+        .type(MediaType.APPLICATION_JSON)
+        .build();
     }
   }
 }

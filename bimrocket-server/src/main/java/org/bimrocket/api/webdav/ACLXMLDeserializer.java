@@ -1,4 +1,4 @@
-package org.bimrocket.servlet.webdav;
+package org.bimrocket.api.webdav;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -13,14 +13,17 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.bimrocket.service.file.ACL;
 import org.bimrocket.service.file.util.MutableACL;
+import static org.bimrocket.api.webdav.WebdavUtils.DAV_NS;
+import static org.bimrocket.api.webdav.WebdavUtils.mapXmlTagToPrivilege;
 import static org.bimrocket.service.security.SecurityConstants.AUTHENTICATED_ROLE;
 import static org.bimrocket.service.security.SecurityConstants.EVERYONE_ROLE;
-import static org.bimrocket.servlet.webdav.WebdavUtils.*;
 
-
-// Deserialize XML to MutableACL object
+/**
+ *
+ * @author jordi.hernandez@i2cat.net
+ */
 public class ACLXMLDeserializer
-{  
+{
   // Receives current user to replace when tag is D:owner
   public static ACL deserialize(String xml, String userId) throws IOException
   {
@@ -42,7 +45,7 @@ public class ACLXMLDeserializer
         Element ace = (Element) aceList.item(i);
         String principal = getPrincipal(ace, userId);
         if (principal == null) continue;
-        
+
         NodeList privilegeList = ace.getElementsByTagNameNS(DAV_NS, "privilege");
 
         for (int j = 0; j < privilegeList.getLength(); j++)
@@ -50,7 +53,7 @@ public class ACLXMLDeserializer
           Element privilegeElement = getFirstElementChild(privilegeList.item(j));
           if (privilegeElement == null) continue;
 
-          String privilegeTag = privilegeElement.getLocalName();          
+          String privilegeTag = privilegeElement.getLocalName();
           acl.grant(principal, mapXmlTagToPrivilege(privilegeTag));
         }
       }

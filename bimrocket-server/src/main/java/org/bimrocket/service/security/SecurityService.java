@@ -33,10 +33,8 @@ package org.bimrocket.service.security;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +65,7 @@ import java.util.UUID;
 import org.bimrocket.dao.expression.Expression;
 import org.bimrocket.dao.expression.OrderByExpression;
 import org.bimrocket.dao.expression.io.log.LogExpressionPrinter;
+import org.bimrocket.rest.RequestContext;
 import static org.bimrocket.service.security.Credentials.*;
 import org.bimrocket.util.EntityDefinition;
 import org.bimrocket.util.TextUtils;
@@ -89,9 +88,6 @@ public class SecurityService
   public static final Map<String, Field> roleFieldMap =
     EntityDefinition.getInstance(Role.class).getFieldMap();
 
-  static final String USER_ATTRIBUTE = "_user_";
-  static final String CREDENTIALS_ATTRIBUTE = "_credentials_";
-
 // Exceptions
 
   static final String USER_ALREADY_EXISTS =
@@ -110,7 +106,7 @@ public class SecurityService
     "SEC007: Password is required.";
 
   @Inject
-  Instance<HttpServletRequest> requestInstance;
+  RequestContext requestContext;
 
   @Inject
   Config config;
@@ -125,12 +121,14 @@ public class SecurityService
   ExpiringCache<Role> roleCache;
   ConcurrentHashMap<Thread, String> userIdByThread;
 
-  long credentialsCacheTimeout; // seconds
-  long userCacheTimeout; // seconds
-  long roleCacheTimeout; // seconds
-  long tokenTimeout; // seconds
+  int credentialsCacheTimeout; // seconds
+  int userCacheTimeout; // seconds
+  int roleCacheTimeout; // seconds
+  int tokenTimeout; // seconds
+  int maxTokenAge; // seconds
 
   User anonymousUser;
+  User adminUser;
 
   boolean ldapEnabled;
 
@@ -170,20 +168,23 @@ public class SecurityService
 
     adminPassword = config.getValue(BASE + "adminPassword", String.class);
 
-    credentialsCacheTimeout = config.getValue(BASE + "credentialsCacheTimeout", Long.class);
+    credentialsCacheTimeout = config.getValue(BASE + "credentialsCacheTimeout", Integer.class);
     credentialsCache = new ExpiringCache<>(credentialsCacheTimeout * 1000);
     LOGGER.log(Level.INFO, "credentialsCacheTimeout: {0}", credentialsCacheTimeout);
 
-    userCacheTimeout = config.getValue(BASE + "userCacheTimeout", Long.class);
+    userCacheTimeout = config.getValue(BASE + "userCacheTimeout", Integer.class);
     userCache = new ExpiringCache<>(userCacheTimeout * 1000);
     LOGGER.log(Level.INFO, "userCacheTimeout: {0}", userCacheTimeout);
 
-    roleCacheTimeout = config.getValue(BASE + "roleCacheTimeout", Long.class);
+    roleCacheTimeout = config.getValue(BASE + "roleCacheTimeout", Integer.class);
     roleCache = new ExpiringCache<>(roleCacheTimeout * 1000);
     LOGGER.log(Level.INFO, "roleCacheTimeout: {0}", roleCacheTimeout);
 
-    tokenTimeout = config.getValue(BASE + "tokenTimeout", Long.class);
+    tokenTimeout = config.getValue(BASE + "tokenTimeout", Integer.class);
     LOGGER.log(Level.INFO, "tokenTimeout: {0}", tokenTimeout);
+
+    maxTokenAge = config.getValue(BASE + "maxTokenAge", Integer.class);
+    LOGGER.log(Level.INFO, "maxTokenAge: {0}", maxTokenAge);
 
     userIdByThread = new ConcurrentHashMap<>();
 
@@ -191,6 +192,11 @@ public class SecurityService
     anonymousUser.setId(ANONYMOUS_USER);
     anonymousUser.setName(ANONYMOUS_USER);
     anonymousUser.getRoleIds().add(EVERYONE_ROLE);
+
+    adminUser = new User();
+    adminUser.setId(ADMIN_USER);
+    adminUser.setName(ADMIN_USER);
+    adminUser.getRoleIds().add(ADMIN_ROLE);
   }
 
   @PreDestroy
@@ -204,19 +210,14 @@ public class SecurityService
   {
     LOGGER.log(Level.FINE, "userId: {0}", userId);
 
+    if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
+
     if (ADMIN_USER.equals(userId)) // admin user
     {
       if (!adminPassword.equals(password))
         throw new NotAuthorizedException();
 
-      User user = getUser(userId); // get from store
-      if (user == null)
-      {
-        user = new User();
-        user.setId(userId);
-        user.setName(userId);
-      }
-      return user;
+      return adminUser;
     }
 
     User user = getUser(userId); // get from store
@@ -480,32 +481,22 @@ public class SecurityService
     return user.getId();
   }
 
-  public void setCredentials(Credentials credentials)
-  {
-    HttpServletRequest request = requestInstance.get();
-    request.setAttribute(CREDENTIALS_ATTRIBUTE, credentials);
-  }
-
   public User getCurrentUser()
   {
     User user = getUserFromThread();
-    if (user == null)
-    {
-      return getUserFromRequest();
-    }
-    return anonymousUser;
+    if (user != null) return user;
+
+    return getUserFromRequest();
   }
 
   /* private methods */
 
   private User getUserFromRequest()
   {
-    HttpServletRequest request = requestInstance.get();
-    User user = (User)request.getAttribute(USER_ATTRIBUTE);
+    User user = requestContext.getCurrentUser();
     if (user != null) return user;
 
-    Credentials credentials =
-      (Credentials)request.getAttribute(CREDENTIALS_ATTRIBUTE);
+    Credentials credentials = requestContext.getCredentials();
     if (credentials == null) return anonymousUser;
 
     String userId = credentialsCache.get(credentials.getHash());
@@ -517,7 +508,7 @@ public class SecurityService
 
     user = getUserFromCredentials(credentials);
     userId = user.getId().trim();
-    request.setAttribute(USER_ATTRIBUTE, user);
+    requestContext.setCurrentUser(user);
 
     if (ANONYMOUS_USER.equals(userId)) return anonymousUser;
 
@@ -533,20 +524,32 @@ public class SecurityService
 
   private User getUserFromThread()
   {
+    User user;
     String userId = userIdByThread.get(Thread.currentThread());
-    if (userId != null)
+
+    if (ANONYMOUS_USER.equals(userId))
     {
-      User user = userCache.get(userId);
+      user = anonymousUser;
+    }
+    else if (ADMIN_USER.equals(userId))
+    {
+      user = adminUser;
+    }
+    else if (userId != null)
+    {
+      user = userCache.get(userId);
       if (user != null) return user;
 
       user = getUser(userId);
       addUserRoles(user);
 
       userCache.put(userId, user);
-
-      return user;
     }
-    return null;
+    else
+    {
+      user = null;
+    }
+    return user;
   }
 
   private User getUserFromCredentials(Credentials credentials)
@@ -583,10 +586,16 @@ public class SecurityService
 
       if (token == null) return anonymousUser;
 
+      // check token expiration
       Date expirationDate = TextUtils.parseISODate(token.getExpirationDate());
       Date now = new Date();
 
       if (now.after(expirationDate)) return anonymousUser;
+
+      Date creationDate = TextUtils.parseISODate(token.getCreationDate());
+      long tokenAge = (now.getTime() - creationDate.getTime()) / 1000;
+
+      if (tokenAge > maxTokenAge) return anonymousUser;
 
       String userId = token.getUserId();
 
@@ -597,9 +606,7 @@ public class SecurityService
       }
       else if (ADMIN_USER.equals(userId))
       {
-        user = new User();
-        user.setId(userId);
-        user.setName(userId);
+        user = adminUser;
       }
       else
       {
@@ -610,6 +617,7 @@ public class SecurityService
           throw new NotAuthorizedException(USER_IS_NOT_ACTIVE);
       }
 
+      // extend token expiration
       long timeToExpiration = expirationDate.getTime() - now.getTime();
       if (timeToExpiration < 1000 * tokenTimeout)
       {

@@ -28,33 +28,41 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.filter;
+package org.bimrocket.rest.filter;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
-import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author realor
  */
 @Provider
-public class CORSFilter implements ContainerResponseFilter
+public class LoggingFilter implements ContainerResponseFilter
 {
+  static final Logger LOGGER = Logger.getLogger(LoggingFilter.class.getName());
+
   @Override
   public void filter(ContainerRequestContext requestContext,
-    ContainerResponseContext responseContext) throws IOException
+    ContainerResponseContext responseContext)
+    throws IOException
   {
-    MultivaluedMap<String, Object> headers = responseContext.getHeaders();
-    headers.add("Access-Control-Allow-Origin", "*");
-    headers.add("Access-Control-Allow-Credentials", "true");
-    headers.add("Access-Control-Allow-Headers",
-     "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match,x-requested-with,destination");
-
-    headers.add("Access-Control-Allow-Methods",
-      "HEAD,GET,POST,PUT,DELETE,OPTIONS,PROPFIND,PROPPATCH,MKCOL,ACL,LOCK,UNLOCK,COPY,MOVE");
+    String method = requestContext.getMethod();
+    UriInfo uriInfo = requestContext.getUriInfo();
+    String path = uriInfo.getPath();
+    String query = uriInfo.getRequestUri().getRawQuery();
+    int status = responseContext.getStatus();
+    if (query != null)
+    {
+      path += "?" + query;
+    }
+    LOGGER.log(Level.INFO, "{0} {1} -> {2}",
+      new Object[] { method, path, status });
   }
 }

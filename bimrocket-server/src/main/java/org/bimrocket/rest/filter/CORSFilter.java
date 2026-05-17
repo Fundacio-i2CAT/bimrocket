@@ -28,57 +28,33 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.service.security;
+package org.bimrocket.rest.filter;
 
-import jakarta.persistence.Id;
-import java.util.Date;
-import org.bimrocket.util.TextUtils;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.Provider;
+import java.io.IOException;
 
 /**
  *
  * @author realor
  */
-public class Token
+@Provider
+public class CORSFilter implements ContainerResponseFilter
 {
-  @Id
-  private String id;
-  private String userId;
-  private String creationDate;
-  private String expirationDate;
-
-  static Token create(String id, String userId, int tokenTimeout)
+  @Override
+  public void filter(ContainerRequestContext requestContext,
+    ContainerResponseContext responseContext) throws IOException
   {
-    Token token = new Token();
-    token.id = id;
-    token.userId = userId;
-    token.creationDate = TextUtils.getISODate();
-    token.updateExpirationDate(tokenTimeout);
-    return token;
-  }
+    MultivaluedMap<String, Object> headers = responseContext.getHeaders();
+    headers.add("Access-Control-Allow-Origin", "*");
+    headers.add("Access-Control-Allow-Credentials", "true");
+    headers.add("Access-Control-Allow-Headers",
+     "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match,x-requested-with,destination");
 
-  public String Id()
-  {
-    return id;
-  }
-
-  public String getUserId()
-  {
-    return userId;
-  }
-
-  public String getCreationDate()
-  {
-    return creationDate;
-  }
-
-  public String getExpirationDate()
-  {
-    return expirationDate;
-  }
-
-  public void updateExpirationDate(int timeout)
-  {
-    long expirationTime = System.currentTimeMillis() + 1000L * timeout;
-    this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
+    headers.add("Access-Control-Allow-Methods",
+      "HEAD,GET,POST,PUT,DELETE,OPTIONS,PROPFIND,PROPPATCH,MKCOL,ACL,LOCK,UNLOCK,COPY,MOVE");
   }
 }

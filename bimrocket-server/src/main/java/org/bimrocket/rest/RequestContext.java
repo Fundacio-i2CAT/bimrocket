@@ -28,57 +28,50 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.service.security;
+package org.bimrocket.rest;
 
-import jakarta.persistence.Id;
-import java.util.Date;
-import org.bimrocket.util.TextUtils;
+import jakarta.enterprise.context.RequestScoped;
+import org.bimrocket.api.security.User;
+import org.bimrocket.service.security.Credentials;
 
 /**
  *
  * @author realor
  */
-public class Token
+@RequestScoped
+public class RequestContext
 {
-  @Id
-  private String id;
-  private String userId;
-  private String creationDate;
-  private String expirationDate;
+  private Credentials credentials;
+  private String remoteAddress;
+  private User currentUser;
 
-  static Token create(String id, String userId, int tokenTimeout)
+  public Credentials getCredentials()
   {
-    Token token = new Token();
-    token.id = id;
-    token.userId = userId;
-    token.creationDate = TextUtils.getISODate();
-    token.updateExpirationDate(tokenTimeout);
-    return token;
+    return credentials;
   }
 
-  public String Id()
+  public void setCredentials(Credentials credentials)
   {
-    return id;
+    this.credentials = credentials;
   }
 
-  public String getUserId()
+  public String getRemoteAddress()
   {
-    return userId;
+    return remoteAddress;
   }
 
-  public String getCreationDate()
+  public void setRemoteAddress(String remoteAddress)
   {
-    return creationDate;
+    this.remoteAddress = remoteAddress;
   }
 
-  public String getExpirationDate()
+  public User getCurrentUser()
   {
-    return expirationDate;
+    return currentUser;
   }
 
-  public void updateExpirationDate(int timeout)
+  public void setCurrentUser(User currentUser)
   {
-    long expirationTime = System.currentTimeMillis() + 1000L * timeout;
-    this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
+    this.currentUser = currentUser;
   }
 }

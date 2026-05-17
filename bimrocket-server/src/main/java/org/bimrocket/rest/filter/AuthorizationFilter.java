@@ -28,7 +28,7 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.filter;
+package org.bimrocket.rest.filter;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -40,6 +40,7 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
@@ -57,6 +58,11 @@ import static jakarta.ws.rs.core.MediaType.TEXT_XML;
 import static org.bimrocket.service.security.SecurityConstants.ANONYMOUS_USER;
 import static org.bimrocket.service.security.SecurityConstants.AUTHENTICATED_ROLE;
 import org.bimrocket.api.security.SessionCookieManager;
+import static org.bimrocket.api.security.SessionCookieManager.SESSION_COOKIE;
+import org.bimrocket.rest.RequestContext;
+import org.bimrocket.service.security.Credentials;
+import static org.bimrocket.service.security.Credentials.COOKIE;
+import org.jboss.resteasy.core.ResteasyContext;
 
 /**
  *
@@ -70,6 +76,9 @@ public class AuthorizationFilter
   private ResourceInfo resourceInfo;
 
   @Inject
+  RequestContext requestContext;
+
+  @Inject
   SecurityService securityService;
 
   @Inject
@@ -78,6 +87,26 @@ public class AuthorizationFilter
   @Override
   public void filter(ContainerRequestContext context) throws IOException
   {
+    Credentials credentials = null;
+
+    // set Credentials
+    String authorization = context.getHeaderString("Authorization");
+    if (authorization != null)
+    {
+      credentials = fromAuthorization(authorization);
+    }
+    else
+    {
+      Cookie cookie = context.getCookies().get(SESSION_COOKIE);
+      if (cookie != null)
+      {
+        credentials = fromCookie(cookie);
+      }
+    }
+    requestContext.setCredentials(credentials);
+    requestContext.setRemoteAddress(getRemoteAddress());
+
+    // check method authorization
     if ("OPTIONS".equals(context.getMethod())) return;
 
     Method method = resourceInfo.getResourceMethod();
@@ -115,6 +144,7 @@ public class AuthorizationFilter
   {
     if (responseContext.getStatus() == 401)
     {
+      // Reset cookie
       responseContext.getHeaders().add("Set-Cookie",
         sessionCookieManager.getDestroyCookieString());
     }
@@ -146,5 +176,38 @@ public class AuthorizationFilter
       }
     }
     return Response.status(statusCode, message).build();
+  }
+
+  private Credentials fromAuthorization(String authorization)
+  {
+    String type;
+    String value;
+
+    authorization = authorization.trim();
+    int index = authorization.indexOf(' ');
+    if (index != -1)
+    {
+      type = authorization.substring(0, index).toLowerCase();
+      value = authorization.substring(index + 1).trim();
+    }
+    else
+    {
+      type = "";
+      value = authorization;
+    }
+    return new Credentials(type, value);
+  }
+
+  private Credentials fromCookie(Cookie cookie)
+  {
+    return new Credentials(COOKIE, cookie.getValue());
+  }
+
+  private String getRemoteAddress()
+  {
+    org.jboss.resteasy.spi.HttpRequest httpRequest =
+      ResteasyContext.getContextData(org.jboss.resteasy.spi.HttpRequest.class);
+
+    return httpRequest.getRemoteAddress();
   }
 }

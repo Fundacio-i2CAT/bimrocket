@@ -28,57 +28,19 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.service.security;
+package org.bimrocket.rest.methods;
 
-import jakarta.persistence.Id;
-import java.util.Date;
-import org.bimrocket.util.TextUtils;
+import jakarta.ws.rs.HttpMethod;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  *
  * @author realor
  */
-public class Token
-{
-  @Id
-  private String id;
-  private String userId;
-  private String creationDate;
-  private String expirationDate;
-
-  static Token create(String id, String userId, int tokenTimeout)
-  {
-    Token token = new Token();
-    token.id = id;
-    token.userId = userId;
-    token.creationDate = TextUtils.getISODate();
-    token.updateExpirationDate(tokenTimeout);
-    return token;
-  }
-
-  public String Id()
-  {
-    return id;
-  }
-
-  public String getUserId()
-  {
-    return userId;
-  }
-
-  public String getCreationDate()
-  {
-    return creationDate;
-  }
-
-  public String getExpirationDate()
-  {
-    return expirationDate;
-  }
-
-  public void updateExpirationDate(int timeout)
-  {
-    long expirationTime = System.currentTimeMillis() + 1000L * timeout;
-    this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
-  }
-}
+@HttpMethod("PROPFIND")
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PROPFIND {}
