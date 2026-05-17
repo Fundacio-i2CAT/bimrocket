@@ -58,12 +58,15 @@ public class ExpressSchema
 
   public ExpressNamedType getNamedType(String typeName)
   {
+    ExpressNamedType namedType = namedTypes.get(typeName);
+    if (namedType != null) return namedType;
+
     return namedTypes.get(typeName.toUpperCase());
   }
 
   public void addNamedType(ExpressNamedType namedType)
   {
-    namedTypes.put(namedType.getTypeName().toUpperCase(), namedType);
+    namedTypes.put(namedType.getNormalizedTypeName(), namedType);
   }
 
   public Collection<ExpressNamedType> getNamedTypes()

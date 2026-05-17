@@ -38,15 +38,22 @@ package org.bimrocket.express;
 public abstract class ExpressType
 {
   private final String typeName;
+  private final String normalizedTypeName;
 
   public ExpressType(String typeName)
   {
     this.typeName = typeName;
+    normalizedTypeName = typeName.toUpperCase();
   }
 
   public String getTypeName()
   {
     return typeName;
+  }
+
+  public String getNormalizedTypeName()
+  {
+    return normalizedTypeName;
   }
 
   @Override

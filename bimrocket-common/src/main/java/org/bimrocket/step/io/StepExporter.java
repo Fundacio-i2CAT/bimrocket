@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -111,16 +113,33 @@ public class StepExporter
     export(new File(filename));
   }
 
+  public void export(String filename, Collection<ExpressCursor> cursors)
+    throws IOException
+  {
+    export(new File(filename), cursors);
+  }
+
   public void export(File file) throws IOException
+  {
+    export(file, Collections.emptyList());
+  }
+
+  public void export(File file, Collection<ExpressCursor> cursors)
+    throws IOException
   {
     try (BufferedWriter writer =
           new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file))))
     {
-      export(writer);
+      export(writer, cursors);
     }
   }
 
   public void export(Writer writer)
+  {
+    export(writer, Collections.emptyList());
+  }
+
+  public void export(Writer writer, Collection<ExpressCursor> cursors)
   {
     tagCount = 0;
     entityTags.clear();
@@ -132,7 +151,20 @@ public class StepExporter
       fileSchema.getSchemas().add(schema.getName());
     }
 
-    registerEntities(data.getRoot());
+    if (cursors.isEmpty())
+    {
+      registerEntities(data.getRoot());
+    }
+    else
+    {
+      for (ExpressCursor cursor : cursors)
+      {
+        if (cursor.getData() == data)
+        {
+          registerEntities(cursor);
+        }
+      }
+    }
 
     printer = new PrintWriter(writer);
     try
@@ -194,6 +226,8 @@ public class StepExporter
     ExpressType type = cursor.getType();
     if (type instanceof ExpressEntity)
     {
+      if (!isEntityExportable(cursor)) return;
+
       id = cursor.getId();
       if (id == null) throw new RuntimeException("Entity id is null");
 
@@ -230,6 +264,11 @@ public class StepExporter
       entityTags.put(id, ++tagCount);
       entityList.add(cursor.copy());
     }
+  }
+
+  protected boolean isEntityExportable(ExpressCursor entityCursor)
+  {
+    return true;
   }
 
   protected void exportEntity(ExpressCursor cursor)
@@ -298,7 +337,8 @@ public class StepExporter
       {
         String id = cursor.getId();
         Integer tag = entityTags.get(id);
-        printer.print("#" + tag);
+        if (tag != null) printer.print("#" + tag);
+        else printer.print("$");
       }
       else if (type instanceof ExpressDefinedType)
       {
@@ -379,13 +419,13 @@ public class StepExporter
   protected String formatNumber(Number number, ExpressType type)
   {
     ExpressPrimitive primitive = null;
-    if (type instanceof ExpressPrimitive)
+    if (type instanceof ExpressPrimitive expressPrimitive)
     {
-      primitive = (ExpressPrimitive)type;
+      primitive = expressPrimitive;
     }
-    else if (type instanceof ExpressDefinedType)
+    else if (type instanceof ExpressDefinedType expressDefinedType)
     {
-      primitive = ((ExpressDefinedType)type).getPrimitive();
+      primitive = expressDefinedType.getPrimitive();
     }
     if (primitive == null)
     {

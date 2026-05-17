@@ -64,6 +64,8 @@ public interface ExpressCursor
    * Gets the value of the specified attribute of the container wrapped by this
    * cursor.
    *
+   * @param <V> the value of the attribute of the given name.
+   * by this cursor.
    * @param name the name of the attribute.
    * @return the attribute value which is an instance of {@code String},
    * {@code Number}, {@code ExpressConstant} or the
@@ -118,6 +120,7 @@ public interface ExpressCursor
    * Gets the value at the specified index of the container wrapped by this
    * cursor.
    *
+   * @param <V> the value of the attribute at index position.
    * @param index the index of the item to get.
    * @return the item value which is an instance of {@code String},
    * {@code Number}, {@code ExpressConstant} or the
@@ -286,6 +289,14 @@ public interface ExpressCursor
    * @return the number of items of this container.
    */
   int size();
+
+
+  /**
+   * Returns the depth of this cursor.
+   *
+   * @return the depth of this cursor.
+   */
+  int getDepth();
 
   /**
    * Returns a copy of this cursor.
