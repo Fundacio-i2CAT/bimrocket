@@ -33,6 +33,7 @@ package org.bimrocket.service.security;
 import jakarta.persistence.Id;
 import java.util.Date;
 import org.bimrocket.util.TextUtils;
+import org.bson.codecs.pojo.annotations.BsonId;
 
 /**
  *
@@ -41,6 +42,7 @@ import org.bimrocket.util.TextUtils;
 public class Token
 {
   @Id
+  @BsonId
   private String id;
   private String userId;
   private String creationDate;
@@ -56,7 +58,7 @@ public class Token
     return token;
   }
 
-  public String Id()
+  public String getId()
   {
     return id;
   }
@@ -80,5 +82,25 @@ public class Token
   {
     long expirationTime = System.currentTimeMillis() + 1000 * timeout;
     this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
+  }
+
+  public void setId(String id)
+  {
+    this.id = id;
+  }
+
+  public void setUserId(String userId)
+  {
+    this.userId = userId;
+  }
+
+  public void setCreationDate(String creationDate)
+  {
+    this.creationDate = creationDate;
+  }
+
+  public void setExpirationDate(String expirationDate)
+  {
+    this.expirationDate = expirationDate;
   }
 }
