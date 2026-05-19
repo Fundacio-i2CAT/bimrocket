@@ -32,32 +32,33 @@ package org.bimrocket.api.security.oauth2.providers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bimrocket.api.security.User;
+import org.bimrocket.api.security.oauth2.TokenInfo;
+import org.bimrocket.util.TextUtils;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import org.bimrocket.api.security.User;
-import org.bimrocket.api.security.oauth2.TokenInfo;
-import org.bimrocket.util.TextUtils;
 
 /**
  *
  * @author jordi.hernandez@i2cat.net
  * @author realor
  */
-public class KeycloakOAuth2Provider extends AbstractOAuth2Provider
+public class GicarOAuth2Provider extends AbstractOAuth2Provider
 {
   @Override
   public String getName()
   {
-    return "keycloak";
+    return "gicar";
   }
 
   @Override
   public User getUser(TokenInfo tokenInfo) throws Exception
   {
     String baseUrl = getValue("baseUrl", "");
-    String getUserInfoUrl = getValue("getUserInfoUrl", "/userinfo");
+    String getUserInfoUrl = getValue("getUserInfoUrl", "/userInfo");
 
     if (getUserInfoUrl.startsWith("/")) getUserInfoUrl = baseUrl + getUserInfoUrl;
 
