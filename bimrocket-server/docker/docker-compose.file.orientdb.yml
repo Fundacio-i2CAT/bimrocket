@@ -11,7 +11,7 @@ services:
     ports:
       - "9090:8080"
     volumes:
-      - ./application.orientdb.yaml:/root/bimrocket/bimrocket-server.yaml
+      - ./application.file.orientdb.yaml:/root/bimrocket/bimrocket-server.yaml
       - bimrocket_data:/root/bimrocket/cloudfs
     networks:
       - bimrocket_network

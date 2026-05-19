@@ -17,12 +17,12 @@ Bimrocket's system is ready to deploy both **MongoDB** and **OrientDB**. This is
 OrientDB is a multi-model *NoSQL* database that combines the features of a document database, a graph database, and an object database in a single engine. It allows flexible data modeling and supports complex relationships through graph structures while maintaining document-based storage.
 
 **Files:**
-- [application.orientdb.yaml](.\application.orientdb.yaml)
-- [docker-compose.orientdb.yml](.\docker-compose.orientdb.yml)
+- [application.file.orientdb.yaml](.\application.orientdb.yaml)
+- [docker-compose.file.orientdb.yml](.\docker-compose.orientdb.yml)
 
 From the `/docker` directory, build images and deploy the containers:
   ```sh
-  docker-compose up -f docker-compose.orientdb.yml --build -d
+  docker-compose up -f docker-compose.file.orientdb.yml --build -d
   ```
 
 ### Deployment in MongoDB
@@ -32,12 +32,19 @@ From the `/docker` directory, build images and deploy the containers:
 **MongoDB** is a widely used *NoSQL* document-oriented database designed for scalability, performance, and ease of development. It stores data in flexible *JSON-like* documents, making it ideal for modern applications that require dynamic schemas and rapid iteration.
 
 **Files:**
-- [application.mongodb.yaml](.\application.mongodb.yaml)
-- [docker-compose.mongodb.yml](.\docker-compose.mongodb.yml)
+
+For Azure deployment
+- [application.azure.mongodb.yaml](.\application.mongodb.yaml)
+- [docker-compose.azure.mongodb.yml](.\docker-compose.mongodb.yml)
+
+For File System deployment
+- [application.file.mongodb.yaml](.\application.mongodb.yaml)
+- [docker-compose.file.mongodb.yml](.\docker-compose.mongodb.yml)
+
 
 From the `/docker` directory, build images and deploy the containers:
   ```sh
-  docker-compose up -f docker-compose.mongodb.yml --build -d
+  docker-compose up -f docker-compose.azure.mongodb.yml --build -d
   ```
 
 ### Docker Compose
