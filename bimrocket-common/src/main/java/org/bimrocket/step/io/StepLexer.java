@@ -51,8 +51,11 @@ public class StepLexer
 {
   private final Reader reader;
   private final Stack<StepToken> tokenStack = new Stack<>();
-  private final Stack<Integer> charStack = new Stack<>();
   private final StringBuilder buffer = new StringBuilder();
+  private final char charBuffer[] = new char[409600];
+  private int charBufferPos = 0;
+  private int charBufferSize = 0;
+  private int unreadChar = -2;
 
   private static final LookupTable KEYWORDS = new LookupTable();
   private static final Pattern TEXT_PATTERN =
@@ -303,15 +306,15 @@ public class StepLexer
 
   protected StepToken readReference() throws IOException
   {
-    buffer.append("#");
+    long id = 0;
     int ch = read();
     while (Character.isDigit(ch))
     {
-      buffer.append((char)ch);
+      id = id * 10 + (ch - '0');
       ch = read();
     }
     unread(ch);
-    return new StepToken(REFERENCE, buffer.toString());
+    return new StepToken(REFERENCE, id);
   }
 
   protected StepToken readComment() throws IOException
@@ -341,21 +344,24 @@ public class StepLexer
 
   protected int read() throws IOException
   {
-    int ch;
-    if (charStack.isEmpty())
+    if (unreadChar != -2)
     {
-      ch = reader.read();
+      int ch = unreadChar;
+      unreadChar = -2;
+      return ch;
     }
-    else
+    if (charBufferPos >= charBufferSize)
     {
-      ch = charStack.pop();
+      charBufferPos = 0;
+      charBufferSize = reader.read(charBuffer, 0, charBuffer.length);
+      if (charBufferSize <= 0) return -1;
     }
-    return ch;
+    return charBuffer[charBufferPos++];
   }
 
   protected void unread(int ch)
   {
-    charStack.push(ch);
+    unreadChar = ch;
   }
 
   static class LookupTable extends HashMap<String, String>

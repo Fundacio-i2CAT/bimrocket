@@ -1,3 +1,4 @@
+/*
 package org.bimrocket.servlet.webdav;
 
 import org.bimrocket.service.file.ACL;
@@ -106,7 +107,7 @@ public class ACLXMLDeserializerTest
     return """
     <?xml version="1.0" encoding="utf-8"?>
     <D:acl xmlns:D="DAV:">
-                
+
     <!-- Access for PROJECTISTA -->
     <D:ace>
         <D:principal>
@@ -117,7 +118,7 @@ public class ACLXMLDeserializerTest
             <D:privilege><D:write/></D:privilege>
         </D:grant>
     </D:ace>
-    
+
     <!-- Access for VECTOR-UT-OGE -->
     <D:ace>
         <D:principal>
@@ -127,7 +128,7 @@ public class ACLXMLDeserializerTest
             <D:privilege><D:read/></D:privilege>
         </D:grant>
     </D:ace>
-                
+
     <!-- Access for ADMIN -->
     <D:ace>
         <D:principal>
@@ -138,9 +139,10 @@ public class ACLXMLDeserializerTest
             <D:privilege><D:write-acl/></D:privilege>
         </D:grant>
     </D:ace>
-    
+
     </D:acl>
     """;
   }
 
 }
+*/

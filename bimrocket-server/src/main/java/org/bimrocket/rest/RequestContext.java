@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -28,37 +28,50 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
+package org.bimrocket.rest;
 
-package org.bimrocket.express;
+import jakarta.enterprise.context.RequestScoped;
+import org.bimrocket.api.security.User;
+import org.bimrocket.service.security.Credentials;
 
 /**
  *
  * @author realor
  */
-public abstract class ExpressType
+@RequestScoped
+public class RequestContext
 {
-  private final String typeName;
-  private final String normalizedTypeName;
+  private Credentials credentials;
+  private String remoteAddress;
+  private User currentUser;
 
-  public ExpressType(String typeName)
+  public Credentials getCredentials()
   {
-    this.typeName = typeName;
-    normalizedTypeName = typeName.toUpperCase();
+    return credentials;
   }
 
-  public String getTypeName()
+  public void setCredentials(Credentials credentials)
   {
-    return typeName;
+    this.credentials = credentials;
   }
 
-  public String getNormalizedTypeName()
+  public String getRemoteAddress()
   {
-    return normalizedTypeName;
+    return remoteAddress;
   }
 
-  @Override
-  public String toString()
+  public void setRemoteAddress(String remoteAddress)
   {
-    return typeName;
+    this.remoteAddress = remoteAddress;
+  }
+
+  public User getCurrentUser()
+  {
+    return currentUser;
+  }
+
+  public void setCurrentUser(User currentUser)
+  {
+    this.currentUser = currentUser;
   }
 }

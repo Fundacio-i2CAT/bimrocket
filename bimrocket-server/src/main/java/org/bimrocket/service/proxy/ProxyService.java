@@ -34,30 +34,25 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.io.IOUtils;
 import org.bimrocket.api.security.User;
 import org.bimrocket.exception.AccessDeniedException;
+import org.bimrocket.exception.InvalidRequestException;
+import static org.bimrocket.service.security.SecurityConstants.AUTHENTICATED_ROLE;
 import org.bimrocket.service.security.SecurityService;
 import org.bimrocket.util.URIEncoder;
 import org.eclipse.microprofile.config.Config;
-import static org.bimrocket.service.security.SecurityConstants.AUTHENTICATED_ROLE;
 
 /**
  *
@@ -70,6 +65,8 @@ public class ProxyService
 
   static final String BASE = "services.proxy.";
 
+  static final String URL_PARAMETER = "url";
+
   static final HashSet<String> ignoredHeaders = new HashSet<>();
 
   static
@@ -78,6 +75,7 @@ public class ProxyService
     ignoredHeaders.add("connection");
     ignoredHeaders.add("content-length");
     ignoredHeaders.add("user-agent");
+    ignoredHeaders.add("accept-encoding");
   }
 
   @Inject
@@ -120,34 +118,45 @@ public class ProxyService
     }
   }
 
-  public void service(HttpServletRequest servletRequest,
-    HttpServletResponse servletResponse) throws Exception
+  public HttpResponse<InputStream> forwardRequest(
+    String method,
+    Map<String, List<String>> parameterMap,
+    Map<String, List<String>> headerMap,
+    String remoteAddress,
+    InputStream body)
   {
-    String url = servletRequest.getParameter("url");
-    sendCORSHeaders(servletResponse);
-
-    if (url == null)
+    try
     {
-      servletResponse.getWriter().print("proxy service");
+      HttpRequest request =
+        createRequest(method, parameterMap, headerMap, remoteAddress, body);
+
+      return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
     }
-    else
+    catch (RuntimeException ex)
     {
-      HttpRequest request = createRequest(url, servletRequest);
-
-      HttpResponse<InputStream> httpResponse =
-        httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-
-      sendResponse(httpResponse, servletResponse);
+      throw ex;
+    }
+    catch (Exception ex)
+    {
+      throw new RuntimeException(ex);
     }
   }
 
-  /* private */
-
-  private HttpRequest createRequest(String url,
-    HttpServletRequest servletRequest) throws Exception
+  private HttpRequest createRequest(
+    String method,
+    Map<String, List<String>> parameterMap,
+    Map<String, List<String>> headerMap,
+    String remoteAddress,
+    InputStream body)
+    throws Exception
   {
+    List<String> urlList = parameterMap.get(URL_PARAMETER);
+    if (urlList == null || urlList.isEmpty())
+        throw new InvalidRequestException(URL_PARAMETER + " parameter required");
+
+    String url = urlList.get(0);
+
     String alias;
-    String remoteAddr = servletRequest.getRemoteAddr();
 
     // get and validate url
     if (url.startsWith("@"))
@@ -164,9 +173,9 @@ public class ProxyService
 
       String ipFilter =
         config.getOptionalValue(aliasBase + ".ipfilter", String.class).orElse(null);
-      if (ipFilter != null && !remoteAddr.startsWith(ipFilter))
+      if (ipFilter != null && !remoteAddress.startsWith(ipFilter))
       {
-        throw new AccessDeniedException("Not authorized remote ip: " + remoteAddr);
+        throw new AccessDeniedException("Not authorized remote ip: " + remoteAddress);
       }
     }
     else
@@ -183,14 +192,12 @@ public class ProxyService
     StringBuilder uriBuffer = new StringBuilder(encodedUrl);
     boolean firstParam = true;
 
-    Map<String, String[]> parameterMap = servletRequest.getParameterMap();
-
     // add parameters to url
     for (String name : parameterMap.keySet())
     {
       if (!name.equals("url"))
       {
-        String[] values = parameterMap.get(name);
+        List<String> values = parameterMap.get(name);
         for (String value : values)
         {
           if (firstParam)
@@ -209,23 +216,18 @@ public class ProxyService
       }
     }
 
-    String method = servletRequest.getMethod().toUpperCase();
-
     // set body
-    InputStream is = "POST".equals(method) || "PUT".equals(method) ?
-      servletRequest.getInputStream() : null;
-
-    BodyPublisher body = is == null ?
+    HttpRequest.BodyPublisher bodyPub = body == null ?
       HttpRequest.BodyPublishers.noBody() :
-      HttpRequest.BodyPublishers.ofInputStream(() -> is);
+      HttpRequest.BodyPublishers.ofInputStream(() -> body);
 
     HttpRequest.Builder builder = HttpRequest.newBuilder()
       .uri(new URI(uriBuffer.toString()))
-      .method(method, body);
+      .method(method, bodyPub);
 
     // set headers
-    setHttpHeaders(builder, servletRequest, alias);
-    builder.header("X-Forwarded-For", remoteAddr);
+    setHttpHeaders(builder, headerMap, alias);
+    builder.header("X-Forwarded-For", remoteAddress);
     return builder.build();
   }
 
@@ -247,13 +249,11 @@ public class ProxyService
   }
 
   private void setHttpHeaders(HttpRequest.Builder builder,
-    HttpServletRequest servletRequest, String alias)
+    Map<String, List<String>> headerMap, String alias)
   {
-    Enumeration<String> headerNames = servletRequest.getHeaderNames();
-    while (headerNames.hasMoreElements())
+    for (String name : headerMap.keySet())
     {
-      String name = headerNames.nextElement();
-      String value = servletRequest.getHeader(name);
+      String value = headerMap.get(name).get(0);
 
       if (alias != null
         && name.equalsIgnoreCase("Authorization")
@@ -278,39 +278,5 @@ public class ProxyService
         }
       }
     }
-  }
-
-  private void sendResponse(HttpResponse<InputStream> httpResponse,
-    HttpServletResponse servletResponse)
-    throws Exception
-  {
-    Map<String, List<String>> headersMap = httpResponse.headers().map();
-
-    servletResponse.setStatus(httpResponse.statusCode());
-
-    for (Map.Entry<String, List<String>> entry : headersMap.entrySet())
-    {
-      String name = entry.getKey();
-      if (name != null
-        && !name.equalsIgnoreCase("Transfer-Encoding")
-        && !name.toLowerCase().startsWith("access-control"))
-      {
-        servletResponse.setHeader(name, entry.getValue().get(0));
-      }
-    }
-
-    try (OutputStream os = servletResponse.getOutputStream())
-    {
-      IOUtils.copy(httpResponse.body(), os);
-      os.flush();
-    }
-  }
-
-  private void sendCORSHeaders(HttpServletResponse servletResponse)
-  {
-    servletResponse.setHeader("Access-Control-Allow-Origin", "*");
-    servletResponse.setHeader("Access-Control-Allow-Credentials", "true");
-    servletResponse.setHeader("Access-Control-Allow-Headers", "*");
-    servletResponse.setHeader("Access-Control-Allow-Methods", "*");
   }
 }

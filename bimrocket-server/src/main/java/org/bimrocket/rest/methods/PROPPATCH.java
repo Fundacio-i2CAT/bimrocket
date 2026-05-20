@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -28,37 +28,19 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
+package org.bimrocket.rest.methods;
 
-package org.bimrocket.express;
+import jakarta.ws.rs.HttpMethod;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  *
  * @author realor
  */
-public abstract class ExpressType
-{
-  private final String typeName;
-  private final String normalizedTypeName;
-
-  public ExpressType(String typeName)
-  {
-    this.typeName = typeName;
-    normalizedTypeName = typeName.toUpperCase();
-  }
-
-  public String getTypeName()
-  {
-    return typeName;
-  }
-
-  public String getNormalizedTypeName()
-  {
-    return normalizedTypeName;
-  }
-
-  @Override
-  public String toString()
-  {
-    return typeName;
-  }
-}
+@HttpMethod("PROPPATCH")
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PROPPATCH {}

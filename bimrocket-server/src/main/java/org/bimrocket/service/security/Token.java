@@ -48,7 +48,7 @@ public class Token
   private String creationDate;
   private String expirationDate;
 
-  static Token create(String id, String userId, long tokenTimeout)
+  static Token create(String id, String userId, int tokenTimeout)
   {
     Token token = new Token();
     token.id = id;
@@ -78,9 +78,9 @@ public class Token
     return expirationDate;
   }
 
-  public void updateExpirationDate(long timeout)
+  public void updateExpirationDate(int timeout)
   {
-    long expirationTime = System.currentTimeMillis() + 1000 * timeout;
+    long expirationTime = System.currentTimeMillis() + 1000L * timeout;
     this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
   }
 

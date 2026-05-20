@@ -1,4 +1,4 @@
-package org.bimrocket.servlet.webdav;
+package org.bimrocket.api.webdav;
 
 import org.bimrocket.service.file.ACL;
 import org.bimrocket.service.file.Privilege;
@@ -11,10 +11,15 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
+import static org.bimrocket.api.webdav.WebdavUtils.DAV_NS;
+import static org.bimrocket.api.webdav.WebdavUtils.mapPrivilegeToXmlTag;
 import static org.bimrocket.service.security.SecurityConstants.AUTHENTICATED_ROLE;
 import static org.bimrocket.service.security.SecurityConstants.EVERYONE_ROLE;
-import static org.bimrocket.servlet.webdav.WebdavUtils.*;
 
+/**
+ *
+ * @author jordi.hernandez@i2cat.net
+ */
 public class ACLXMLSerializer
 {
   public static String serialize(ACL acl)
@@ -37,7 +42,7 @@ public class ACLXMLSerializer
         Element ace = doc.createElementNS(DAV_NS, "D:ace");
         Element principal = doc.createElementNS(DAV_NS, "D:principal");
 
-        switch (roleId.toUpperCase()) 
+        switch (roleId.toUpperCase())
         {
           case EVERYONE_ROLE:
             principal.appendChild(doc.createElementNS(DAV_NS, "D:all"));
@@ -58,7 +63,7 @@ public class ACLXMLSerializer
         for (Privilege privilege : privileges)
         {
           Element privilegeElement = doc.createElementNS(DAV_NS, "D:privilege");
-          Element privElement = doc.createElementNS(DAV_NS, 
+          Element privElement = doc.createElementNS(DAV_NS,
             "D:" + mapPrivilegeToXmlTag(privilege));
           privilegeElement.appendChild(privElement);
           grant.appendChild(privilegeElement);
@@ -79,7 +84,7 @@ public class ACLXMLSerializer
       transformer.transform(new DOMSource(doc), new StreamResult(writer));
       return writer.toString();
     }
-    catch (IllegalArgumentException | ParserConfigurationException | 
+    catch (IllegalArgumentException | ParserConfigurationException |
           TransformerException | DOMException ex)
     {
       throw new RuntimeException(ex);

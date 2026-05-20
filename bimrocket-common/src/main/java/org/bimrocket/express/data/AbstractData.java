@@ -333,6 +333,12 @@ public abstract class AbstractData<E, C> implements ExpressData
     }
 
     @Override
+    public int getDepth()
+    {
+      return stack == null ? 0 : stack.size() / 2;
+    }
+
+    @Override
     public ExpressCursor copy()
     {
       return new Cursor(container, type);

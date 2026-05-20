@@ -28,7 +28,7 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-package org.bimrocket.servlet.webdav;
+package org.bimrocket.api.webdav;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -45,9 +45,9 @@ import static org.bimrocket.service.file.Privilege.WRITE_ACL;
 public class WebdavUtils
 {
   public static final String DAV_NS = "DAV:";
-  
+
   static final BidiMap<String, Privilege> xmlTagToPrivilege = new DualHashBidiMap<>();
-  
+
   static
   {
     xmlTagToPrivilege.put("read", READ);
@@ -62,8 +62,8 @@ public class WebdavUtils
     if (privilege == null)
       throw new IllegalArgumentException("Unsupported privilege " + privilegeTag);
     return privilege;
-  }  
-  
+  }
+
   public static String mapPrivilegeToXmlTag(Privilege privilege)
   {
     String privilegeTag = xmlTagToPrivilege.inverseBidiMap().get(privilege);

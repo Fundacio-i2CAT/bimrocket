@@ -37,17 +37,18 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import org.bimrocket.express.data.ExpressCursor;
 import static org.bimrocket.express.ExpressCollection.LIST;
 import org.bimrocket.express.ExpressConstant;
 import org.bimrocket.express.ExpressSchema;
+import org.bimrocket.express.data.CompactData;
 import org.bimrocket.express.data.ExpressData;
-import org.bimrocket.express.data.GenericData;
 import org.bimrocket.express.io.ExpressLoader;
 import org.bimrocket.step.header.StepFileHeaderData;
 
@@ -100,12 +101,12 @@ public class StepLoader
   {
     StepLexer lexer = new StepLexer(reader);
     String typeName = null;
-    ExpressCursor rootCursor = data.getRoot();
+    ExpressCursor rootCursor = null;
     ExpressCursor cursor = null;
-    String currentTag = null;
-    Map<String, Integer> backwardRefMap = new HashMap<>();
-    Map<String, ArrayList<Reference>> forwardRefMap = new HashMap<>();
-    Stack<Integer> indexStack = new Stack<>();
+    Long currentTag = null;
+    Map<Long, Integer> backwardRefMap = new HashMap<>();
+    Map<Long, ArrayList<Reference>> forwardRefMap = new HashMap<>();
+    Deque<Integer> indexStack = new ArrayDeque<>();
     int index = 0;
 
     try (reader)
@@ -161,7 +162,7 @@ public class StepLoader
         }
         else if (token.isReference())
         {
-          String tag = (String)token.getValue();
+          Long tag = (Long)token.getValue();
           if (indexStack.isEmpty()) // start line
           {
             currentTag = tag;
@@ -178,12 +179,13 @@ public class StepLoader
                 forwardRefMap.put(tag, references);
               }
               references.add(new Reference(cursor, index));
-              cursor.set(index++, (String)null);
+              cursor.set(index++, (String)null); // null as provisional value
             }
             else // backward reference
             {
-              rootCursor.enter(tagIndex);
-              cursor.set(index++, rootCursor);
+              if (rootCursor == null) rootCursor = data.getRoot();
+              ExpressCursor tagCursor = rootCursor.enter(tagIndex);
+              cursor.set(index++, tagCursor);
               rootCursor.exit();
             }
           }
@@ -193,14 +195,16 @@ public class StepLoader
         {
           if (indexStack.isEmpty() && currentTag != null)
           {
-            backwardRefMap.put(currentTag, rootCursor.size() - 1);
+            if (rootCursor == null) rootCursor = data.getRoot();
+            int tagIndex = rootCursor.size() - 1;
+            backwardRefMap.put(currentTag, tagIndex);
             ArrayList<Reference> references = forwardRefMap.remove(currentTag);
             if (references != null)
             {
-              rootCursor.enter(rootCursor.size() - 1);
+              ExpressCursor tagCursor = rootCursor.enter(tagIndex);
               for (Reference reference : references)
               {
-                reference.dereference(rootCursor);
+                reference.dereference(tagCursor);
               }
               rootCursor.exit();
             }
@@ -255,7 +259,7 @@ public class StepLoader
 
   protected ExpressData createData(ExpressSchema schema)
   {
-    return new GenericData(schema);
+    return new CompactData(schema);
   }
 
   static class Reference

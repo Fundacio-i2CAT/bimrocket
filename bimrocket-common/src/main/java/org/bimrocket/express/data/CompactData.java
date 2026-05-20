@@ -30,39 +30,49 @@
  */
 package org.bimrocket.express.data;
 
-import java.util.HashMap;
-import java.util.UUID;
-import org.bimrocket.express.ExpressSchema;
 import org.bimrocket.express.ExpressDefinedType;
 import org.bimrocket.express.ExpressEntity;
+import org.bimrocket.express.ExpressNamedType;
+import org.bimrocket.express.ExpressSchema;
 import org.bimrocket.express.ExpressType;
-import org.bimrocket.express.data.GenericData.Element;
+import org.bimrocket.express.data.CompactData.Element;
 
 /**
  *
  * @author realor
  */
-public class GenericData extends AbstractListData<Element>
+public class CompactData extends AbstractListData<Element>
 {
-  public GenericData(ExpressSchema schema)
+  long lastId = 0;
+
+  public CompactData(ExpressSchema schema)
   {
     super(schema);
   }
 
-  public static class Element extends HashMap<String, Object>
+  public class Element
   {
-    private static final long serialVersionUID = 1L;
+    private final ExpressNamedType namedType;
+    private final Object[] values;
+    private final long id;
 
     public Element(String typeName)
     {
-      put("_type", typeName);
-      put("_id", UUID.randomUUID().toString());
-    }
+      namedType = schema.getNamedType(typeName);
+      id = ++lastId;
 
-    @Override
-    public final Object put(String name, Object value)
-    {
-      return super.put(name, value);
+      if (namedType instanceof ExpressEntity entity)
+      {
+        values = new Object[entity.getAllAttributes().size()];
+      }
+      else if (namedType instanceof ExpressDefinedType)
+      {
+        values = new Object[1];
+      }
+      else
+      {
+        throw new RuntimeException("Invalid type: " + typeName);
+      }
     }
   }
 
@@ -79,38 +89,53 @@ public class GenericData extends AbstractListData<Element>
   @Override
   protected Element createEntity(ExpressEntity entity)
   {
-    return new Element(entity.getTypeName());
+    return new Element(entity.getNormalizedTypeName());
   }
 
   @Override
   protected Element createDefinedType(ExpressDefinedType definedType)
   {
-    return new Element(definedType.getTypeName());
+    return new Element(definedType.getNormalizedTypeName());
   }
 
   @Override
   protected String getElementTypeName(Element element)
   {
-    return (String)element.get("_type");
+    return element.namedType.getTypeName();
   }
 
   @Override
   protected String getElementId(Element element)
   {
-    return (String)element.get("_id");
+    return String.valueOf(element.id);
   }
 
   @Override
-  protected Object getElementValue(Element element, String field,
-    ExpressType type)
+  protected Object getElementValue(Element element, String name, ExpressType type)
   {
-    return element.get(field);
+    if (element.namedType instanceof ExpressEntity entity)
+    {
+      int index = entity.getAttributeIndex(name);
+      return element.values[index];
+    }
+    else
+    {
+      return element.values[0];
+    }
   }
 
   @Override
-  protected void setElementValue(Element element, String field, Object value,
+  protected void setElementValue(Element element, String name, Object value,
     ExpressType type)
   {
-    element.put(field, value);
+    if (element.namedType instanceof ExpressEntity entity)
+    {
+      int index = entity.getAttributeIndex(name);
+      element.values[index] = value;
+    }
+    else
+    {
+      element.values[0] = value;
+    }
   }
 }
