@@ -14,7 +14,7 @@ services:
     userCacheTimeout: 300
     roleCacheTimeout: 300
     tokenTimeout: 1800
-    maxTokeAge: 28800
+    maxTokenAge: 28800
     cookie:
       secure: false
       httpOnly: true
