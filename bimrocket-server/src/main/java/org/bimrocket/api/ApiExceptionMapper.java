@@ -30,6 +30,7 @@
  */
 package org.bimrocket.api;
 
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.core.Response;
@@ -110,6 +111,7 @@ public class ApiExceptionMapper
       return Response.status(401)
         .entity(error)
         .type(MediaType.APPLICATION_JSON)
+        .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Bimrocket\"")
         .build();
     }
   }
