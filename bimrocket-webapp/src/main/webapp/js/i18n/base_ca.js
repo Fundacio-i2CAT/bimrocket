@@ -386,9 +386,6 @@ export const translations =
   "action.save_model" : "Desa model",
   "action.rename" : "Reanomena",
   "action.delete" : "Esborra",
-  "action.copy" : "Copia",
-  "action.cut" : "Retalla",
-  "action.paste" : "Enganxa",
   "action.edit_acl" : "Edita permissos",
   "action.upload_file" : "Puja fitxer",
   "action.download_file" : "Baixa fitxer",
@@ -446,7 +443,7 @@ export const translations =
   "label.service_name" : "Nom del servei:",
   "label.service_desc" : "Descripció del servei:",
   "label.service_url" : "URL:",
-  "label.service_credentials_alias" : "Àlies de credencials:",
+  "label.service_auth": "Utilitzar autenticació nativa",
   "label.service_user" : "Usuari:",
   "label.service_pass" : "Paraula de pas:",
 
@@ -629,6 +626,7 @@ export const translations =
   "title.acl_not_found" : "No s'ha trobat l'ACL",
   "title.confirm_save" : "Confirmació",
   "title.overwrite" : "Sobreescriure fitxer",
+  "title.login_dialog" : "Inicia sessió per continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Àrea: ${area} ${units}2`,
@@ -653,8 +651,6 @@ export const translations =
   "message.folder_created" : "Carpeta creada.",
   "message.file_deleted" : "Fitxer esborrat.",
   "message.folder_deleted" : "Carpeta esborrada.",
-  "message.copy_completed" : "Còpia completada.",
-  "message.move_completed" : "Moviment completat.",
   "message.renaming_completed" : "Reanomenat completat.",
   "message.changes_discarded" : "Canvis descartats.",
   "message.filename_already_exists" : "Ja existeix un fitxer amb aquest nom.",
@@ -680,6 +676,7 @@ export const translations =
   "message.invalid_credentials" : "Credencials incorrectes.",
   "message.access_denied" : "Accés denegat.",
   "message.action_denied" : "Acció denegada.",
+  "message.service_auth_error": "Aquest servei no admet l'autenticació bàsica",
 
   "message.invalid_revolution_axis" : "Eix de revolució invàlid. Aquest eix no es pot projectar sobre el pla del perfil.",
 
@@ -697,6 +694,8 @@ export const translations =
   "message.invalid_privileges" : "Hi ha errors en els privilegis introduïts.",
   "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
+  "message.login_failed" : "Credencials incorrectes.",
+
   "question.overwrite_file" : filename => `Vols sobreescriure el fitxer ${filename}?`,
   "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || "l'editor"}?`,
   "question.delete_service" : name => `Vols esborrar el servei ${name}?`,
@@ -708,6 +707,7 @@ export const translations =
   "question.create_new_scene" : "Vols crear una nova escena?",
   "question.delete_conversation" : "Vols esborrar la conversa?",
   "question.confirm_save_changes": "Vols confirmar els canvis?",
+  "question.confirm_logout": "Segur que vols tancar la sessió?",
 
   "controller.AutoPilotController" : "Condueix un objecte.",
   "controller.Brain4itPostController" : "Fa un POST a Brain4it.",

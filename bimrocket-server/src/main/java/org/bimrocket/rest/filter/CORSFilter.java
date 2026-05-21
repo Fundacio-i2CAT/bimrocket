@@ -35,6 +35,9 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.Provider;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import java.io.IOException;
 
 /**
@@ -44,6 +47,7 @@ import java.io.IOException;
 @Provider
 public class CORSFilter implements ContainerResponseFilter
 {
+
   @Override
   public void filter(ContainerRequestContext requestContext,
     ContainerResponseContext responseContext) throws IOException

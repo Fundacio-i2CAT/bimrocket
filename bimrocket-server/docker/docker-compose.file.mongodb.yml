@@ -11,32 +11,30 @@ services:
     ports:
       - "9090:8080"
     volumes:
-      - ./application.orientdb.yaml:/root/bimrocket/bimrocket-server.yaml
+      - ./application.file.mongodb.yaml:/root/bimrocket/bimrocket-server.yaml
       - bimrocket_data:/root/bimrocket/cloudfs
     networks:
       - bimrocket_network
   
-  orientdb:
-    image: orientdb:3.2.39
-    container_name: orientdb
+  mongodb:
+    image: mongo:8.0.13
+    container_name: mongodb
     restart: always
-    environment:
-      - ORIENTDB_ROOT_PASSWORD=orientdb
     ports:
-      - "2424:2424" 
-      - "2480:2480" 
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: mongodb
     volumes:
-      - orientdb_databases:/orientdb/databases
-      - orientdb_config:/orientdb/config
-      - orientdb_backup:/orientdb/backup
+      - mongodb_databases:/data/db
+      - mongodb_config:/data/configdb
     networks:
       - bimrocket_network
 
-volumes: 
+volumes:
   bimrocket_data: 
-  orientdb_databases:
-  orientdb_config:
-  orientdb_backup:
+  mongodb_databases:
+  mongodb_config:
 
 networks:
   bimrocket_network:

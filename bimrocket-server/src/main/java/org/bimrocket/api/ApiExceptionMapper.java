@@ -30,6 +30,8 @@
  */
 package org.bimrocket.api;
 
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.core.Response;
@@ -95,6 +97,9 @@ public class ApiExceptionMapper
   public static class NotAuthorizedExceptionMapper
     implements ExceptionMapper<NotAuthorizedException>
   {
+    @Context
+    private HttpHeaders headers;
+
     @Override
     public Response toResponse(NotAuthorizedException ex)
     {
@@ -107,10 +112,22 @@ public class ApiExceptionMapper
         message = ex.toString();
       }
       error.setMessage(message);
-      return Response.status(401)
-        .entity(error)
-        .type(MediaType.APPLICATION_JSON)
-        .build();
+
+      Response.ResponseBuilder builder = Response.status(401)
+              .entity(error)
+              .type(MediaType.APPLICATION_JSON);
+
+      String requestedWith = headers.getHeaderString("X-Requested-With");
+
+      // Only send WWW-Authenticate if not is AJAX
+      if (!"XMLHttpRequest".equalsIgnoreCase(requestedWith))
+      {
+        builder.header(
+                HttpHeaders.WWW_AUTHENTICATE,
+                "Basic realm=\"Bimrocket\"");
+      }
+
+      return builder.build();
     }
   }
 

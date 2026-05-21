@@ -50,33 +50,6 @@ class WebUtils
   };
 
   /**
-   * Sets basic authorization header to request object
-   *
-   * @param {object} request - the request object (XMLHttpRequest or fetch options)
-   * @param {string} username - the username
-   * @param {string} password - the password
-   * @param {string} headerName - the header name to set (Authorization by default)
-   */
-  static setBasicAuthorization(request, username, password,
-    headerName = "Authorization")
-  {
-    if (username && password)
-    {
-      const userPass = username + ":" + password;
-      const authorization = "Basic " + btoa(userPass);
-
-      if (request instanceof XMLHttpRequest)
-      {
-        request.setRequestHeader(headerName, authorization);
-      }
-      else if (typeof request === "object") // fetch header options
-      {
-        request[headerName] = authorization;
-      }
-    }
-  }
-
-  /**
    * Encodes text as HTML
    *
    * @param {type} text - the text to encode

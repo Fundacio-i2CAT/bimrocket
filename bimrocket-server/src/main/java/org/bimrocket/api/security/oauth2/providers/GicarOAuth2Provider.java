@@ -32,39 +32,41 @@ package org.bimrocket.api.security.oauth2.providers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bimrocket.api.security.User;
+import org.bimrocket.api.security.oauth2.TokenInfo;
+import org.bimrocket.util.TextUtils;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import org.bimrocket.api.security.User;
-import org.bimrocket.api.security.oauth2.TokenInfo;
-import org.bimrocket.util.TextUtils;
 
 /**
  *
  * @author jordi.hernandez@i2cat.net
  * @author realor
  */
-public class ValidOAuth2Provider extends AbstractOAuth2Provider
+public class GicarOAuth2Provider extends AbstractOAuth2Provider
 {
   @Override
   public String getName()
   {
-    return "valid";
+    return "gicar";
   }
 
   @Override
   public User getUser(TokenInfo tokenInfo) throws Exception
   {
     String baseUrl = getValue("baseUrl", "");
-    String getUserInfoUrl = getValue("getUserInfoUrl", "/serveis-rest/getUserInfo");
+    String getUserInfoUrl = getValue("getUserInfoUrl", "/userInfo");
 
     if (getUserInfoUrl.startsWith("/")) getUserInfoUrl = baseUrl + getUserInfoUrl;
 
-    String url = getUserInfoUrl + "?AccessToken=" + tokenInfo.getAccessToken();
+    String url = getUserInfoUrl;
 
     HttpRequest request = HttpRequest.newBuilder()
       .uri(URI.create(url))
+      .header("Authorization", "Bearer " + tokenInfo.getAccessToken())
       .GET()
       .build();
 
@@ -75,14 +77,14 @@ public class ValidOAuth2Provider extends AbstractOAuth2Provider
     ObjectMapper mapper = new ObjectMapper();
     JsonNode userNode = mapper.readTree(response.body());
 
-    if (!userNode.has("identifier"))
-      throw new RuntimeException("Missing identifier field");
+    if (!userNode.has("preferred_username"))
+      throw new RuntimeException("Missing preferred_username field");
 
     // fill user info into User
 
-    String identifier = userNode.get("identifier").asText();
+    String preferredUsername = userNode.get("preferred_username").asText();
     User user = new User();
-    user.setId(identifier);
+    user.setId(preferredUsername);
 
     String givenName = "";
     String surnames = "";
@@ -91,20 +93,16 @@ public class ValidOAuth2Provider extends AbstractOAuth2Provider
     {
       givenName = userNode.get("name").asText();
     }
-    if (userNode.has("surnames"))
+    if (userNode.has("given_name"))
     {
-      surnames = userNode.get("surnames").asText();
-    }
-    else if (userNode.has("surname1"))
-    {
-      surnames = userNode.get("surname1").asText();
-      if (userNode.has("surname2"))
+      surnames = userNode.get("given_name").asText();
+      if (userNode.has("family_name"))
       {
-        surnames += " " + userNode.get("surname2").asText();
+        surnames += " " + userNode.get("family_name").asText();
       }
     }
     String name = (givenName + " " + surnames).trim();
-    if (name.length() == 0) name = identifier;
+    if (name.length() == 0) name = preferredUsername;
     user.setName(name);
 
     if (userNode.has("email"))

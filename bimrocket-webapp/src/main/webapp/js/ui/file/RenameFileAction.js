@@ -37,13 +37,9 @@ class RenameFileAction extends FileAction
     dialog.setSize(250, 130);
     dialog.setI18N(application.i18n);
 
-    const nameElem = dialog.addTextField("file_name", "label.file_name");
+    let nameElem = dialog.addTextField("file_name", "label.file_name");
     nameElem.setAttribute("spellcheck", "false");
     nameElem.value = entryName;
-    nameElem.addEventListener("keyup", event =>
-    {
-      if (event.keyCode === 13) dialog.onAccept();
-    });
 
     dialog.addButton("rename_accept", "button.accept", () => dialog.onAccept());
     dialog.addButton("rename_cancel", "button.cancel", () => dialog.onCancel());

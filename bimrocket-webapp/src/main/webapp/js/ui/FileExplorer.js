@@ -18,6 +18,7 @@ import { FileService, Metadata, Result, ACL } from "../io/FileService.js";
 import { IOManager } from "../io/IOManager.js";
 import { WebUtils } from "../utils/WebUtils.js";
 import { I18N } from "../i18n/I18N.js";
+import { SecurityService } from "../io/SecurityService.js";
 
 class FileExplorer extends Panel
 {
@@ -725,16 +726,34 @@ class FileExplorer extends Panel
 
   handleError(result, isWriteAction, onLogin, onFailed)
   {
+    if (this.service.useBasicAuth && (result.status === Result.INVALID_CREDENTIALS || result.status === Result.FORBIDDEN))
+    {
+      MessageDialog.create("ERROR", "bim|message.service_auth_error")
+        .setClassName("error")
+        .setI18N(this.application.i18n).show();
+
+      return;
+    } 
+
     if (result.status === Result.INVALID_CREDENTIALS)
     {
-      this.requestCredentials("message.invalid_credentials",
-        onLogin, onFailed);
+      SecurityService.requestCredentials(
+        this.application,
+        this.service.url,
+        "message.invalid_credentials",
+        onLogin,
+        onFailed
+      );
     }
     else if (result.status === Result.FORBIDDEN)
     {
-      this.requestCredentials(isWriteAction ?
-        "message.action_denied" : "message.access_denied",
-        onLogin, onFailed);
+      SecurityService.requestCredentials(
+        this.application,
+        this.service.url,
+        isWriteAction ? "message.action_denied" : "message.access_denied",
+        onLogin,
+        onFailed
+      );
     }
     else
     {
@@ -744,22 +763,6 @@ class FileExplorer extends Panel
         .setClassName("error")
         .setI18N(this.application.i18n).show();
     }
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-    loginDialog.login = (username, password) =>
-    {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
-    };
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-    loginDialog.show();
   }
 
   addProxyFields(dialog, service)

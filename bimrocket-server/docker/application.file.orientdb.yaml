@@ -30,39 +30,39 @@ services:
       searchBase: DC=santfeliu,DC=local
       adminUsername: admin
       adminPassword: changeit
-    oauth2:
-      active: []
-      providers:
-        valid:
-          logoUrl: changeit
-          baseUrl: https://valid-pre.aoc.cat
-          authUrl: /o/oauth2/auth
-          tokenUrl: /o/oauth2/token
-          getUserInfoUrl: /serveis-rest/getUserInfo
-          scope: autenticacio_usuari
-          clientId: changeit
-          secretId: changeit
-          roles: []
-        keycloak:
-          logoUrl: changeit
-          baseUrl: changeit
-          authUrl: /auth
-          tokenUrl: /token
-          getUserInfoUrl: /userinfo
-          scope: openid
-          clientId: changeit
-          secretId: changeit
-          roles: []
-        gicar:
-          logoUrl: changeit
-          baseUrl: changeit
-          authUrl: /auth
-          tokenUrl: /token
-          getUserInfoUrl: /userinfo
-          scope: openid
-          clientId: changeit
-          secretId: changeit
-          roles: []
+  oauth2:
+    active: [ ]
+    providers:
+      valid:
+        logoUrl: changeit
+        baseUrl: https://valid-pre.aoc.cat
+        authUrl: /o/oauth2/auth
+        tokenUrl: /o/oauth2/token
+        getUserInfoUrl: /serveis-rest/getUserInfo
+        scope: autenticacio_usuari
+        clientId: changeit
+        secretId: changeit
+        roles: []
+      keycloak:
+        logoUrl: changeit
+        baseUrl: changeit
+        authUrl: /auth
+        tokenUrl: /token
+        getUserInfoUrl: /userinfo
+        scope: openid
+        clientId: changeit
+        secretId: changeit
+        roles: []
+      gicar:
+        logoUrl: changeit
+        baseUrl: changeit
+        authUrl: /auth
+        tokenUrl: /token
+        getUserInfoUrl: /userinfo
+        scope: openid
+        clientId: changeit
+        secretId: changeit
+        roles: []
 
   # file service
   file:
@@ -138,15 +138,16 @@ services:
 # database config
 databases:
   bimdb:
-    url: embedded:${BIMROCKET_DATA_PATH}/db/bimdb
+    url: remote:orientdb/bimdb
     username: root
     password: orientdb
   IFC2X3:
-    url: embedded:${BIMROCKET_DATA_PATH}/db/IFC2X3
+    url: remote:orientdb/IFC2X3
     username: root
     password: orientdb
   IFC4:
-    url: embedded:${BIMROCKET_DATA_PATH}/db/IFC4
+    url: remote:orientdb/IFC4
     username: root
     password: orientdb
+
 

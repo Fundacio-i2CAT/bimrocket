@@ -5,6 +5,7 @@ import { ConfirmDialog } from "./ConfirmDialog.js";
 import { Toast } from "./Toast.js";
 import { I18N } from "../i18n/I18N.js";
 import { Result, ACL } from "../io/FileService.js";
+import { ServiceLoginDialog } from "./ServiceLoginDialog.js";
 
 class ACLEditorDialog extends Dialog
 {
@@ -96,12 +97,30 @@ class ACLEditorDialog extends Dialog
   handleError(result, onLogin, onFailed)
   {
     console.info(result);
-    if (result.status === Result.INVALID_CREDENTIALS || result.status === Result.FORBIDDEN)
+
+    if (this.fileService.useBasicAuth && (result.status === Result.INVALID_CREDENTIALS || result.status === Result.FORBIDDEN))
     {
-      this.fileExplorer.requestCredentials(
-        result.status === Result.INVALID_CREDENTIALS ?
-        "message.invalid_credentials" : "message.action_denied",
-        onLogin, onFailed);
+      if (onFailed) onFailed();
+      return;
+    }
+
+    if (result.status === Result.INVALID_CREDENTIALS)
+    {
+      new ServiceLoginDialog(this.application)
+        .setService(this.fileService)
+        .setMessage("message.invalid_credentials")
+        .setOnLogin(onLogin)
+        .setOnFailed(onFailed)
+        .show();
+    }
+    else if (result.status === Result.FORBIDDEN)
+    {
+      new ServiceLoginDialog(this.application)
+        .setService(this.fileService)
+        .setMessage("message.action_denied")
+        .setOnLogin(onLogin)
+        .setOnFailed(onFailed)
+        .show();
     }
     else if (result.status === Result.BAD_REQUEST)
     {
