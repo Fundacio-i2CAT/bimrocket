@@ -81,16 +81,33 @@ class IFCDBService extends Service
     url += path;
 
     const fetchHeaders = { ...headers };
+    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+    let fetchCredentials;
 
-    if (!this.useBasicAuth)
+    if (this.useBasicAuth)
     {
+      fetchCredentials = "include";
+    } 
+    else if (!this.useBasicAuth && isLocalServer)
+    {
+      fetchCredentials = "include";
       fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
+    }
+    else
+    {
+      fetchCredentials = "omit";
+      fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
+      
+      if (this.bearerToken)
+      {
+        fetchHeaders["Authorization"] = `Bearer ${this.bearerToken}`;
+      }
     }
 
     const fetchOptions = {
       method : method,
       headers : fetchHeaders,
-      credentials: this.useBasicAuth ? "omit" : "include",
+      credentials: fetchCredentials,
     };
 
     if (body)

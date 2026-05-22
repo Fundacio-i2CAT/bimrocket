@@ -160,9 +160,15 @@ class ServiceLoginDialog extends LoginDialog
 		if (!this.service) throw new Error("Service is required");
 
     const temporarySecurityService = this.getSecurityService();
-
-    temporarySecurityService.login(username, password, () => {
+    
+    temporarySecurityService.login(username, password, (response) => {
       this.hide();
+
+      if (response?.token)
+      {
+        this.service.bearerToken = response.token;
+      }
+
       if (this.onLogin) this.onLogin();
 		}, 
 		(error) => 
