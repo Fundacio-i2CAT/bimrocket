@@ -172,12 +172,28 @@ class SecurityService extends Service
 
     request.open(method, this.url + "/" + path);
     request.setRequestHeader("Accept", "application/json");
-    request.withCredentials = true;
 
-    if (!this.useBasicAuth)
-    {
-      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-    }
+    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+
+    if (this.useBasicAuth)
+      {
+        request.withCredentials = true;
+      }
+      else if (!this.useBasicAuth && isLocalServer)
+      {
+        request.withCredentials = true;
+        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      }
+      else
+      {
+        request.withCredentials = false;
+        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        if (this.bearerToken)
+        {
+          request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
+        }
+      }
 
     if (data)
     {

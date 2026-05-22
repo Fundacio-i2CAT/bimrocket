@@ -442,11 +442,26 @@ class WebdavService extends FileService
     }
     request.open(method, encodeURI(url), true);
     
-    request.withCredentials = true;
+    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
 
-    if (!this.useBasicAuth)
+    if (this.useBasicAuth)
     {
+      request.withCredentials = true;
+    }
+    else if (!this.useBasicAuth && isLocalServer)
+    {
+      request.withCredentials = true;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
+    else
+    {
+      request.withCredentials = false;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+      if (this.bearerToken)
+      {
+        request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`);
+      }
     }
   }
 
