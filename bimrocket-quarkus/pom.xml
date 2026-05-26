@@ -56,9 +56,6 @@
   <profiles>
     <profile>
       <id>orientdb</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <dependencies>
         <dependency>
           <groupId>org.bimrocket</groupId>
@@ -93,7 +90,7 @@
       </dependencies>
     </profile>
     <profile>
-      <id>dist</id>
+      <id>quarkus-fullstack</id>
       <dependencies>
         <dependency>
           <groupId>org.bimrocket</groupId>

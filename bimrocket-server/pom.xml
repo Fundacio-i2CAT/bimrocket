@@ -73,9 +73,6 @@
   <profiles>
     <profile>
       <id>orientdb</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <dependencies>
         <dependency>
           <groupId>org.bimrocket</groupId>
