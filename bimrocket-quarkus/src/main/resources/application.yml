@@ -1,0 +1,29 @@
+quarkus:
+
+  arc:
+    unremovable-types:
+      - org.bimrocket.**
+      - org.graalvm.**
+
+  banner:
+    path: bimrocket-banner.txt
+
+  package:
+    output-directory: bimrocket-quarkus
+
+  smallrye-openapi:
+    servers: "/"
+
+  swagger-ui:
+    always-include: true
+    path: /swagger
+
+"%prod":
+  quarkus:
+    log:
+      file:
+        enabled: true
+        path: logs/app.log
+        level: INFO
+
+

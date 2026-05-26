@@ -109,42 +109,51 @@ export function load(application)
   // create default services
   if (application.services.bcf === undefined)
   {
-    const bcf = new BCFService({
-      name : "bcf",
-      description : application.constructor.NAME + " BCF",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
-    });
-    application.addService(bcf, "bcf", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const bcf = new BCFService({
+        name : "bcf",
+        description : application.constructor.NAME + " BCF",
+        url : Environment.SERVER_URL + "/api",
+        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
+      });
+      application.addService(bcf, "bcf", false);
+    }
   }
 
   if (application.services.ifcdb === undefined)
   {
-    const ifcdb_2X3 = new IFCDBService({
-      name : "ifcdb_2X3",
-      description : application.constructor.NAME + " IFCDB (IFC2X3)",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/ifcdb/1.0/models/IFC2X3",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
-    });
-    application.addService(ifcdb_2X3, "ifcdb", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const ifcdb_2X3 = new IFCDBService({
+        name : "ifcdb_2X3",
+        description : application.constructor.NAME + " IFCDB (IFC2X3)",
+        url : Environment.SERVER_URL + "/api/ifcdb/1.0/models/IFC2X3",
+        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
+      });
+      application.addService(ifcdb_2X3, "ifcdb", false);
 
-    const ifcdb_4 = new IFCDBService({
-      name : "ifcdb_4",
-      description : application.constructor.NAME + " IFCDB (IFC4)",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/ifcdb/1.0/models/IFC4",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
-    });
-    application.addService(ifcdb_4, "ifcdb", false);
+      const ifcdb_4 = new IFCDBService({
+        name : "ifcdb_4",
+        description : application.constructor.NAME + " IFCDB (IFC4)",
+        url : Environment.SERVER_URL + "/api/ifcdb/1.0/models/IFC4",
+        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
+      });
+      application.addService(ifcdb_4, "ifcdb", false);
+    }
   }
 
   if (application.services.snapshots === undefined)
   {
-    const webdav = new WebdavService({
-      name : "ifc_snapshots",
-      description : "Remote",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/ifc_snapshots"
-    });
-    application.addService(webdav, "ifc_snapshots", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const webdav = new WebdavService({
+        name : "ifc_snapshots",
+        description : "Remote",
+        url : Environment.SERVER_URL + "/api/cloudfs/ifc_snapshots"
+      });
+      application.addService(webdav, "ifc_snapshots", false);
+    }
 
     const idbfs = new IDBFileService({
       name : "idb_ifc_snapshots",
@@ -156,13 +165,16 @@ export function load(application)
 
   if (application.services.security === undefined)
   {
-    const security = new SecurityService({
-      name : "security",
-      description : "Security",
-      url: Environment.SERVER_URL  + "/api/security",
-      credentialsAlias : Environment.SERVER_ALIAS
-    });
-    application.addService(security, "security", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const security = new SecurityService({
+        name : "security",
+        description : "Security",
+        url: Environment.SERVER_URL  + "/api/security",
+        credentialsAlias : Environment.SERVER_ALIAS
+      });
+      application.addService(security, "security", false);
+    }
   }
 
   // load bundles

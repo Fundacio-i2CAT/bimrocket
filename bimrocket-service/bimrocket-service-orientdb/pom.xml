@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>bimrocket-service-orientdb</artifactId>
+  <packaging>jar</packaging>
+  <name>bimrocket-service-orientdb</name>
+  <description>bimrocket service orientdb</description>
+
+  <parent>
+    <groupId>org.bimrocket</groupId>
+    <artifactId>bimrocket-service</artifactId>
+    <version>1.0</version>
+  </parent>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.bimrocket</groupId>
+      <artifactId>bimrocket-service-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.orientechnologies</groupId>
+      <artifactId>orientdb-client</artifactId>
+      <version>${orientdb.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.graalvm.sdk</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.graalvm.truffle</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.graalvm.polyglot</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.graalvm.js</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+
+</project>

@@ -758,13 +758,16 @@ export function load(application)
   // create default services
   if (application.services.model === undefined)
   {
-    const webdav = new WebdavService({
-      name: "models",
-      description : "Remote",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/models",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
-    });
-    application.addService(webdav, "model", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const webdav = new WebdavService({
+        name: "models",
+        description : "Remote",
+        url : Environment.SERVER_URL + "/api/cloudfs/models",
+        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
+      });
+      application.addService(webdav, "model", false);
+    }
 
     const idbfs = new IDBFileService({
       name: "idb_models",
@@ -776,13 +779,16 @@ export function load(application)
 
   if (application.services.script === undefined)
   {
-    const webdav = new WebdavService({
-      name : "scripts",
-      description : "Remote",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/scripts",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
-    });
-    application.addService(webdav, "script", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const webdav = new WebdavService({
+        name : "scripts",
+        description : "Remote",
+        url : Environment.SERVER_URL + "/api/cloudfs/scripts",
+        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
+      });
+      application.addService(webdav, "script", false);
+    }
 
     const idbfs = new IDBFileService({
       name : "idb_scripts",
@@ -794,13 +800,16 @@ export function load(application)
 
   if (application.services.report === undefined)
   {
-    const webdav = new WebdavService({
-      name : "reports",
-      description : "Remote",
-      url : (Environment.SERVER_URL || "/bimrocket-server") + "/api/cloudfs/reports",
-      credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
-    });
-    application.addService(webdav, "report", false);
+    if (typeof Environment.SERVER_URL === "string")
+    {
+      const webdav = new WebdavService({
+        name : "reports",
+        description : "Remote",
+        url : Environment.SERVER_URL + "/api/cloudfs/reports",
+        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket"
+      });
+      application.addService(webdav, "report", false);
+    }
 
     const idbfs = new IDBFileService({
       name : "idb_reports",

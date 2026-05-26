@@ -30,10 +30,10 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-			<groupId>org.bimrocket</groupId>
-			<artifactId>bimrocket-common</artifactId>
-			<version>1.0</version>
-		</dependency>
+      <groupId>org.bimrocket</groupId>
+      <artifactId>bimrocket-common</artifactId>
+      <version>1.0</version>
+    </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -126,6 +126,25 @@
             </resource>
           </webResources>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>package-static</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/main/assembly/static.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
