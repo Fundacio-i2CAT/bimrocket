@@ -676,7 +676,6 @@ export const translations =
   "message.invalid_credentials" : "Credencials incorrectes.",
   "message.access_denied" : "Accés denegat.",
   "message.action_denied" : "Acció denegada.",
-  "message.service_auth_error": "Aquest servei no admet l'autenticació bàsica",
 
   "message.invalid_revolution_axis" : "Eix de revolució invàlid. Aquest eix no es pot projectar sobre el pla del perfil.",
 
