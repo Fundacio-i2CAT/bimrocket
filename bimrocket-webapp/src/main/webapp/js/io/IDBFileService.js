@@ -6,7 +6,6 @@
 
 import { FileService, Metadata, Result } from "./FileService.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { IOManager } from "./IOManager.js";
 
 const OK = Result.OK;
 const ERROR = Result.ERROR;
@@ -314,8 +313,7 @@ class ReadOperation extends Operation
       if (this.loadFileData)
       {
         const mimeType = node.data.type || "text/plain";
-        const formatInfo = IOManager.getFormatInfoByMimeType(mimeType);
-        if (formatInfo?.dataType === "text")
+        if (mimeType === "text/plain")
         {
           data = await node.data.text();
         }
