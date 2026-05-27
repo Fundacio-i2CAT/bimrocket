@@ -4,18 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.bimrocket</groupId>
-  <artifactId>bimrocket-webapp</artifactId>
-  <version>1.0</version>
-  <name>bimrocket-webapp</name>
-  <description>bimrocket client webapp</description>
-  <packaging>war</packaging>
-
   <parent>
     <groupId>org.bimrocket</groupId>
     <artifactId>bimrocket</artifactId>
     <version>1.0</version>
   </parent>
+
+  <artifactId>bimrocket-webapp</artifactId>
+  <name>bimrocket-webapp</name>
+  <description>bimrocket client webapp</description>
+  <packaging>war</packaging>
 
   <properties>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>

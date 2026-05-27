@@ -104,6 +104,7 @@
     <module>bimrocket-webapp</module>
     <module>bimrocket-server</module>
     <module>bimrocket-quarkus</module>
+    <module>bimrocket-console</module>
   </modules>
 
 </project>

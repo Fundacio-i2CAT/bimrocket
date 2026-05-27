@@ -2,18 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.bimrocket</groupId>
-  <artifactId>bimrocket-server</artifactId>
-  <version>1.0</version>
-  <name>bimrocket-server</name>
-  <description>bimrocket server webapp</description>
-  <packaging>war</packaging>
-
   <parent>
     <groupId>org.bimrocket</groupId>
     <artifactId>bimrocket</artifactId>
     <version>1.0</version>
   </parent>
+
+  <artifactId>bimrocket-server</artifactId>
+  <name>bimrocket-server</name>
+  <description>bimrocket server war</description>
+  <packaging>war</packaging>
 
   <properties>
     <resteasy.version>6.2.11.Final</resteasy.version>
