@@ -769,7 +769,6 @@ export function load(application)
       });
       application.addService(webdav, "model", false);
     }
-    application.addService(webdav, "model", false);
 
     const idbfs = new IDBFileService({
       name: "idb_models",
