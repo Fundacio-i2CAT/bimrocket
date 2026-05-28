@@ -113,21 +113,10 @@ public class ApiExceptionMapper
       }
       error.setMessage(message);
 
-      Response.ResponseBuilder builder = Response.status(401)
-              .entity(error)
-              .type(MediaType.APPLICATION_JSON);
-
-      String requestedWith = headers.getHeaderString("X-Requested-With");
-
-      // Only send WWW-Authenticate if not is AJAX
-      if (!"XMLHttpRequest".equalsIgnoreCase(requestedWith))
-      {
-        builder.header(
-                HttpHeaders.WWW_AUTHENTICATE,
-                "Basic realm=\"Bimrocket\"");
-      }
-
-      return builder.build();
+      return Response.status(401)
+       .entity(error)
+       .type(MediaType.APPLICATION_JSON)
+       .build();
     }
   }
 
