@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bimrocket.api.security.User;
 import org.bimrocket.api.security.oauth2.TokenInfo;
+import org.bimrocket.util.TextUtils;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -111,7 +112,7 @@ public class GicarOAuth2Provider extends AbstractOAuth2Provider
     }
 
     user.getRoleIds().addAll(getValues("roles"));
-    user.setPasswordHash(getName()); // invalidates login by password
+    user.setPassword(TextUtils.generatePassword());
 
     return user;
   }

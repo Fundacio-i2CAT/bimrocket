@@ -131,7 +131,6 @@ class IOManager
     let onError = intent.onError; // onError(error)
     let manager = intent.manager; // LoadingManager
     let units = intent.units || "m"; // application units
-    let basicAuthCredentials = intent.basicAuthCredentials;
 
     try
     {
@@ -217,11 +216,7 @@ class IOManager
           }
         };
         request.open("GET", url, true);
-        if (basicAuthCredentials)
-        {
-          WebUtils.setBasicAuthorization(request,
-            basicAuthCredentials.username, basicAuthCredentials.password);
-        }
+        request.withCredentials = true;
         request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         request.send();
       }

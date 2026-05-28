@@ -28,7 +28,6 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-
 package org.bimrocket.api.security.oauth2.providers;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,6 +38,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.bimrocket.api.security.User;
 import org.bimrocket.api.security.oauth2.TokenInfo;
+import org.bimrocket.util.TextUtils;
 
 /**
  *
@@ -111,7 +111,7 @@ public class KeycloakOAuth2Provider extends AbstractOAuth2Provider
     }
 
     user.getRoleIds().addAll(getValues("roles"));
-    user.setPasswordHash(getName()); // invalidates login by password
+    user.setPassword(TextUtils.generatePassword());
 
     return user;
   }

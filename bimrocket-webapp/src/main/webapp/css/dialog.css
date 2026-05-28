@@ -340,6 +340,26 @@ div.dialog > .header > button:focus
   color: #C00000;
 }
 
+.dialog .oauth_buttons
+{
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+
+  & button.oauth_logo_btn
+  {
+    color: #C00000;
+    background: transparent;
+    border-radius: 2px;
+    cursor: pointer;
+
+    & img
+    {
+      max-height: 32px;
+    }
+  }
+}
+
 @keyframes fade_in_dialog
 {
   0% {opacity: 0; visibility: visible; }

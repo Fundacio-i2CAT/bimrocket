@@ -14,7 +14,7 @@ class LoginDialog extends Dialog
     this.application = application;
     this.setI18N(this.application.i18n);
 
-    this.setSize(240, 180);
+    this.setSize(280, 240);
 
     if (message)
     {

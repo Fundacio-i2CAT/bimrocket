@@ -6,7 +6,6 @@
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class IFCDBService extends Service
 {
@@ -76,27 +75,45 @@ class IFCDBService extends Service
 
   async invoke(method, path = "", headers = {}, body)
   {
-    const username = this.username;
-    const password = this.password;
     let url = this.url;
 
     if (!url.endsWith("/")) url += "/";
     url += path;
 
+    const fetchHeaders = { ...headers };
+    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+    let fetchCredentials;
+
+    if (this.useBasicAuth)
+    {
+      fetchCredentials = "include";
+    } 
+    else if (!this.useBasicAuth && isLocalServer)
+    {
+      fetchCredentials = "include";
+      fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
+    }
+    else
+    {
+      fetchCredentials = "omit";
+      fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
+      
+      if (this.bearerToken)
+      {
+        fetchHeaders["Authorization"] = `Bearer ${this.bearerToken}`;
+      }
+    }
+
     const fetchOptions = {
       method : method,
-      headers : headers
+      headers : fetchHeaders,
+      credentials: fetchCredentials,
     };
 
     if (body)
     {
       fetchOptions.body = body;
     }
-
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(fetchOptions.headers,
-      credentials.username, credentials.password);
 
     const response = await fetch(url, fetchOptions);
     if (!response.ok) throw await response.json();

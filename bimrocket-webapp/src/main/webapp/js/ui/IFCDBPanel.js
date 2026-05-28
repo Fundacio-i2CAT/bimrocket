@@ -9,8 +9,6 @@ import { Controls } from "./Controls.js";
 import { ServiceDialog } from "./ServiceDialog.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
-import { LoginDialog } from "./LoginDialog.js";
-import { Dialog } from "./Dialog.js";
 import { TabbedPane } from "./TabbedPane.js";
 import { Tree } from "./Tree.js";
 import { Toast } from "./Toast.js";
@@ -20,7 +18,9 @@ import { WebUtils } from "../utils/WebUtils.js";
 import { I18N } from "../i18n/I18N.js";
 import { ServiceManager } from "../io/ServiceManager.js";
 import { IFCDBService } from "../io/IFCDBService.js";
+import { ServiceLoginDialog } from "./ServiceLoginDialog.js";
 import * as THREE from "three";
+
 
 class IFCDBPanel extends Panel
 {
@@ -810,13 +810,30 @@ class IFCDBPanel extends Panel
 
     this.hideProgressBar();
 
+    if (this.service.useBasicAuth && (error.code === 401 || error.code === 403))
+    {
+      MessageDialog.create("ERROR", "message.service_auth_error")
+        .setClassName("error")
+        .setI18N(this.application.i18n).show();
+
+      return;
+    }
+
     if (error.code === 401)
     {
-      this.requestCredentials("message.invalid_credentials", onLogin);
+      new ServiceLoginDialog(this.application)
+        .setService(this.service)
+        .setMessage("message.invalid_credentials")
+        .setOnLogin(onLogin)
+        .show();
     }
     else if (error.code === 403)
     {
-      this.requestCredentials("message.action_denied", onLogin);
+      new ServiceLoginDialog(this.application)
+        .setService(this.service)
+        .setMessage("message.action_denied")
+        .setOnLogin(onLogin)
+        .show();
     }
     else
     {
@@ -825,22 +842,6 @@ class IFCDBPanel extends Panel
         .setClassName("error")
         .setI18N(this.application.i18n).show();
     }
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-    loginDialog.login = (username, password) =>
-    {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
-    };
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-    loginDialog.show();
   }
 
   showProgressBar(message = "")

@@ -441,22 +441,27 @@ class WebdavService extends FileService
       url = WebdavService.PROXY_URI + url;
     }
     request.open(method, encodeURI(url), true);
-    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    
+    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
 
-    const credentials = this.getCredentials();
-
-    if (this.useProxy)
+    if (this.useBasicAuth)
     {
-      if (credentials.username && credentials.password)
-      {
-        WebUtils.setBasicAuthorization(request,
-          credentials.username, credentials.password, "Forwarded-Authorization");
-      }
+      request.withCredentials = true;
+    }
+    else if (!this.useBasicAuth && isLocalServer)
+    {
+      request.withCredentials = true;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     }
     else
     {
-      WebUtils.setBasicAuthorization(request,
-        credentials.username, credentials.password);
+      request.withCredentials = false;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+      if (this.bearerToken)
+      {
+        request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`);
+      }
     }
   }
 

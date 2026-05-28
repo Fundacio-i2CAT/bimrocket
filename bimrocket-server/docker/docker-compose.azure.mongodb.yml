@@ -11,7 +11,7 @@ services:
     ports:
       - "9090:8080"
     volumes:
-      - ./application.mongodb.yaml:/root/bimrocket/bimrocket-server.yaml
+      - ./application.azure.mongodb.yaml:/root/bimrocket/bimrocket-server.yaml
     networks:
       - bimrocket_network
  

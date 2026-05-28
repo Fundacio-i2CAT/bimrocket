@@ -10,20 +10,52 @@ services:
   security:
     adminPassword: bimrocket
     passwordPattern: '^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=_\-\.])(?=\S+$).{8,}$'
-    authorizationCacheTimeout: 300
+    credentialsCacheTimeout: 300
     userCacheTimeout: 300
     roleCacheTimeout: 300
-    ldap:
-      enabled: false
-      url: ldap://dc1.santfeliu.local
-      domain: santfeliu.local
-      searchBase: DC=santfeliu,DC=local
-      adminUsername: admin
-      adminPassword: changeit
+    tokenTimeout: 1800
+    maxTokenAge: 28800
+    cookie:
+      secure: false
+      httpOnly: true
+      sameSite: STRICT
     store:
-      class: org.bimrocket.service.security.store.orient.SecurityOrientDaoStore
-      orient:
+      class: org.bimrocket.service.security.store.mongo.SecurityMongoDaoStore
+      mongo:
         database: bimdb
+    oauth2:
+      active: []
+      providers:
+        valid:
+          logoUrl: changeit
+          baseUrl: https://valid-pre.aoc.cat
+          authUrl: /o/oauth2/auth
+          tokenUrl: /o/oauth2/token
+          getUserInfoUrl: /serveis-rest/getUserInfo
+          scope: autenticacio_usuari
+          clientId: changeit
+          secretId: changeit
+          roles: []
+        keycloak:
+          logoUrl: changeit
+          baseUrl: changeit
+          authUrl: /auth
+          tokenUrl: /token
+          getUserInfoUrl: /userinfo
+          scope: openid
+          clientId: changeit
+          secretId: changeit
+          roles: []
+        gicar:
+          logoUrl: changeit
+          baseUrl: changeit
+          authUrl: /auth
+          tokenUrl: /token
+          getUserInfoUrl: /userinfo
+          scope: openid
+          clientId: changeit
+          secretId: changeit
+          roles: []
 
   # file service
   file:
@@ -46,8 +78,8 @@ services:
         subject: '#{project.name}##{index}: #{title} [#{priority}]'
         body: '#{description}'
     store:
-      class: org.bimrocket.service.bcf.store.orient.BcfOrientDaoStore
-      orient:
+      class: org.bimrocket.service.security.store.mongo.SecurityMongoDaoStore
+      mongo:
         database: bimdb
 
   # ifcdb service
@@ -57,14 +89,14 @@ services:
       - IFC4
     maxFileSizeMb: 200
     store:
-      class: org.bimrocket.service.ifcdb.store.orient.OrientIfcStore
+      class: org.bimrocket.service.bcf.store.mongo.BcfMongoDaoStore
 
   # task service
   task:
     taskCacheSize: 10
     store:
-      class: org.bimrocket.service.task.store.orient.TaskOrientDaoStore
-      orient:
+      class: org.bimrocket.service.ifcdb.store.mongo.MongoIfcStore
+      mongo:
         database: bimdb
 
   # print service
@@ -99,16 +131,10 @@ services:
 # database config
 databases:
   bimdb:
-    url: remote:orientdb/bimdb
-    username: root
-    password: orientdb
+    url: mongodb://root:mongodb@mongodb:27017/bimdb?authSource=admin
   IFC2X3:
-    url: remote:orientdb/IFC2X3
-    username: root
-    password: orientdb
+    url: mongodb://root:mongodb@mongodb:27017/IFC2X3?authSource=admin
   IFC4:
-    url: remote:orientdb/IFC4
-    username: root
-    password: orientdb
+    url: mongodb://root:mongodb@mongodb:27017/IFC4?authSource=admin
 
 

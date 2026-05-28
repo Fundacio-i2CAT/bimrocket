@@ -6,6 +6,7 @@
 
 import { FileService, Metadata, Result } from "./FileService.js";
 import { ServiceManager } from "./ServiceManager.js";
+import { IOManager } from "./IOManager.js";
 
 const OK = Result.OK;
 const ERROR = Result.ERROR;
@@ -32,92 +33,105 @@ class IDBFileService extends FileService
 
   find(path, options, onCompleted)
   {
-    new ReadOperation(this.url, onCompleted)
-      .setPath(path)
-      .setLoadFileData(false)
-      .execute();
+    const readOperation = new ReadOperation(false);
+    readOperation.execute(this.url, path, onCompleted);
   }
 
   read(path, onCompleted, onProgress)
   {
-    new ReadOperation(this.url, onCompleted)
-      .setPath(path)
-      .setLoadFileData(true)
-      .execute();
+    const readOperation = new ReadOperation(true);
+    readOperation.execute(this.url, path, onCompleted);
   }
 
   write(path, data, onCompleted, onProgress)
   {
-    new WriteOperation(this.url, onCompleted)
-      .setPath(path)
-      .setData(data)
-      .execute();
+    const writeOperation = new WriteOperation(data);
+    writeOperation.execute(this.url, path, onCompleted);
   }
 
   remove(path, onCompleted, onProgress)
   {
-    new RemoveOperation(this.url, onCompleted)
-      .setPath(path)
-      .execute();
+    const removeOperation = new RemoveOperation();
+    removeOperation.execute(this.url, path, onCompleted);
   }
 
   makeCollection(path, onCompleted, onProgress)
   {
-    new MakeCollectionOperation(this.url, onCompleted)
-      .setPath(path)
-      .execute();
+    const mkColOperation = new MakeCollectionOperation();
+    mkColOperation.execute(this.url, path, onCompleted);
   }
 
   move(sourcePath, destinationPath, onCompleted)
   {
-    new MoveOperation(this.url, onCompleted)
-      .setSourcePath(sourcePath)
-      .setDestinationPath(destinationPath)
-      .execute();
+    const srcIndex = sourcePath.lastIndexOf("/");
+    let srcBase, srcName;
+    if (srcIndex === -1)
+    {
+      srcBase = "";
+      srcName = sourcePath;
+    }
+    else
+    {
+      srcBase = sourcePath.substring(0, srcIndex);
+      srcName = sourcePath.substring(srcIndex + 1);
+    }
+
+    const destIndex = destinationPath.lastIndexOf("/");
+    let destBase, destName;
+    if (destIndex === -1)
+    {
+      destBase = "";
+      destName = destinationPath;
+    }
+    else
+    {
+      destBase = destinationPath.substring(0, destIndex);
+      destName = destinationPath.substring(destIndex + 1);
+    }
+
+    if (srcBase === destBase)
+    {
+      if (srcName !== destName)
+      {
+        const renameOperation = new RenameOperation(destName);
+        renameOperation.execute(this.url, sourcePath, onCompleted);
+      }
+      else onCompleted(new Result(OK));
+    }
+    else
+    {
+      onCompleted(new Result(ERROR, "Unsupported operation."));
+    }
   }
 
   copy(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    new CopyOperation(this.url, onCompleted)
-      .setSourcePath(sourcePath)
-      .setDestinationPath(destinationPath)
-      .execute();
+    onCompleted(new Result(ERROR, "Not implemented."));
   }
 }
 
 class Operation
 {
-  constructor(dbName, onCompleted, onProgress)
+  constructor()
   {
-    this.dbName = dbName;
     this.index = 0,
     this.nodeId = 0;
     this.nodes = [];
     this.pathArray = null;
-    this.store = null;
-    this.isUpdate = true;
+    this.onCompleted = null;
+  }
+
+  execute(dbName, path, onCompleted)
+  {
+    if (!dbName) dbName = "default";
+
+    if (path.startsWith("//")) path = path.substring(1);
+    const pathArray = path === "/" ? [""] : path.split("/");
+
+    this.pathArray = pathArray;
     this.onCompleted = onCompleted;
-    this.onProgress = onProgress;
-  }
 
-  onStoreReady()
-  {
-    this.onCompleted?.(OK);
-  }
-
-  onLastNode()
-  {
-    this.error(ERROR, "Invalid operation.");
-  }
-
-  onNewNode()
-  {
-    this.error(ERROR, "Invalid operation.");
-  }
-
-  execute()
-  {
-    const openReq = indexedDB.open(this.dbName, 1);
+    const openReq = indexedDB.open(dbName, 1);
 
     // Create the schema
     openReq.onupgradeneeded = () =>
@@ -144,10 +158,6 @@ class Operation
       tx.oncomplete = () =>
       {
         db.close();
-        if (this.isUpdate)
-        {
-          this.onCompleted?.(new Result(OK));
-        }
       };
 
       tx.onerror = (event) =>
@@ -155,25 +165,13 @@ class Operation
         this.error(ERROR, event.error);
       };
 
-      this.onStoreReady();
+      this.loadNextNode();
     };
 
     openReq.onerror = (event) =>
     {
       this.error(ERROR, event.error);
     };
-  }
-
-  loadPath(path)
-  {
-    if (path.startsWith("//")) path = path.substring(1);
-    const pathArray = path === "/" ? [""] : path.split("/");
-
-    this.pathArray = pathArray;
-    this.index = 0;
-    this.nodeId = 0;
-    this.nodes = [];
-    this.loadNextNode();
   }
 
   loadNextNode()
@@ -230,7 +228,7 @@ class Operation
     };
   }
 
-  nextNodeId()
+  createNodeId()
   {
     const store = this.store;
     const rootNode = this.nodes[0];
@@ -239,9 +237,19 @@ class Operation
     return rootNode.lastId;
   }
 
+  onLastNode()
+  {
+    this.error(ERROR, "Invalid operation.");
+  }
+
+  onNewNode()
+  {
+    this.error(ERROR, "Invalid operation.");
+  }
+
   error(status, msg)
   {
-    this.onCompleted?.(new Result(status, msg));
+    this.onCompleted(new Result(status, msg));
   }
 
   getSize(data)
@@ -253,29 +261,10 @@ class Operation
 
 class ReadOperation extends Operation
 {
-  constructor(dbName, onCompleted)
+  constructor(loadFileData = false)
   {
-    super(dbName, onCompleted);
-    this.path = null;
-    this.loadFileData = false;
-    this.isUpdate = false;
-  }
-
-  setPath(path)
-  {
-    this.path = path;
-    return this;
-  }
-
-  setLoadFileData(loadFileData = false)
-  {
+    super();
     this.loadFileData = loadFileData;
-    return this;
-  }
-
-  onStoreReady()
-  {
-    this.loadPath(this.path);
   }
 
   onNewNode()
@@ -325,7 +314,8 @@ class ReadOperation extends Operation
       if (this.loadFileData)
       {
         const mimeType = node.data.type || "text/plain";
-        if (mimeType === "text/plain")
+        const formatInfo = IOManager.getFormatInfoByMimeType(mimeType);
+        if (formatInfo?.dataType === "text")
         {
           data = await node.data.text();
         }
@@ -335,27 +325,15 @@ class ReadOperation extends Operation
         }
       }
     }
-    this.onCompleted?.(new Result(OK, "", path, metadata, entries, data));
+    this.onCompleted(new Result(OK, "", path, metadata, entries, data));
   }
 }
 
 class WriteOperation extends Operation
 {
-  constructor(dbName, onCompleted)
+  constructor(data)
   {
-    super(dbName, onCompleted);
-    this.path = null;
-    this.data = null;
-  }
-
-  setPath(path)
-  {
-    this.path = path;
-    return this;
-  }
-
-  setData(data)
-  {
+    super();
     if (typeof data === "string")
     {
       data = new Blob([data], { type : "text/plain" });
@@ -365,13 +343,6 @@ class WriteOperation extends Operation
       data = new Blob([data], { type : "application/octet-stream" });
     }
     this.data = data; // always save data as blob
-
-    return this;
-  }
-
-  onStoreReady()
-  {
-    this.loadPath(this.path);
   }
 
   onLastNode()
@@ -390,7 +361,7 @@ class WriteOperation extends Operation
       node.data = this.data;
       this.store.put(node);
 
-      this.onCompleted?.(new Result(OK));
+      this.onCompleted(new Result(OK));
     }
     else // attempt to replace collection by file
     {
@@ -406,7 +377,7 @@ class WriteOperation extends Operation
     const pathArray = this.pathArray;
     const name = pathArray[this.index];
 
-    let nodeId = this.nextNodeId();
+    let nodeId = this.createNodeId();
 
     // register file in node entries
     parentNode.entries[name] = {
@@ -423,26 +394,16 @@ class WriteOperation extends Operation
       data : this.data
     };
     this.store.put(fileNode);
+
+    this.onCompleted(new Result(OK));
   }
 }
 
 class RemoveOperation extends Operation
 {
-  constructor(dbName, onCompleted)
+  constructor()
   {
-    super(dbName, onCompleted);
-    this.path = null;
-  }
-
-  setPath(path)
-  {
-    this.path = path;
-    return this;
-  }
-
-  onStoreReady()
-  {
-    this.loadPath(this.path);
+    super();
   }
 
   onLastNode()
@@ -464,27 +425,17 @@ class RemoveOperation extends Operation
 
       store.put(parentNode);
       store.delete(node.id);
+
+      this.onCompleted(new Result(OK));
     }
   }
 }
 
 class MakeCollectionOperation extends Operation
 {
-  constructor(dbName, onCompleted)
+  constructor()
   {
-    super(dbName, onCompleted);
-    this.path = null;
-  }
-
-  setPath(path)
-  {
-    this.path = path;
-    return this;
-  }
-
-  onStoreReady()
-  {
-    this.loadPath(this.path);
+    super();
   }
 
   onLastNode()
@@ -499,7 +450,7 @@ class MakeCollectionOperation extends Operation
     const pathArray = this.pathArray;
     const name = pathArray[this.index];
 
-    let nodeId = this.nextNodeId();
+    let nodeId = this.createNodeId();
 
     // register collection name in node entries
     parentNode.entries[name] = {
@@ -516,38 +467,20 @@ class MakeCollectionOperation extends Operation
       entries: {}
     };
     this.store.put(colNode);
+    this.onCompleted(new Result(OK));
   }
 }
 
 class RenameOperation extends Operation
 {
-  constructor(dbName, onCompleted)
+  constructor(newName)
   {
-    super(dbName, onCompleted);
-    this.path = null;
-    this.newName = null;
-  }
-
-  setPath(path)
-  {
-    this.path = path;
-    return this;
-  }
-
-  setNewName(newName)
-  {
+    super();
     this.newName = newName;
-    return this;
-  }
-
-  onStoreReady()
-  {
-    this.loadPath(this.path);
   }
 
   onLastNode()
   {
-    const store = this.store;
     const newName = this.newName;
     let name = this.pathArray[this.index];
     if (name !== newName)
@@ -556,267 +489,16 @@ class RenameOperation extends Operation
       if (parentNode.entries[newName])
       {
         // a resource already exists with newName
-        this.error(ERROR, "A file alredy exists with the same name.");
+        this.onCompleted(new Result(ERROR, "Unsupported operation."));
         return;
       }
       let entry = parentNode.entries[name];
       delete parentNode.entries[name];
       parentNode.entries[newName] = entry;
 
-      store.put(parentNode);
+      this.store.put(parentNode);
     }
-  }
-}
-
-class TransferOperation extends Operation
-{
-  constructor(dbName, onCompleted)
-  {
-    super(dbName, onCompleted);
-    this.sourcePath = null;
-    this.destinationPath = null;
-    this.state = 0;
-  }
-
-  setSourcePath(sourcePath)
-  {
-    this.sourcePath = sourcePath;
-    return this;
-  }
-
-  setDestinationPath(destinationPath)
-  {
-    this.destinationPath = destinationPath;
-    return this;
-  }
-
-  onStoreReady()
-  {
-    this.loadPath(this.sourcePath);
-  }
-
-  getNewName()
-  {
-    let sourcePath = this.sourcePath;
-    let destinationPath = this.destinationPath;
-
-    const srcIndex = sourcePath.lastIndexOf("/");
-    let srcBase, srcName;
-    if (srcIndex === -1)
-    {
-      srcBase = "";
-      srcName = sourcePath;
-    }
-    else
-    {
-      srcBase = sourcePath.substring(0, srcIndex);
-      srcName = sourcePath.substring(srcIndex + 1);
-    }
-
-    const destIndex = destinationPath.lastIndexOf("/");
-    let destBase, destName;
-    if (destIndex === -1)
-    {
-      destBase = "";
-      destName = destinationPath;
-    }
-    else
-    {
-      destBase = destinationPath.substring(0, destIndex);
-      destName = destinationPath.substring(destIndex + 1);
-    }
-
-    return srcBase === destBase ? destName : null;
-  }
-}
-
-class MoveOperation extends TransferOperation
-{
-  constructor(dbName, onCompleted)
-  {
-    super(dbName, onCompleted);
-  }
-
-  onLastNode()
-  {
-    const store = this.store;
-    const nodes = this.nodes;
-
-    if (this.state === 0)
-    {
-      const name = this.pathArray[this.index];
-      const newName = this.getNewName();
-
-      if (name === newName)
-      {
-        // do nothing
-      }
-      else if (newName) // rename file/folder
-      {
-        const parentNode = nodes[this.index - 1];
-        const entry = parentNode.entries[name];
-        delete parentNode.entries[name];
-        parentNode.entries[newName] = entry;
-        store.put(parentNode);
-      }
-      else // move to other folder
-      {
-        this.cutParentNode = nodes[this.index - 1];
-
-        // remove and save entry from parent directory
-        this.cutEntry = this.cutParentNode.entries[name];
-        delete this.cutParentNode.entries[name];
-
-        this.state = 1;
-        this.loadPath(this.destinationPath);
-      }
-    }
-    else
-    {
-      // destination exists, replace it
-      this.pasteNode();
-    }
-  }
-
-  onNewNode()
-  {
-    if (this.state === 0)
-    {
-      // source does not exists
-      this.error(NOT_FOUND, "Not found.");
-    }
-    else
-    {
-      // paste node
-      this.pasteNode();
-    }
-  }
-
-  pasteNode()
-  {
-    const store = this.store;
-    const nodes = this.nodes;
-    const parentNode = nodes[this.index - 1];
-    const pathArray = this.pathArray;
-    const name = pathArray[this.index];
-    const cutParentNode = this.cutParentNode;
-    const cutEntry = this.cutEntry;
-
-    const oldNode = nodes[this.index];
-    if (oldNode)
-    {
-      console.info("remove " + oldNode.id);
-      store.delete(oldNode.id);
-    }
-
-    parentNode.entries[name] = cutEntry;
-    store.put(cutParentNode);
-    store.put(parentNode);
-  }
-}
-
-class CopyOperation extends TransferOperation
-{
-  constructor(dbName, onCompleted)
-  {
-    super(dbName, onCompleted);
-  }
-
-  onLastNode()
-  {
-    const store = this.store;
-    const nodes = this.nodes;
-
-    if (this.state === 0)
-    {
-      const name = this.pathArray[this.index];
-      const newName = this.getNewName();
-      const node = nodes[this.index];
-      const parentNode = nodes[this.index - 1];
-      const entry = parentNode.entries[name];
-
-      if (name === newName)
-      {
-        // do nothing (copy to itself)
-      }
-      else if (newName) // copy to same folder
-      {
-        const newEntry = {
-          id: this.nextNodeId(),
-          type : entry.type,
-          size : entry.size,
-          modified: Date.now()
-        };
-        const newNode = {
-          id : newEntry.id,
-          data : node.data
-        };
-
-        parentNode.entries[newName] = newEntry;
-        store.put(parentNode);
-        store.put(newNode);
-      }
-      else // copy to other folder
-      {
-        this.copyNode = node;
-        this.copyEntry = entry;
-
-        this.state = 1;
-        this.loadPath(this.destinationPath);
-      }
-    }
-    else
-    {
-      // destination exists, replace it
-      this.pasteNode();
-    }
-  }
-
-  onNewNode()
-  {
-    if (this.state === 0)
-    {
-      // source does not exists
-      this.error(NOT_FOUND, "Not found.");
-    }
-    else
-    {
-      // paste node
-      this.pasteNode();
-    }
-  }
-
-  pasteNode()
-  {
-    const store = this.store;
-    const nodes = this.nodes;
-    const parentNode = nodes[this.index - 1];
-    const pathArray = this.pathArray;
-    const name = pathArray[this.index];
-    const copyNode = this.copyNode;
-    const copyEntry = this.copyEntry;
-
-    const oldNode = nodes[this.index];
-    if (oldNode)
-    {
-      console.info("remove " + oldNode.id);
-      store.delete(oldNode.id);
-    }
-
-    const newEntry = {
-      id: this.nextNodeId(),
-      type : copyEntry.type,
-      size : copyEntry.size,
-      modified: Date.now()
-    };
-    const newNode = {
-      id : newEntry.id,
-      data : copyNode.data
-    };
-
-    parentNode.entries[name] = newEntry;
-    store.put(parentNode);
-    store.put(newNode);
+    this.onCompleted(new Result(OK));
   }
 }
 

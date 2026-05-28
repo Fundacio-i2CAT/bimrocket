@@ -63,19 +63,9 @@ public class Token
     return id;
   }
 
-  public void setId(String id)
-  {
-    this.id = id;
-  }
-
   public String getUserId()
   {
     return userId;
-  }
-
-  public void setUserId(String userId)
-  {
-    this.userId = userId;
   }
 
   public String getCreationDate()
@@ -83,24 +73,34 @@ public class Token
     return creationDate;
   }
 
-  public void setCreationDate(String creationDate)
-  {
-    this.creationDate = creationDate;
-  }
-
   public String getExpirationDate()
   {
     return expirationDate;
-  }
-
-  public void setExpirationDate(String expirationDate)
-  {
-    this.expirationDate = expirationDate;
   }
 
   public void updateExpirationDate(int timeout)
   {
     long expirationTime = System.currentTimeMillis() + 1000L * timeout;
     this.expirationDate = TextUtils.getISODate(new Date(expirationTime));
+  }
+
+  public void setId(String id)
+  {
+    this.id = id;
+  }
+
+  public void setUserId(String userId)
+  {
+    this.userId = userId;
+  }
+
+  public void setCreationDate(String creationDate)
+  {
+    this.creationDate = creationDate;
+  }
+
+  public void setExpirationDate(String expirationDate)
+  {
+    this.expirationDate = expirationDate;
   }
 }

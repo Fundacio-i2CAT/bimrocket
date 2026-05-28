@@ -33,3 +33,5 @@
 /bimrocket-quarkus/running
 /bimrocket-ifc-processor/target/
 /bimrocket-console/target/
+
+.vscode/

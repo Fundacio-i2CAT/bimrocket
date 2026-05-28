@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -30,12 +30,12 @@
  */
 package org.bimrocket.rest.filter;
 
-import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.Provider;
+
 import java.io.IOException;
 
 /**
@@ -43,15 +43,15 @@ import java.io.IOException;
  * @author realor
  */
 @Provider
-@RequestScoped
 public class CORSFilter implements ContainerResponseFilter
 {
+
   @Override
   public void filter(ContainerRequestContext requestContext,
     ContainerResponseContext responseContext) throws IOException
   {
     MultivaluedMap<String, Object> headers = responseContext.getHeaders();
-    headers.add("Access-Control-Allow-Origin", "*");
+    headers.add("Access-Control-Allow-Origin", "http://localhost:8181");
     headers.add("Access-Control-Allow-Credentials", "true");
     headers.add("Access-Control-Allow-Headers",
      "origin,content-type,accept,authorization,depth,if-modified-since,if-none-match,x-requested-with,destination");
