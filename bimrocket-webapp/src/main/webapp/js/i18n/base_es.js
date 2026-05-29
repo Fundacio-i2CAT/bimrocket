@@ -676,7 +676,6 @@ export const translations =
   "message.invalid_credentials" : "Credenciales incorrectas.",
   "message.access_denied" : "Acceso denegado.",
   "message.action_denied" : "Acción denegada.",
-  "message.service_auth_error": "Este servicio no admite autenticación básica",
 
   "message.invalid_revolution_axis" : "Eje de revolución inválido. Este eje no se puede proyectar sobre el plano del perfil.",
 

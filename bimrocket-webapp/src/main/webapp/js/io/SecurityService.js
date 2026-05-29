@@ -102,7 +102,19 @@ class SecurityService extends Service
 
   login(username, password, onCompleted, onError)
   {
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+    let targetUrl;
+    try
+    {
+      targetUrl = new URL(this.url, window.location.href);
+    }
+    catch (error)
+    {
+      if (onError) onError({ code: 400, message: "Invalid URL: " + this.url });
+
+      return;
+    }
+
+    const isLocalServer = targetUrl.origin === window.location.origin;
 
     const data =
     {
@@ -170,30 +182,43 @@ class SecurityService extends Service
       }
     };
 
-    request.open(method, this.url + "/" + path);
+    const destinationUrl = `${this.url}/${path}`;
+    let targetUrl;
+    try
+    {
+      targetUrl = new URL(destinationUrl, window.location.href); 
+    }
+    catch (error)
+    {
+      if (onError) onError({ code: 400, message: "Invalid URL: " + destinationUrl });
+
+      return;
+    }
+
+    const isLocalServer = targetUrl.origin === window.location.origin;
+
+    request.open(method, destinationUrl);
     request.setRequestHeader("Accept", "application/json");
 
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
-
     if (this.useBasicAuth)
-      {
-        request.withCredentials = true;
-      }
-      else if (!this.useBasicAuth && isLocalServer)
-      {
-        request.withCredentials = true;
-        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-      }
-      else
-      {
-        request.withCredentials = false;
-        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    {
+      request.withCredentials = true;
+    }
+    else if (isLocalServer)
+    {
+      request.withCredentials = true;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
+    else
+    {
+      request.withCredentials = false;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
-        if (this.bearerToken)
-        {
-          request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
-        }
+      if (this.bearerToken)
+      {
+        request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
       }
+    }
 
     if (data)
     {

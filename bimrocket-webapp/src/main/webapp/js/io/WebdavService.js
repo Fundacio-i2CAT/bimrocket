@@ -440,15 +440,26 @@ class WebdavService extends FileService
     {
       url = WebdavService.PROXY_URI + url;
     }
+    
+    let targetUrl;
+    try
+    {
+      targetUrl = new URL(url, window.location.href); 
+    }
+    catch (error)
+    {
+      throw new Error("Invalid URL: " + url);
+    }
+    
     request.open(method, encodeURI(url), true);
     
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+   const isLocalServer = targetUrl.origin === window.location.origin;
 
     if (this.useBasicAuth)
     {
       request.withCredentials = true;
     }
-    else if (!this.useBasicAuth && isLocalServer)
+    else if (isLocalServer)
     {
       request.withCredentials = true;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");

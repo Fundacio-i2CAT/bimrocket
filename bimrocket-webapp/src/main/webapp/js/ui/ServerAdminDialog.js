@@ -894,7 +894,8 @@ class ServerAdminDialog extends Dialog
 
     if (this.service.useBasicAuth && (error.code === 401 || error.code === 403))
     {
-      MessageDialog.create("ERROR", "message.service_auth_error")
+      let message = this.cleanErrorMessage(error.message);
+      MessageDialog.create("ERROR", message)
         .setClassName("error")
         .setI18N(this.application.i18n).show();
 

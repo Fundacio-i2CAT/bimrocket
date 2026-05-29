@@ -255,17 +255,29 @@ class BCFService extends Service
       }
     };
 
-    request.open(method, this.url + "/bcf/2.1/" + path);
+    const destinationUrl = `${this.url}/bcf/2.1/${path}`;
+    let targetUrl;
+    try
+    {
+      targetUrl = new URL(destinationUrl, window.location.href); 
+    }
+    catch (error)
+    {
+      if (onError) onError({ code: 400, message: "Invalid URL: " + destinationUrl });
+
+      return;
+    }
+    const isLocalServer = targetUrl.origin === window.location.origin;
+
+    request.open(method, destinationUrl);
     request.setRequestHeader("Accept", "application/json");
     request.setRequestHeader("Content-Type", "application/json");
     
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
-
     if (this.useBasicAuth)
     {
       request.withCredentials = true;
     }
-    else if (!this.useBasicAuth && isLocalServer)
+    else if (isLocalServer)
     {
       request.withCredentials = true;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");

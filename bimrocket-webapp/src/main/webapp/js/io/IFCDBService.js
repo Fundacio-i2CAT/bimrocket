@@ -81,14 +81,25 @@ class IFCDBService extends Service
     url += path;
 
     const fetchHeaders = { ...headers };
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+    
+    let targetUrl;
+    try
+    {
+      targetUrl = new URL(url, window.location.href); 
+    }
+    catch (error)
+    {
+      throw { code: 400, message: "Invalid URL: " + url };
+    }
+
+    const isLocalServer = targetUrl.origin === window.location.origin;
     let fetchCredentials;
 
     if (this.useBasicAuth)
     {
       fetchCredentials = "include";
     } 
-    else if (!this.useBasicAuth && isLocalServer)
+    else if (isLocalServer)
     {
       fetchCredentials = "include";
       fetchHeaders["X-Requested-With"] = "XMLHttpRequest";

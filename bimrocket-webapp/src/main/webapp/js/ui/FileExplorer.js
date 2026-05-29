@@ -728,7 +728,7 @@ class FileExplorer extends Panel
   {
     if (this.service.useBasicAuth && (result.status === Result.INVALID_CREDENTIALS || result.status === Result.FORBIDDEN))
     {
-      MessageDialog.create("ERROR", "bim|message.service_auth_error")
+      MessageDialog.create("ERROR", result.message)
         .setClassName("error")
         .setI18N(this.application.i18n).show();
 
