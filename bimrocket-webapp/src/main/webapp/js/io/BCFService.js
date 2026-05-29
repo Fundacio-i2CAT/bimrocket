@@ -264,7 +264,8 @@ class BCFService extends Service
     try
     {
       const innerPath = destinationUrl.startsWith("/") ? destinationUrl.slice(1) : destinationUrl;
-      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
+      const absoluteBaseUrl = new URL(Environment.SERVER_URL, window.location.href).href;
+      const baseUrl = absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : absoluteBaseUrl + "/";
       targetUrl = new URL(innerPath, baseUrl);
     }
     catch (error)
@@ -292,7 +293,7 @@ class BCFService extends Service
     {
       request.withCredentials = false;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-      request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
+      request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`);
     }
 
     if (data)

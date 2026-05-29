@@ -676,7 +676,6 @@ export const translations =
   "message.invalid_credentials" : "Invalid credentials.",
   "message.access_denied" : "Access denied.",
   "message.action_denied" : "Action denied.",
-  "message.service_auth_error": "This server doesn't allow basic authentication",
 
   "message.invalid_revolution_axis" : "Invalid axis of revolution. This axis can not be projected onto the plane of the profile.",
 

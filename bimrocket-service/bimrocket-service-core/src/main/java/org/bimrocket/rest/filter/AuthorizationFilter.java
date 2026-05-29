@@ -42,6 +42,7 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
@@ -147,6 +148,24 @@ public class AuthorizationFilter
       // Reset cookie
       responseContext.getHeaders().add("Set-Cookie",
         sessionCookieManager.getDestroyCookieString());
+
+      // Check AJAX request
+      String requestedWith =
+              requestContext.getHeaderString("X-Requested-With");
+
+      // Only send WWW-Authenticate if not AJAX
+      if (!"XMLHttpRequest".equalsIgnoreCase(requestedWith))
+      {
+        responseContext.getHeaders().putSingle(
+                HttpHeaders.WWW_AUTHENTICATE,
+                "Basic realm=\"Bimrocket\"");
+      }
+      else
+      {
+        // Ensure header is absent for AJAX
+        responseContext.getHeaders().remove(
+                HttpHeaders.WWW_AUTHENTICATE);
+      }
     }
   }
 

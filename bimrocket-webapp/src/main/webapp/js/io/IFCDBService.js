@@ -86,8 +86,9 @@ class IFCDBService extends Service
     try
     {
       const innerPath = destinationUrl.startsWith("/") ? destinationUrl.slice(1) : destinationUrl;
-      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
-      targetUrl = new URL(innerPath, baseUrl); 
+      const absoluteBaseUrl = new URL(Environment.SERVER_URL, window.location.href).href;
+      const baseUrl = absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : absoluteBaseUrl + "/";
+      targetUrl = new URL(innerPath, baseUrl);
     }
     catch (error)
     {

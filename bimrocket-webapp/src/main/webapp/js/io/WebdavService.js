@@ -446,8 +446,9 @@ class WebdavService extends FileService
     try
     {
       const innerPath = url.startsWith("/") ? url.slice(1) : url;
-      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
-      targetUrl = new URL(innerPath, baseUrl); 
+      const absoluteBaseUrl = new URL(Environment.SERVER_URL, window.location.href).href;
+      const baseUrl = absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : absoluteBaseUrl + "/";
+      targetUrl = new URL(innerPath, baseUrl);
     }
     catch (error)
     {

@@ -114,7 +114,7 @@ export function load(application)
       const bcf = new BCFService({
         name : "bcf",
         description : application.constructor.NAME + " BCF",
-        url : Environment.SERVER_URL + "/api",
+        url : "/api",
         useBasicAuth: false
       });
       application.addService(bcf, "bcf", false);
@@ -128,7 +128,7 @@ export function load(application)
       const ifcdb_2X3 = new IFCDBService({
         name : "ifcdb_2X3",
         description : application.constructor.NAME + " IFCDB (IFC2X3)",
-        url : Environment.SERVER_URL + "/api/ifcdb/1.0/models/IFC2X3",
+        url : "/api/ifcdb/1.0/models/IFC2X3",
         useBasicAuth: false
       });
       application.addService(ifcdb_2X3, "ifcdb", false);
@@ -136,7 +136,7 @@ export function load(application)
       const ifcdb_4 = new IFCDBService({
         name : "ifcdb_4",
         description : application.constructor.NAME + " IFCDB (IFC4)",
-        url : Environment.SERVER_URL + "/api/ifcdb/1.0/models/IFC4",
+        url : "/api/ifcdb/1.0/models/IFC4",
         useBasicAuth: false
       });
       application.addService(ifcdb_4, "ifcdb", false);
@@ -150,7 +150,7 @@ export function load(application)
       const webdav = new WebdavService({
         name : "ifc_snapshots",
         description : "Remote",
-        url : Environment.SERVER_URL + "/api/cloudfs/ifc_snapshots",
+        url : "/api/cloudfs/ifc_snapshots",
         useBasicAuth: false
       });
       application.addService(webdav, "ifc_snapshots", false);
@@ -172,7 +172,7 @@ export function load(application)
       const security = new SecurityService({
         name : "security",
         description : "Security",
-        url: Environment.SERVER_URL  + "/api/security",
+        url: "/api/security",
         useBasicAuth: false
       });
       application.addService(security, "security", false);
