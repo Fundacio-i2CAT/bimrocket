@@ -7,6 +7,7 @@
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
+import { Environment } from "../Environment.js";
 
 class BCFService extends Service
 {
@@ -255,17 +256,34 @@ class BCFService extends Service
       }
     };
 
-    request.open(method, this.url + "/bcf/2.1/" + path);
+    let safeBaseUrl = this.url || "";
+    if (safeBaseUrl.endsWith("/")) safeBaseUrl = safeBaseUrl.slice(0, -1);
+    const destinationUrl = `${safeBaseUrl}/bcf/2.1/${path}`;
+    let targetUrl;
+
+    try
+    {
+      const innerPath = destinationUrl.startsWith("/") ? destinationUrl.slice(1) : destinationUrl;
+      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
+      targetUrl = new URL(innerPath, baseUrl);
+    }
+    catch (error)
+    {
+      if (onError) onError({ code: 400, message: "Invalid URL: " + destinationUrl });
+
+      return;
+    }
+    const isLocalServer = targetUrl.origin === window.location.origin;
+
+    request.open(method, targetUrl.href);
     request.setRequestHeader("Accept", "application/json");
     request.setRequestHeader("Content-Type", "application/json");
-    
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
 
     if (this.useBasicAuth)
     {
       request.withCredentials = true;
     }
-    else if (!this.useBasicAuth && isLocalServer)
+    else if (isLocalServer)
     {
       request.withCredentials = true;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -274,11 +292,7 @@ class BCFService extends Service
     {
       request.withCredentials = false;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-      if (this.bearerToken)
-      {
-        request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
-      }
+      request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
     }
 
     if (data)

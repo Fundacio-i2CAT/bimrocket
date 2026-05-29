@@ -6,6 +6,7 @@
 
 import { Service } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
+import { Environment } from "../Environment.js";
 
 class IFCDBService extends Service
 {
@@ -75,20 +76,32 @@ class IFCDBService extends Service
 
   async invoke(method, path = "", headers = {}, body)
   {
-    let url = this.url;
-
-    if (!url.endsWith("/")) url += "/";
-    url += path;
-
     const fetchHeaders = { ...headers };
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+
+    let safeBaseUrl = this.url || "";
+    if (safeBaseUrl.endsWith("/")) safeBaseUrl = safeBaseUrl.slice(0, -1);
+    const destinationUrl = `${safeBaseUrl}/${path}`;
+    let targetUrl;
+    
+    try
+    {
+      const innerPath = destinationUrl.startsWith("/") ? destinationUrl.slice(1) : destinationUrl;
+      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
+      targetUrl = new URL(innerPath, baseUrl); 
+    }
+    catch (error)
+    {
+      throw { code: 400, message: "Invalid URL: " + destinationUrl };
+    }
+
+    const isLocalServer = targetUrl.origin === window.location.origin;
     let fetchCredentials;
 
     if (this.useBasicAuth)
     {
       fetchCredentials = "include";
     } 
-    else if (!this.useBasicAuth && isLocalServer)
+    else if (isLocalServer)
     {
       fetchCredentials = "include";
       fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
@@ -97,11 +110,7 @@ class IFCDBService extends Service
     {
       fetchCredentials = "omit";
       fetchHeaders["X-Requested-With"] = "XMLHttpRequest";
-      
-      if (this.bearerToken)
-      {
-        fetchHeaders["Authorization"] = `Bearer ${this.bearerToken}`;
-      }
+      fetchHeaders["Authorization"] = `Bearer ${this.bearerToken}`;
     }
 
     const fetchOptions = {
@@ -115,7 +124,7 @@ class IFCDBService extends Service
       fetchOptions.body = body;
     }
 
-    const response = await fetch(url, fetchOptions);
+    const response = await fetch(targetUrl.href, fetchOptions);
     if (!response.ok) throw await response.json();
 
     return response;

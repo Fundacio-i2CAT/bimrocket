@@ -6,6 +6,7 @@
  */
 
 import { Service } from "./Service.js";
+import { Environment } from "../Environment.js";
 import { ServiceManager } from "./ServiceManager.js";
 
 class SecurityService extends Service
@@ -102,7 +103,22 @@ class SecurityService extends Service
 
   login(username, password, onCompleted, onError)
   {
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+    let targetUrl;
+    try
+    {
+      let safeBaseUrl = this.url || "";
+      const path = safeBaseUrl.startsWith("/") ? safeBaseUrl.slice(1) : safeBaseUrl;
+      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
+      targetUrl = new URL(path, baseUrl);
+    }
+    catch (error)
+    {
+      if (onError) onError({ code: 400, message: "Invalid URL: " + this.url });
+
+      return;
+    }
+
+    const isLocalServer = targetUrl.origin === window.location.origin;
 
     const data =
     {
@@ -170,30 +186,43 @@ class SecurityService extends Service
       }
     };
 
-    request.open(method, this.url + "/" + path);
+    let safeBaseUrl = this.url || "";
+    if (safeBaseUrl.endsWith("/")) safeBaseUrl = safeBaseUrl.slice(0, -1);
+    const destinationUrl = `${safeBaseUrl}/${path}`;
+    let targetUrl;
+
+    try
+    {
+      const innerPath = destinationUrl.startsWith("/") ? destinationUrl.slice(1) : destinationUrl;
+      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
+      targetUrl = new URL(innerPath, baseUrl); 
+    }
+    catch (error)
+    {
+      if (onError) onError({ code: 400, message: "Invalid URL: " + destinationUrl });
+
+      return;
+    }
+
+    request.open(method, targetUrl.href);
     request.setRequestHeader("Accept", "application/json");
-
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
-
+    
+    const isLocalServer = targetUrl.origin === window.location.origin;
     if (this.useBasicAuth)
-      {
-        request.withCredentials = true;
-      }
-      else if (!this.useBasicAuth && isLocalServer)
-      {
-        request.withCredentials = true;
-        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-      }
-      else
-      {
-        request.withCredentials = false;
-        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-        if (this.bearerToken)
-        {
-          request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`)
-        }
-      }
+    {
+      request.withCredentials = true;
+    }
+    else if (isLocalServer)
+    {
+      request.withCredentials = true;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    }
+    else
+    {
+      request.withCredentials = false;
+      request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`);
+    }
 
     if (data)
     {

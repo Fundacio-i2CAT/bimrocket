@@ -8,6 +8,7 @@ import { IOManager } from "./IOManager.js";
 import { FileService, Metadata, Result, ACL } from "./FileService.js";
 import { ServiceManager } from "./ServiceManager.js";
 import { WebUtils } from "../utils/WebUtils.js";
+import { Environment } from "../Environment.js";
 
 const OK = Result.OK;
 const ERROR = Result.ERROR;
@@ -440,15 +441,28 @@ class WebdavService extends FileService
     {
       url = WebdavService.PROXY_URI + url;
     }
-    request.open(method, encodeURI(url), true);
     
-    const isLocalServer = this.url.startsWith("/") || this.url.includes(window.location.hostname);
+    let targetUrl;
+    try
+    {
+      const innerPath = url.startsWith("/") ? url.slice(1) : url;
+      const baseUrl = Environment.SERVER_URL.endsWith("/") ? Environment.SERVER_URL : Environment.SERVER_URL + "/";
+      targetUrl = new URL(innerPath, baseUrl); 
+    }
+    catch (error)
+    {
+      throw new Error("Invalid URL: " + url);
+    }
+
+    request.open(method, targetUrl.href, true);
+    
+    const isLocalServer = targetUrl.origin === window.location.origin;
 
     if (this.useBasicAuth)
     {
       request.withCredentials = true;
     }
-    else if (!this.useBasicAuth && isLocalServer)
+    else if (isLocalServer)
     {
       request.withCredentials = true;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -457,11 +471,7 @@ class WebdavService extends FileService
     {
       request.withCredentials = false;
       request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-      if (this.bearerToken)
-      {
-        request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`);
-      }
+      request.setRequestHeader("Authorization", `Bearer ${this.bearerToken}`);
     }
   }
 
