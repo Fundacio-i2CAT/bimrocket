@@ -115,7 +115,6 @@ export function load(application)
         name : "bcf",
         description : application.constructor.NAME + " BCF",
         url : Environment.SERVER_URL + "/api",
-        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket",
         useBasicAuth: false
       });
       application.addService(bcf, "bcf", false);
@@ -130,7 +129,6 @@ export function load(application)
         name : "ifcdb_2X3",
         description : application.constructor.NAME + " IFCDB (IFC2X3)",
         url : Environment.SERVER_URL + "/api/ifcdb/1.0/models/IFC2X3",
-        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket",
         useBasicAuth: false
       });
       application.addService(ifcdb_2X3, "ifcdb", false);
@@ -139,7 +137,6 @@ export function load(application)
         name : "ifcdb_4",
         description : application.constructor.NAME + " IFCDB (IFC4)",
         url : Environment.SERVER_URL + "/api/ifcdb/1.0/models/IFC4",
-        credentialsAlias : Environment.SERVER_ALIAS || "bimrocket",
         useBasicAuth: false
       });
       application.addService(ifcdb_4, "ifcdb", false);
@@ -176,7 +173,6 @@ export function load(application)
         name : "security",
         description : "Security",
         url: Environment.SERVER_URL  + "/api/security",
-        credentialsAlias : Environment.SERVER_ALIAS,
         useBasicAuth: false
       });
       application.addService(security, "security", false);
