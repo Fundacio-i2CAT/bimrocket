@@ -763,7 +763,7 @@ export function load(application)
       const webdav = new WebdavService({
         name: "models",
         description : "Remote",
-        url : Environment.SERVER_URL + "/api/cloudfs/models",
+        url : "/api/cloudfs/models",
         useBasicAuth: false
       });
       application.addService(webdav, "model", false);
@@ -785,7 +785,7 @@ export function load(application)
       const webdav = new WebdavService({
         name : "scripts",
         description : "Remote",
-        url : Environment.SERVER_URL + "/api/cloudfs/scripts",
+        url : "/api/cloudfs/scripts",
         useBasicAuth: false
       });
       application.addService(webdav, "script", false);
@@ -807,7 +807,7 @@ export function load(application)
       const webdav = new WebdavService({
         name : "reports",
         description : "Remote",
-        url : Environment.SERVER_URL + "/api/cloudfs/reports",
+        url : "/api/cloudfs/reports",
         useBasicAuth: false
       });
       application.addService(webdav, "report", false);
