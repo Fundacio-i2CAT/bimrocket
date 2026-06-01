@@ -193,12 +193,11 @@ class SecurityService extends Service
     let targetUrl;
 
     try
-    {
-      let safeBaseUrl = this.url || "";
-      const path = safeBaseUrl.startsWith("/") ? safeBaseUrl.slice(1) : safeBaseUrl;
+    { 
+      const innerPath = destinationUrl.startsWith("/") ? destinationUrl.slice(1) : destinationUrl;
       const absoluteBaseUrl = new URL(Environment.SERVER_URL, window.location.href).href;
       const baseUrl = absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : absoluteBaseUrl + "/";
-      targetUrl = new URL(path, baseUrl);
+      targetUrl = new URL(innerPath, baseUrl);
     }
     catch (error)
     {
