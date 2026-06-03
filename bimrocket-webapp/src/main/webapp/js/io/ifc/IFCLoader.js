@@ -888,11 +888,6 @@ class IfcProductHelper extends IfcHelper
         let reprObject3D = this.helper(productRepr).getObject3D("Body");
         if (reprObject3D)
         {
-          if (reprObject3D.parent)
-          {
-            // representation already added to scene, clone it.
-            reprObject3D = loader.cloneObject3D(reprObject3D, true);
-          }
           reprObject3D.name = IFC.RepresentationName;
 
           object3D.add(reprObject3D);
@@ -968,6 +963,7 @@ class IfcRepresentationHelper extends IfcHelper
     if (this.object3D === null)
     {
       const representation = this.entity;
+      const loader = this.loader;
 
       let group = new THREE.Group();
       for (let i = 0; i < representation.Items.length; i++)
@@ -979,6 +975,11 @@ class IfcRepresentationHelper extends IfcHelper
           let itemObject3D = itemHelper.getObject3D();
           if (itemObject3D)
           {
+            if (itemObject3D.parent)
+            {
+              // representation item already added to scene, clone it.
+              itemObject3D = loader.cloneObject3D(itemObject3D, true);
+            }
             itemObject3D.name = "Item" + i;
             itemObject3D.userData.IFC =
               {"ifcClassName" : item.constructor.name};
@@ -1210,6 +1211,7 @@ class IfcBooleanResultHelper extends IfcGeometricRepresentationItemHelper
     if (this.object3D === null)
     {
       const result = this.entity;
+      const loader = this.loader;
 
       const operator = result.Operator;
       const firstOperand = result.FirstOperand;
@@ -1217,9 +1219,20 @@ class IfcBooleanResultHelper extends IfcGeometricRepresentationItemHelper
 
       const firstHelper = this.helper(firstOperand);
       const secondHelper = this.helper(secondOperand);
-
-      const firstObject = firstHelper.getObject3D();
-      const secondObject = secondHelper.getObject3D();
+      
+      let firstObject = firstHelper.getObject3D();
+      if (firstObject.parent)
+      {
+        // firstObject already added to scene, clone it.
+        firstObject = loader.cloneObject3D(firstObject, true);
+      }
+      let secondObject = secondHelper.getObject3D();
+      if (secondObject.parent)
+      {
+        // secondObject already added to scene, clone it.
+        secondObject = loader.cloneObject3D(secondObject, true);
+      }
+      
       if (firstObject instanceof Solid && firstHelper.material)
       {
         firstObject.material = firstHelper.material;
