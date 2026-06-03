@@ -117,7 +117,7 @@ public class FileSystemFileStore implements FileStore
   {
     File file = getFile(path);
 
-    if (!file.exists()) throw new NotFoundException("File do not exists");
+    if (!file.exists()) throw new NotFoundException("File not found");
 
     return getMetadata(file);
   }

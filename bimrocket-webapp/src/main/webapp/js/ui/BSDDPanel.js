@@ -28,8 +28,11 @@ class BSDDPanel extends Panel
 
     this.dictionaryUri = null;
     this.classUri = null;
-    this.baseUrl = (Environment.SERVER_URL || "/bimrocket-server") +
-      "/api/proxy?url=" + BSDDPanel.BSDD_HOST;
+
+    const serverUrl = Environment.SERVER_URL === undefined ?
+      "/bimrocket-server" : Environment.SERVER_URL;
+
+    this.baseUrl = serverUrl + "/api/proxy?url=" + BSDDPanel.BSDD_HOST;
     this.headers = {
       "Accept" : "application/json",
       "X-User-Agent" : "bimrocket/" + Application.VERSION

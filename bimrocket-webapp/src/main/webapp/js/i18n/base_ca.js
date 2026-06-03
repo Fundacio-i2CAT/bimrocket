@@ -446,9 +446,9 @@ export const translations =
   "label.service_name" : "Nom del servei:",
   "label.service_desc" : "Descripció del servei:",
   "label.service_url" : "URL:",
-  "label.service_credentials_alias" : "Àlies de credencials:",
   "label.service_user" : "Usuari:",
   "label.service_pass" : "Paraula de pas:",
+  "label.server_type" : "Tipus de servidor:",
 
   "label.section_color" : "Color de secció:",
   "label.smooth_angle" : "Angle de suavitzat:",
@@ -468,10 +468,6 @@ export const translations =
 
   "label.username" : "Usuari:",
   "label.password" : "Paraula de pas:",
-
-  "label.use_proxy" : "Utilitza proxy",
-  "label.proxy_user" : "Usuari del proxy:",
-  "label.proxy_pass" : "Paraula de pas del proxy:",
 
   "label.folder_name" : "Nom de la carpeta:",
   "label.property_name" : "Nom de la propietat:",
@@ -629,6 +625,7 @@ export const translations =
   "title.acl_not_found" : "No s'ha trobat l'ACL",
   "title.confirm_save" : "Confirmació",
   "title.overwrite" : "Sobreescriure fitxer",
+  "title.login_dialog" : "Inicia sessió per continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Àrea: ${area} ${units}2`,
@@ -697,6 +694,8 @@ export const translations =
   "message.invalid_privileges" : "Hi ha errors en els privilegis introduïts.",
   "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
+  "message.login_failed" : "Credencials incorrectes.",
+
   "question.overwrite_file" : filename => `Vols sobreescriure el fitxer ${filename}?`,
   "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || "l'editor"}?`,
   "question.delete_service" : name => `Vols esborrar el servei ${name}?`,
@@ -708,6 +707,7 @@ export const translations =
   "question.create_new_scene" : "Vols crear una nova escena?",
   "question.delete_conversation" : "Vols esborrar la conversa?",
   "question.confirm_save_changes": "Vols confirmar els canvis?",
+  "question.confirm_logout": "Segur que vols tancar la sessió?",
 
   "controller.AutoPilotController" : "Condueix un objecte.",
   "controller.Brain4itPostController" : "Fa un POST a Brain4it.",

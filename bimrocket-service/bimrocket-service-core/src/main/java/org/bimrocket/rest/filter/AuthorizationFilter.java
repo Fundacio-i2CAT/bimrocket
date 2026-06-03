@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -42,6 +42,7 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
@@ -147,6 +148,22 @@ public class AuthorizationFilter
       // Reset cookie
       responseContext.getHeaders().add("Set-Cookie",
         sessionCookieManager.getDestroyCookieString());
+
+      // Check AJAX request
+      String requestedWith = requestContext.getHeaderString("X-Requested-With");
+
+      // Send WWW-Authenticate header for AJAX requests only
+      if ("XMLHttpRequest".equalsIgnoreCase(requestedWith) ||
+          "Fetch".equalsIgnoreCase(requestedWith))
+      {
+        // Ensure header is absent for AJAX
+        responseContext.getHeaders().remove(HttpHeaders.WWW_AUTHENTICATE);
+      }
+      else
+      {
+        responseContext.getHeaders().putSingle(
+          HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Bimrocket\"");
+      }
     }
   }
 

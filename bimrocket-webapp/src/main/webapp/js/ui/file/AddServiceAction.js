@@ -34,7 +34,6 @@ class AddServiceAction extends FileAction
     const serviceTypes = ServiceManager.getTypesOf(FileService);
     let dialog = new ServiceDialog("title.add_cloud_service", serviceTypes);
     dialog.services = application.services[this.group];
-    fileExplorer.addProxyFields(dialog);
 
     dialog.setI18N(application.i18n);
     dialog.onSave = (serviceType, parameters) =>

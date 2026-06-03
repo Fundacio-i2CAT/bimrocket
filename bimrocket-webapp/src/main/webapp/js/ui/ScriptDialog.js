@@ -77,10 +77,10 @@ class ScriptDialog extends Dialog
     if (!code || code !== this.scriptCode)
     {
       Controls.setCodeEditorDocument(this.editorView, code,
-      { language : "javascript" });
+        { language : "javascript" });
 
       const { EditorView } = CM["@codemirror/view"];
-      const { StateEffect } = CM["@codemirror/state"];
+      const { StateEffect, EditorSelection } = CM["@codemirror/state"];
 
       const changeListener = EditorView.updateListener.of(update =>
       {
@@ -92,7 +92,9 @@ class ScriptDialog extends Dialog
 
       this.editorView.dispatch(
       {
-        effects: StateEffect.appendConfig.of(changeListener)
+        effects: StateEffect.appendConfig.of(changeListener),
+        selection: EditorSelection.cursor(0),
+        scrollIntoView: true
       });
     }
   }

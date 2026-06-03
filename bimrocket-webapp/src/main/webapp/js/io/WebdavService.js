@@ -6,6 +6,7 @@
 
 import { IOManager } from "./IOManager.js";
 import { FileService, Metadata, Result, ACL } from "./FileService.js";
+import { RestServiceClient } from "./RestServiceClient.js";
 import { ServiceManager } from "./ServiceManager.js";
 import { WebUtils } from "../utils/WebUtils.js";
 
@@ -21,8 +22,6 @@ const FILE = Metadata.FILE;
 
 class WebdavService extends FileService
 {
-  static PROXY_URI = "/bimrocket-server/api/proxy?url=";
-
   static roleToPrincipal =
   {
     "EVERYONE": { type: "all" },
@@ -51,24 +50,26 @@ class WebdavService extends FileService
   constructor(parameters)
   {
     super(parameters);
+    this.client = new RestServiceClient(this);
+    if (this.serverType === undefined) this.serverType = "bimrocket";
   }
 
   getParameters()
   {
     const parameters = super.getParameters();
-    parameters.useProxy = this.useProxy;
+    parameters.serverType = this.serverType;
     return parameters;
   }
 
   setParameters(parameters)
   {
     super.setParameters(parameters);
-    this.useProxy = parameters.useProxy || false;
+    this.serverType = parameters.serverType;
   }
 
   find(path, options, onCompleted)
   {
-    let url = this.getUrl(path);
+    let url = this.client.getTargetUrl(path);
 
     let baseUri = url;
     let index = baseUri.indexOf("://");
@@ -86,379 +87,261 @@ class WebdavService extends FileService
       }
     }
 
-    // **** HTTP PROPFIND REQUEST ****
+    const headers = { "depth" : options?.depth || "1" };
 
-    let request = new XMLHttpRequest();
-    request.onerror = () =>
-    {
-      // ERROR
-      onCompleted(new Result(ERROR, "Connection error"));
-    };
-    request.onload = () =>
-    {
-      if (request.status === 200 || request.status === 207)
+    this.client.call("PROPFIND", path,
       {
-        try
+        headers,
+        onCompleted : (xml) =>
         {
-          // OK
-          let xml = request.responseXML;
-          let multiNode = xml.childNodes[0];
-          let responseNodes = multiNode.childNodes;
-          let metadata = new Metadata();
-          let entries = null;
-          for (let responseNode of responseNodes)
+          try
           {
-            if (responseNode.localName === "response")
+            // OK
+            let multiNode = xml.childNodes[0];
+            let responseNodes = multiNode.childNodes;
+            let metadata = new Metadata();
+            let entries = null;
+            for (let responseNode of responseNodes)
             {
-              let hrefNode = responseNode.querySelector("href");
-              let hrefValue = hrefNode.textContent;
-
-              if (hrefValue.startsWith("http:") ||
-                  hrefValue.startsWith("https:"))
+              if (responseNode.localName === "response")
               {
-                let resUrl = new URL(hrefValue);
-                hrefValue = resUrl.pathname;
-              }
+                let hrefNode = responseNode.querySelector("href");
+                let hrefValue = hrefNode.textContent;
 
-              if (hrefValue.endsWith("/"))
-                hrefValue = hrefValue.substring(0, hrefValue.length - 1);
+                if (hrefValue.startsWith("http:") ||
+                    hrefValue.startsWith("https:"))
+                {
+                  let resUrl = new URL(hrefValue);
+                  hrefValue = resUrl.pathname;
+                }
 
-              hrefValue = decodeURI(hrefValue);
+                if (hrefValue.endsWith("/"))
+                  hrefValue = hrefValue.substring(0, hrefValue.length - 1);
 
-              let fileName = hrefValue.substring(baseUri.length);
-              let isCollectionNode = responseNode.querySelector(
-                "propstat prop resourcetype collection") !== null;
-              let contentLengthNode = responseNode.querySelector(
-                "propstat prop getcontentlength");
-              let lastModifiedNode = responseNode.querySelector(
-                "propstat prop getlastmodified");
+                hrefValue = decodeURI(hrefValue);
 
-              let fileSize = contentLengthNode ?
-                parseInt(contentLengthNode.textContent) : 0;
-              let lastModified = lastModifiedNode ? // HTTP-Date
-                Date.parse(lastModifiedNode.textContent) : 0;
+                let fileName = hrefValue.substring(baseUri.length);
+                let isCollectionNode = responseNode.querySelector(
+                  "propstat prop resourcetype collection") !== null;
+                let contentLengthNode = responseNode.querySelector(
+                  "propstat prop getcontentlength");
+                let lastModifiedNode = responseNode.querySelector(
+                  "propstat prop getlastmodified");
 
-              if (fileName.indexOf("/") === 0) fileName = fileName.substring(1);
+                let fileSize = contentLengthNode ?
+                  parseInt(contentLengthNode.textContent) : 0;
+                let lastModified = lastModifiedNode ? // HTTP-Date
+                  Date.parse(lastModifiedNode.textContent) : 0;
 
-              if (fileName.length === 0) // filename is the requested resource
-              {
-                let index = hrefValue.lastIndexOf("/");
-                metadata.name = hrefValue.substring(index + 1);
-                metadata.description = metadata.name;
-                metadata.type = isCollectionNode ? COLLECTION : FILE;
-                metadata.size = fileSize;
-                metadata.lastModified = lastModified;
-              }
-              else // filename is a child resource
-              {
-                if (!entries) entries = [];
-                let entry = new Metadata(fileName, fileName,
-                  isCollectionNode ? COLLECTION : FILE, fileSize, lastModified);
-                entries.push(entry);
+                if (fileName.indexOf("/") === 0) fileName = fileName.substring(1);
+
+                if (fileName.length === 0) // filename is the requested resource
+                {
+                  let index = hrefValue.lastIndexOf("/");
+                  metadata.name = hrefValue.substring(index + 1);
+                  metadata.description = metadata.name;
+                  metadata.type = isCollectionNode ? COLLECTION : FILE;
+                  metadata.size = fileSize;
+                  metadata.lastModified = lastModified;
+                }
+                else // filename is a child resource
+                {
+                  if (!entries) entries = [];
+                  let entry = new Metadata(fileName, fileName,
+                    isCollectionNode ? COLLECTION : FILE, fileSize, lastModified);
+                  entries.push(entry);
+                }
               }
             }
-          }
 
-          onCompleted(new Result(OK, "", path, metadata, entries, null));
-        }
-        catch (ex)
+            onCompleted?.(new Result(OK, "", path, metadata, entries, null));
+          }
+          catch (ex)
+          {
+            onCompleted?.(new Result(ERROR, ex));
+          }
+        },
+        onError : (error, response) =>
         {
-          onCompleted(new Result(ERROR, ex));
+          // ERROR
+          onCompleted?.(this.createError("Can't open", response.status));
         }
-      }
-      else
-      {
-        onCompleted(this.createError("Can't open", request.status));
-      }
-    };
-    this.openRequest("PROPFIND", url, request);
-    request.setRequestHeader("depth", options?.depth || "1");
-    request.send();
+      });
   }
 
   read(path, onCompleted, onProgress)
   {
-    let url = this.getUrl(path);
-    let metadata = new Metadata();
-    let index = path.lastIndexOf("/");
+    const metadata = new Metadata();
+    const index = path.lastIndexOf("/");
     metadata.name = index === -1 ? path : path.substring(index + 1);
     metadata.type = FILE;
 
-    let request = new XMLHttpRequest();
-    let formatInfo = IOManager.getFormatInfo(url);
+    let formatInfo = IOManager.getFormatInfo(path);
     let dataType = formatInfo?.dataType || "arraybuffer";
-    request.responseType = dataType;
 
-    request.onload = () =>
-    {
-      if (request.status === 200)
+    this.client.call("GET", path,
       {
-        if (onProgress)
+        onCompleted : (data, response) =>
         {
-          onProgress({ progress : 100, message : "Download completed." });
-        }
-        metadata.size = parseInt(request.getResponseHeader("Content-Length"));
-
-        onCompleted(new Result(OK, "", path, metadata, null, request.response));
-      }
-      else
-      {
-        onCompleted(this.createError("Read failed", request.status));
-      }
-    };
-    request.onerror = error =>
-    {
-      onCompleted(new Result(ERROR, error));
-    };
-    if (onProgress)
-    {
-      request.onprogress = event =>
-      {
-        let progress = Math.round(
-          100 * event.loaded / event.total);
-        let message = "Downloading file...";
-        onProgress({ progress : progress, message : message });
-      };
-    }
-    this.openRequest("GET", url, request);
-    request.send();
+          onProgress?.({ progress : 100, message : "Download completed." });
+          metadata.size = parseInt(response.headers.get("Content-Length"));
+          onCompleted?.(new Result(OK, "", path, metadata, null, data));
+        },
+        onError : (error) =>
+        {
+          onCompleted?.(new Result(ERROR, error?.message));
+        },
+        onProgress : (progress) =>
+        {
+          const message = "Downloading file...";
+          onProgress?.({ progress: progress.percent, message });
+        },
+        dataType
+      });
   }
 
   write(path, data, onCompleted, onProgress)
   {
-    const url = this.getUrl(path);
-    const request = new XMLHttpRequest();
-    request.onerror = error =>
-    {
-      // ERROR
-      onCompleted(new Result(ERROR, "Connection error"));
-    };
-    request.onload = () =>
-    {
-      if (request.status === 200 || request.status === 201)
+    this.client.call("PUT", path,
       {
-        onCompleted(new Result(OK));
-      }
-      else
-      {
-        onCompleted(this.createError("Write failed", request.status));
-      }
-    };
-    if (onProgress)
-    {
-      request.onprogress = event =>
-      {
-        let progress = Math.round(
-          100 * event.loaded / event.total);
-        let message = "Uploading file...";
-        onProgress({ progress : progress, message : message });
-      };
-    }
-    this.openRequest("PUT", url, request);
-    request.send(data);
+        body : data,
+        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onError : (error, response) =>
+        {
+          onCompleted?.(this.createError("Write failed", response.status));
+        }
+      });
   }
 
   remove(path, onCompleted, onProgress)
   {
-    const url = this.getUrl(path);
-    const request = new XMLHttpRequest();
-    request.onerror = error =>
-    {
-      // ERROR
-      onCompleted(new Result(ERROR, "Connection error"));
-    };
-    request.onload = () =>
-    {
-      if (request.status === 200 || request.status === 204)
+    this.client.call("DELETE", path,
       {
-        onCompleted(new Result(OK));
-      }
-      else
-      {
-        onCompleted(this.createError("Remove failed", request.status));
-      }
-    };
-    this.openRequest("DELETE", url, request);
-    request.send();
+        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onError : (error, response) =>
+        {
+          onCompleted?.(this.createError("Remove failed", response.status));
+        }
+      });
   }
 
   makeCollection(path, onCompleted, onProgress)
   {
-    const url = this.getUrl(path);
-    const request = new XMLHttpRequest();
-    request.onerror = error =>
-    {
-      onCompleted(new Result(ERROR, "Connection error"));
-    };
-    request.onload = () =>
-    {
-      if (request.status === 200 || request.status === 201)
+    this.client.call("MKCOL", path,
       {
-        onCompleted(new Result(OK));
-      }
-      else
-      {
-        onCompleted(this.createError("Folder creation failed", request.status));
-      }
-    };
-    this.openRequest("MKCOL", url, request);
-    request.send();
+        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onError : (error, response) =>
+        {
+          onCompleted?.(
+            this.createError("Folder creation failed", response.status));
+        }
+      });
   }
 
   move(sourcePath, destinationPath, onCompleted)
   {
-    const url = this.getUrl(sourcePath);
-    const request = new XMLHttpRequest();
-    request.onerror = error =>
-    {
-      onCompleted(new Result(ERROR, "Connection error"));
-    };
-    request.onload = () =>
-    {
-      if (request.status === 200 || request.status === 201)
+    const destination = this.client.getTargetUrl(destinationPath);
+    const headers = { destination };
+
+    this.client.call("MOVE", sourcePath,
       {
-        onCompleted(new Result(OK));
-      }
-      else
-      {
-        onCompleted(this.createError("Move operation failed", request.status));
-      }
-    };
-    this.openRequest("MOVE", url, request);
-    let destination = this.url + encodeURIComponent(destinationPath);
-    request.setRequestHeader("Destination", destination);
-    request.send();
+        headers,
+        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onError : (error, response) =>
+        {
+          onCompleted?.(
+            this.createError("Move operation failed", response.status));
+        }
+      });
   }
 
   copy(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    const url = this.getUrl(sourcePath);
-    const request = new XMLHttpRequest();
-    request.onerror = error =>
-    {
-      onCompleted(new Result(ERROR, "Connection error"));
-    };
-    request.onload = () =>
-    {
-      if (request.status === 200 || request.status === 201)
+    const destination = this.client.getTargetUrl(destinationPath);
+    const headers = { destination };
+
+    this.client.call("COPY", sourcePath,
       {
-        onCompleted(new Result(OK));
-      }
-      else
-      {
-        onCompleted(this.createError("Copy operation failed", request.status));
-      }
-    };
-    this.openRequest("COPY", url, request);
-    request.setRequestHeader("Destination", this.url + destinationPath);
-    request.send();
+        headers,
+        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onError : (error, response) =>
+        {
+          onCompleted?.(
+            this.createError("Copy operation failed", response.status));
+        }
+      });
   }
 
   getACL(path, onCompleted)
   {
-    try
+    const headers =
     {
-      const url = this.getUrl(path);
-      const request = new XMLHttpRequest();
+      "Depth" : "0",
+      "Content-Type" : "application/xml; charset=utf-8"
+    };
 
-      request.onerror = () => onCompleted(new Result(ERROR, "Connection error"));
-      request.onload = () =>
+    const body = `<?xml version="1.0" encoding="utf-8" ?>
+      <d:propfind xmlns:d="DAV:">
+        <d:prop>
+          <d:acl/>
+          <d:owner/>
+        </d:prop>
+      </d:propfind>`;
+
+    this.client.call("PROPFIND", path,
       {
-        if (request.status === 200 || request.status === 207)
+        headers,
+        body,
+        onCompleted : (xml) =>
         {
           try
           {
-            const acl = this.convertXMLToACL(request.response);
-            onCompleted(new Result(OK, "ACL read", path, null, null, acl));
+            const acl = this.convertXMLToACL(xml);
+            onCompleted?.(new Result(OK, "ACL read", path, null, null, acl));
           }
-          catch (error)
+          catch (ex)
           {
-            onCompleted(new Result(ERROR, `Failed to parse ACL: ${error}`));
+            onCompleted?.(new Result(ERROR, `Failed to parse ACL: ${ex}`));
           }
-        }
-        else
+        },
+        onError : (error, response) =>
         {
-          onCompleted(this.createError("ACL retrieval failed", request.status));
-        }
-      };
-
-      this.openRequest("PROPFIND", url, request);
-      request.setRequestHeader("Depth", "0");
-      request.setRequestHeader("Content-Type", "application/xml; charset=utf-8");
-      request.send(
-        '<?xml version="1.0" encoding="utf-8" ?>' +
-        '<d:propfind xmlns:d="DAV:">' +
-        '  <d:prop>' +
-        '    <d:acl/>' +
-        '    <d:owner/>' +
-        '  </d:prop>' +
-        '</d:propfind>'
-      );
-    }
-    catch (error)
-    {
-      onCompleted(new Result(ERROR, `ACL request failed: ${error}`, path));
-    }
+          onCompleted?.(
+            this.createError("ACL retrieval failed", response.status));
+        },
+        dataType : "text"
+      });
   }
 
   setACL(path, acl, onCompleted)
   {
     try
     {
-      const aclXML = this.convertACLToXML(acl);
-      const url = this.getUrl(path);
-      const request = new XMLHttpRequest();
+      const headers = { "Content-Type" : "application/xml; charset=utf-8" };
+      const body = this.convertACLToXML(acl);
 
-      request.onerror = () => onCompleted(new Result(ERROR, "Connection error"));
-      request.onload = () =>
+      this.client.call("ACL", path,
       {
-        if (request.status === 200 || request.status === 201)
+        headers,
+        body,
+        onCompleted : (xml) =>
         {
-          onCompleted(new Result(OK));
-        }
-        else
+          onCompleted?.(new Result(OK, "ACL updated"));
+        },
+        onError : (error, response) =>
         {
-          onCompleted(this.createError("ACL change failed", request.status));
+          onCompleted?.(
+            this.createError("ACL change failed", response.status));
         }
-      };
-
-      this.openRequest("ACL", url, request);
-      request.setRequestHeader("Content-Type", "application/xml; charset=utf-8");
-      request.send(aclXML);
+      });
     }
-    catch (error)
+    catch (ex)
     {
-      onCompleted(new Result(ERROR, `ACL change failed: ${error}`, path));
+      onCompleted?.(new Result(ERROR, `ACL change failed: ${ex}`, path));
     }
   }
 
   /* internal methods */
-
-  openRequest(method, url, request)
-  {
-    if (this.useProxy)
-    {
-      url = WebdavService.PROXY_URI + url;
-    }
-    request.open(method, encodeURI(url), true);
-    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-    const credentials = this.getCredentials();
-
-    if (this.useProxy)
-    {
-      if (credentials.username && credentials.password)
-      {
-        WebUtils.setBasicAuthorization(request,
-          credentials.username, credentials.password, "Forwarded-Authorization");
-      }
-    }
-    else
-    {
-      WebUtils.setBasicAuthorization(request,
-        credentials.username, credentials.password);
-    }
-  }
 
   createError(message, status)
   {
@@ -479,22 +362,6 @@ class WebdavService extends FileService
       default: resultStatus = ERROR;
     }
     return new Result(resultStatus, message);
-  }
-
-  getUrl(path)
-  {
-    let url = this.url || "";
-
-    if (url && url.endsWith("/"))
-    {
-      url = url.substring(0, url.length - 1);
-    }
-
-    if (path && !path.startsWith("/"))
-    {
-      path = "/" + path;
-    }
-    return url + path;
   }
 
   convertXMLToACL(xmlString)

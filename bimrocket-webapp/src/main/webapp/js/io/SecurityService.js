@@ -1,18 +1,23 @@
 /**
  * SecurityService.js
  *
- * @author i2CAT
+ * @author nuriaescudei2cat
+ * @author alexis-i2cat
+ * @author realor
  */
 
 import { Service } from "./Service.js";
+import { RestServiceClient } from "./RestServiceClient.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
+
+const headers = { "Content-Type" : "application/json" };
 
 class SecurityService extends Service
 {
   constructor(parameters)
   {
     super(parameters);
+    this.client = new RestServiceClient(this);
   }
 
   getRoles(odataFilter, odataOrderBy, onCompleted, onError)
@@ -32,27 +37,37 @@ class SecurityService extends Service
       }
     }
 
-    this.invoke("GET", "roles" + query, null, onCompleted, onError);
+    this.client.call("GET", "roles" + query,
+      { onCompleted, onError });
   }
 
   getRole(roleId, onCompleted, onError)
   {
-    this.invoke("GET", "roles/" + roleId, null, onCompleted, onError);
+    this.client.call("GET", "roles/" + roleId,
+      { onCompleted, onError });
   }
 
   createRole(role, onCompleted, onError)
   {
-    this.invoke("POST", "roles", role, onCompleted, onError);
+    const body = JSON.stringify(role);
+
+    this.client.call("POST", "roles",
+      { headers, body, onCompleted, onError });
   }
 
   updateRole(role, onCompleted, onError)
   {
-    this.invoke("PUT", "roles/", role, onCompleted, onError);
+    const body = JSON.stringify(role);
+
+    this.client.call("PUT", "roles",
+      { headers, body, onCompleted, onError });
   }
 
   deleteRole(roleId, onCompleted, onError)
   {
-    this.invoke("DELETE", "roles/" + roleId, null, onCompleted, onError);
+    this.client.call("DELETE",
+      "roles/" + roleId,
+      { onCompleted, onError });
   }
 
   getUsers(odataFilter, odataOrderBy, onCompleted, onError)
@@ -71,97 +86,71 @@ class SecurityService extends Service
         query += "$orderBy=" + odataOrderBy;
       }
     }
-    
-    this.invoke("GET", "users" + query, null, onCompleted, onError);
+
+    this.client.call("GET", "users" + query,
+      { onCompleted, onError });
   }
 
   getUser(userId, onCompleted, onError)
   {
-    this.invoke("GET", "users/" + userId, null, onCompleted, onError);
+    this.client.call("GET", "users/" + userId,
+      { onCompleted, onError });
+  }
+
+  getCurrentUser(onCompleted, onError)
+  {
+    return "???";
   }
 
   createUser(user, onCompleted, onError)
   {
-    this.invoke("POST", "users", user, onCompleted, onError);
+    const body = JSON.stringify(user);
+
+    this.client.call("POST", "users",
+      { headers, body, onCompleted, onError });
   }
 
-  updateUser(userId, user, onCompleted, onError)
+  updateUser(user, onCompleted, onError)
   {
-    this.invoke("PUT", "users/", user, onCompleted, onError);
+    const body = JSON.stringify(user);
+
+    this.client.call("PUT", "users",
+      { headers, body, onCompleted, onError });
   }
 
   deleteUser(userId, onCompleted, onError)
   {
-    this.invoke("DELETE", "users/" + userId, null, onCompleted, onError);
+    this.client.call("DELETE", "users/" + userId,
+      { onCompleted, onError });
   }
 
-  invoke(method, path, data, onCompleted, onError)
+  login(username, password, onCompleted, onError)
   {
-    const request = new XMLHttpRequest();
-    if (onError)
-    {
-      request.onerror = error =>
-      {
-        onError({code: 0, message: "Connection error"});
-      };
-    }
+    const isLocalServer = this.url.startsWith("/") || this.url === "";
 
-    if (onCompleted) request.onload = () =>
+    const request =
     {
-      if (request.status === 200 || request.status === 201)
-      {
-        if (request.response)
-        {
-          try
-          {
-            onCompleted(JSON.parse(request.responseText));
-          }
-          catch (ex)
-          {
-            if (onError) onError({code: 0, message: ex});
-          }
-        }
-        else
-        {
-          onCompleted();
-        }
-      }
-      else
-      {
-        let error;
-        try
-        {
-          error = JSON.parse(request.responseText);
-        }
-        catch (ex)
-        {
-          error = {code: request.status, message: "Error " + request.status};
-        }
-        if (onError) onError(error);
-      }
+      user: username,
+      password: password,
+      generate_cookie: isLocalServer
     };
 
-    request.open(method, this.url + "/security/" + path);
-    request.setRequestHeader("Accept", "application/json");
-    
-    if (data)
-    {
-      request.setRequestHeader("Content-Type", "application/json");
-    }
+    const body = JSON.stringify(request);
 
-    const credentials = this.getCredentials();
+    this.client.call("POST", "login",
+      { headers, body, onCompleted, onError });
+  }
 
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
+  logout(onCompleted, onError)
+  {
+    this.client.call("GET", "logout",
+      { onCompleted, onError });
+  }
 
-    if (data)
-    {
-      request.send(JSON.stringify(data));
-    }
-    else
-    {
-      request.send();
-    }
+  getOAuth2Providers(onCompleted, onError)
+  {
+    this.client.call("GET", "oauth2/providers",
+      { onCompleted, onError });
   }
 }
 

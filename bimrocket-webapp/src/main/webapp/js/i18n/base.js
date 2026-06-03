@@ -446,9 +446,9 @@ export const translations =
   "label.service_name" : "Service name:",
   "label.service_desc" : "Service description:",
   "label.service_url" : "URL:",
-  "label.service_credentials_alias" : "Credentials alias:",
   "label.service_user" : "Username:",
   "label.service_pass" : "Password:",
+  "label.server_type" : "Server type:",
 
   "label.section_color" : "Section color:",
   "label.smooth_angle" : "Smooth angle:",
@@ -469,9 +469,6 @@ export const translations =
   "label.username" : "Username:",
   "label.password" : "Password:",
 
-  "label.use_proxy" : "Use proxy",
-  "label.proxy_user" : "Proxy username:",
-  "label.proxy_pass" : "Proxy password:",
 
   "label.folder_name" : "Folder name:",
   "label.property_name" : "Property name:",
@@ -629,6 +626,7 @@ export const translations =
   "title.acl_not_found": "ACL not found",
   "title.confirm_save": "Confirmation",
   "title.overwrite" : "Overwrite file",
+  "title.login_dialog" : "Please log in to continue",
 
   "message.measure_length" : (length, units) => `Length: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Area: ${area} ${units}2`,
@@ -697,6 +695,8 @@ export const translations =
   "message.invalid_privileges" : "Errors found in the input privileges.",
   "message.edit_acl_json_error" : detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
+  "message.login_failed" : "Invalid credentials.",
+
   "question.overwrite_file" : filename => `Do you want to overwrite the file ${filename}?`,
   "question.discard_changes" : name => `Discard unsaved changes in ${name || 'editor'}?`,
   "question.delete_service" : name => `Do you want to delete the ${name} service?`,
@@ -708,6 +708,7 @@ export const translations =
   "question.create_new_scene" : "Do you want to create a new scene?",
   "question.delete_conversation" : "Do you want to delete the conversation?",
   "question.confirm_save_changes": "Do you want to confirm the changes?",
+  "question.confirm_logout": "Are you sure you want to log out?",
 
   "controller.AutoPilotController" : "Drives an object.",
   "controller.Brain4itPostController" : "Posts a value to Brain4it.",

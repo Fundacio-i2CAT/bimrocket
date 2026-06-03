@@ -5,14 +5,15 @@
  */
 
 import { Service } from "./Service.js";
+import { RestServiceClient } from "./RestServiceClient.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 class IFCDBService extends Service
 {
   constructor(parameters)
   {
     super(parameters);
+    this.client = new RestServiceClient(this);
   }
 
   async getModels(odataFilter, odataOrderBy)
@@ -31,77 +32,52 @@ class IFCDBService extends Service
         query += "$orderBy=" + odataOrderBy;
       }
     }
-    const response = await this.invoke("GET", query);
-    return await response.json();
+    return await this.client.call("GET", query);
   }
 
   async getModelVersions(modelId)
   {
-    const response = await this.invoke("GET", modelId + "/versions");
-    return await response.json();
+    return await this.client.call("GET", modelId + "/versions");
   }
 
   async downloadModel(modelId, version = 0)
   {
-    const response = await this.invoke("GET", modelId + "?version=" + version);
-    return await response.text();
+    return await this.client.call("GET",
+      modelId + "?version=" + version,
+      { dataType : "text" });
   }
 
   async uploadModel(data)
   {
-    const response = await this.invoke("POST", "",
-      {"Content-Type" : "application/x-step"}, data);
-    return await response.json();
+    return await this.client.call("POST", "",
+    {
+      headers: { "Content-Type" : "application/x-step" },
+      body: data
+    });
   }
 
   async updateModel(model)
   {
-    const response = await this.invoke("PUT", "",
-      {"Content-Type" : "application/json"}, JSON.stringify(model));
-    return await response.json();
+    return await this.client.call("PUT", "",
+    {
+      headers: { "Content-Type" : "application/json" },
+      body: JSON.stringify(model)
+    });
   }
 
   async deleteModel(modelId, version = 0)
   {
-    const response = await this.invoke("DELETE", modelId + "?version=" + version);
-    return await response.json();
+    return await this.client.call("DELETE", modelId + "?version=" + version);
   }
 
   async execute(command)
   {
-    const response = await this.invoke("POST", "execute",
-      {"Content-Type" : "application/json"}, JSON.stringify(command));
-    return await response.text();
-  }
-
-  async invoke(method, path = "", headers = {}, body)
-  {
-    const username = this.username;
-    const password = this.password;
-    let url = this.url;
-
-    if (!url.endsWith("/")) url += "/";
-    url += path;
-
-    const fetchOptions = {
-      method : method,
-      headers : headers
-    };
-
-    if (body)
+    return await this.client.call("POST", "execute",
     {
-      fetchOptions.body = body;
-    }
-
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(fetchOptions.headers,
-      credentials.username, credentials.password);
-
-    const response = await fetch(url, fetchOptions);
-    if (!response.ok) throw await response.json();
-
-    return response;
+      headers : { "Content-Type" : "application/json" },
+      body : JSON.stringify(command),
+      dataType : "text"
+    });
   }
 }
 

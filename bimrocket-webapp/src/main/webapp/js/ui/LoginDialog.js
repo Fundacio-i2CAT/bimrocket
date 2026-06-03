@@ -5,6 +5,7 @@
  */
 
 import { Dialog } from "./Dialog.js";
+import { Controls } from "./Controls.js";
 
 class LoginDialog extends Dialog
 {
@@ -14,19 +15,23 @@ class LoginDialog extends Dialog
     this.application = application;
     this.setI18N(this.application.i18n);
 
-    this.setSize(240, 180);
+    this.setSize(280, 240);
 
-    if (message)
-    {
-      this.errorElem = this.addText(message, "error block");
-    }
+    const formElem = document.createElement("form");
+    formElem.id = "login_dialog";
+    formElem.className = "body";
 
-    this.usernameElem = this.addTextField("loginUser",
-      "label.username", "");
+    this.bodyElem.appendChild(formElem);
+
+    this.usernameElem = Controls.addTextField(formElem,
+      "loginUser", "label.username", "");
     this.usernameElem.setAttribute("spellcheck", "false");
 
-    this.passwordElem = this.addPasswordField("loginPassword",
-      "label.password", "");
+    this.passwordElem = Controls.addPasswordField(formElem,
+      "loginPassword", "label.password", "");
+
+    this.usernameElem.setAttribute("autocomplete", "username");
+    this.passwordElem.setAttribute("autocomplete", "current-password");
 
     this.passwordElem.addEventListener("keypress", event =>
     {
@@ -41,7 +46,28 @@ class LoginDialog extends Dialog
 
     this.cancelButton = this.addButton("login_cancel", "button.cancel",
       () => this.onCancel());
+
+    if (message)
+    {
+      this.setMessage(message);
+    }
   }
+
+	setMessage(message)
+	{
+		const translatedMessage = this.application.i18n.get(message);
+
+		if (!this.errorElem)
+		{
+			this.errorElem = this.addText(translatedMessage, "error block");
+			this.bodyElem.insertBefore(this.errorElem, this.bodyElem.firstChild);
+		}
+		else
+		{
+			this.errorElem.textContent = translatedMessage;
+		}
+		return this;
+	}
 
   onShow()
   {

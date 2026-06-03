@@ -76,7 +76,11 @@ class PrintTool extends Tool
   {
     const application = this.application;
     const request = new XMLHttpRequest();
-    const serviceUrl = (Environment.SERVER_URL || "/bimrocket-server") + "/api/print";
+
+    const serverUrl = Environment.SERVER_URL === undefined ?
+      "/bimrocket-server" : Environment.SERVER_URL;
+      
+    const serviceUrl = serverUrl + "/api/print";
 
     let scale = parseFloat(this.scaleElem.value);
     // assume units in meters

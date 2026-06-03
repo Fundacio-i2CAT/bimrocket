@@ -90,9 +90,12 @@ class ChatGPTTool extends Tool
     let setupString = application.setup.getItem(ChatGPTTool.STORAGE_KEY);
     if (setupString === null)
     {
+      const serverUrl = Environment.SERVER_URL === undefined ?
+        "/bimrocket-server" : Environment.SERVER_URL;
+
       this.setup =
       {
-        api_url: (Environment.SERVER_URL || "/bimrocket-server") + "/api/proxy?url=@chatgpt",
+        api_url: serverUrl + "/api/proxy?url=@chatgpt",
         api_key: "implicit",
         model: "gpt-4-turbo",
         temperature: 0.7,

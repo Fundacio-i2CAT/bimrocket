@@ -9,7 +9,6 @@ import { Controls } from "./Controls.js";
 import { Dialog } from "./Dialog.js";
 import { LoginDialog } from "./LoginDialog.js";
 import { ServiceDialog } from "./ServiceDialog.js";
-import { MessageDialog } from "./MessageDialog.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
 import { ACLEditorDialog } from "./ACLEditorDialog.js";
 import { Toast } from "./Toast.js";
@@ -18,7 +17,12 @@ import { FileService, Metadata, Result, ACL } from "../io/FileService.js";
 import { IOManager } from "../io/IOManager.js";
 import { WebUtils } from "../utils/WebUtils.js";
 import { I18N } from "../i18n/I18N.js";
+import { SecurityService } from "../io/SecurityService.js";
+import { ErrorHandler } from "./ErrorHandler.js";
 
+/**
+ * @deprecated replaced by file/FileExplorer
+ */
 class FileExplorer extends Panel
 {
   constructor(application, createContextButtons = true)
@@ -169,8 +173,6 @@ class FileExplorer extends Panel
     const serviceTypes = ServiceManager.getTypesOf(FileService);
     let dialog = new ServiceDialog("title.add_cloud_service", serviceTypes);
     dialog.services = this.application.services[this.group];
-    this.addProxyFields(dialog);
-
     dialog.setI18N(this.application.i18n);
     dialog.onSave = (serviceType, parameters) =>
     {
@@ -187,8 +189,6 @@ class FileExplorer extends Panel
     const serviceTypes = ServiceManager.getTypesOf(FileService);
     let dialog = new ServiceDialog("title.edit_cloud_service",
       serviceTypes, service.constructor.name, service);
-    this.addProxyFields(dialog, service);
-
     dialog.setI18N(this.application.i18n);
     dialog.serviceTypeSelect.disabled = true;
     dialog.nameElem.readOnly = true;
@@ -723,54 +723,14 @@ class FileExplorer extends Panel
     return 0;
   }
 
-  handleError(result, isWriteAction, onLogin, onFailed)
+  handleError(result, isWriteAction, onResolved, onFailed)
   {
-    if (result.status === Result.INVALID_CREDENTIALS)
-    {
-      this.requestCredentials("message.invalid_credentials",
-        onLogin, onFailed);
-    }
-    else if (result.status === Result.FORBIDDEN)
-    {
-      this.requestCredentials(isWriteAction ?
-        "message.action_denied" : "message.access_denied",
-        onLogin, onFailed);
-    }
-    else
-    {
-      if (onFailed) onFailed();
-
-      MessageDialog.create("ERROR", result.message)
-        .setClassName("error")
-        .setI18N(this.application.i18n).show();
-    }
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-    loginDialog.login = (username, password) =>
-    {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
-    };
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-    loginDialog.show();
-  }
-
-  addProxyFields(dialog, service)
-  {
-    dialog.useProxyElem = dialog.addCheckBoxField("useProxy",
-      "label.use_proxy", service?.useProxy === true);
+    ErrorHandler.handleError(this.application, this.service,
+      result, isWriteAction, onResolved, onFailed);
   }
 
   setServiceParameters(dialog, service, parameters)
   {
-    parameters.useProxy = dialog.useProxyElem.checked;
     service.setParameters(parameters);
     this.application.addService(service, this.group);
     this.refreshServices();

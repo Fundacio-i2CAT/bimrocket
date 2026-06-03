@@ -28,11 +28,11 @@
  * and
  * https://www.gnu.org/licenses/lgpl.txt
  */
-
 package org.bimrocket.api.security.oauth2.providers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -45,6 +45,7 @@ import org.bimrocket.api.security.oauth2.TokenInfo;
  * @author jordi.hernandez@i2cat.net
  * @author realor
  */
+@ApplicationScoped
 public class KeycloakOAuth2Provider extends AbstractOAuth2Provider
 {
   @Override

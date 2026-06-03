@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -44,8 +44,6 @@ import org.bimrocket.exception.NotAuthorizedException;
 /**
  *
  * @author realor
- * @author jordi.hernandez@i2cat.net
- * 
  */
 public class ApiExceptionMapper
 {
@@ -115,21 +113,10 @@ public class ApiExceptionMapper
       }
       error.setMessage(message);
 
-      Response.ResponseBuilder builder = Response.status(401)
-        .entity(error)
-        .type(MediaType.APPLICATION_JSON);
-
-      String requestedWith = headers.getHeaderString("X-Requested-With");
-
-      // Only send WWW-Authenticate if is not AJAX
-      if (!"XMLHttpRequest".equalsIgnoreCase(requestedWith))
-      {
-        builder.header(
-          HttpHeaders.WWW_AUTHENTICATE,
-          "Basic realm=\"Bimrocket\"");
-      }
-
-      return builder.build();
+      return Response.status(401)
+       .entity(error)
+       .type(MediaType.APPLICATION_JSON)
+       .build();
     }
   }
 

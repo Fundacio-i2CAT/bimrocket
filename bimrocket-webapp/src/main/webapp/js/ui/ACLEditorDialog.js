@@ -5,6 +5,7 @@ import { ConfirmDialog } from "./ConfirmDialog.js";
 import { Toast } from "./Toast.js";
 import { I18N } from "../i18n/I18N.js";
 import { Result, ACL } from "../io/FileService.js";
+import { ErrorHandler } from "./ErrorHandler.js";
 
 class ACLEditorDialog extends Dialog
 {
@@ -93,28 +94,10 @@ class ACLEditorDialog extends Dialog
     });
   }
 
-  handleError(result, onLogin, onFailed)
+  handleError(result, onResolved, onFailed)
   {
-    console.info(result);
-    if (result.status === Result.INVALID_CREDENTIALS || result.status === Result.FORBIDDEN)
-    {
-      this.fileExplorer.requestCredentials(
-        result.status === Result.INVALID_CREDENTIALS ?
-        "message.invalid_credentials" : "message.action_denied",
-        onLogin, onFailed);
-    }
-    else if (result.status === Result.BAD_REQUEST)
-    {
-      MessageDialog.create("title.acl_editor_error", result.message)
-        .setClassName("error")
-        .setI18N(this.application.i18n).show();
-    }
-    else
-    {
-      MessageDialog.create("ERROR", result.message)
-        .setClassName("error")
-        .setI18N(this.application.i18n).show();
-    }
+    ErrorHandler.handleError(this.application, this.fileService,
+      result, false, onResolved, onFailed);
   }
 
   setACL(acl)

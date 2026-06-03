@@ -446,9 +446,9 @@ export const translations =
   "label.service_name" : "Nombre del servicio:",
   "label.service_desc" : "Descripción del servicio:",
   "label.service_url" : "URL:",
-  "label.service_credentials_alias" : "Alias de credenciales:",
   "label.service_user" : "Usuario:",
   "label.service_pass" : "Contraseña:",
+  "label.server_type" : "Tipo de servidor:",
 
   "label.section_color" : "Color de sección:",
   "label.smooth_angle" : "Ángulo de suavizado:",
@@ -468,10 +468,6 @@ export const translations =
 
   "label.username" : "Usuario:",
   "label.password" : "Contraseña:",
-
-  "label.use_proxy" : "Utilizar proxy",
-  "label.proxy_user" : "Usuario del proxy:",
-  "label.proxy_pass" : "Contraseña del proxy:",
 
   "label.folder_name" : "Nombre de la carpeta:",
   "label.property_name" : "Nombre de la propiedad:",
@@ -629,6 +625,7 @@ export const translations =
   "title.acl_not_found": "No se ha encontrado el ACL",
   "title.confirm_save": "Confirmación",
   "title.overwrite" : "Sobreescribir fichero",
+  "title.login_dialog" : "Inicia sesión para continuar",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Área: ${area} ${units}2`,
@@ -697,6 +694,8 @@ export const translations =
   "message.invalid_privileges" : "Hay errores en los privilegios introducidos.",
   "message.edit_acl_json_error" : detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
 
+  "message.login_failed" : "Credenciales incorrectas.",
+
   "question.overwrite_file" : filename => `Quieres sobreescribir el fichero ${filename}?`,
   "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,
   "question.delete_service" : name => `Quieres borrar el servicio ${name}?`,
@@ -708,6 +707,7 @@ export const translations =
   "question.create_new_scene" : "Quieres crear una nueva escena?",
   "question.delete_conversation" : "Quieres borrar la conversación?",
   "question.confirm_save_changes": "Quieres confirmar los cambios?",
+  "question.confirm_logout": "¿Seguro que quieres cerrar sesión?",
 
   "controller.AutoPilotController" : "Conduce un objeto.",
   "controller.Brain4itPostController" : "Hace un POST a Brain4it.",

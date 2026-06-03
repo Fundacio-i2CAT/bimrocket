@@ -92,6 +92,12 @@ div.dialog > .header > button.minimize
   padding: 6px;
 }
 
+.dialog .body form
+{
+  display: flex;
+  flex-direction: column;
+}
+
 .dialog > .footer
 {
   flex-grow: 0;
@@ -338,6 +344,26 @@ div.dialog > .header > button:focus
 .dialog div.console div.error
 {
   color: #C00000;
+}
+
+.dialog .oauth_buttons
+{
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+
+  & button.oauth_logo_btn
+  {
+    color: #C00000;
+    background: transparent;
+    border-radius: 2px;
+    cursor: pointer;
+
+    & img
+    {
+      max-height: 32px;
+    }
+  }
 }
 
 @keyframes fade_in_dialog

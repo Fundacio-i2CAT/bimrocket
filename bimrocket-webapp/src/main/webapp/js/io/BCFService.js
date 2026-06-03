@@ -2,77 +2,107 @@
  * BCFService.js
  *
  * @author realor
+ * @author alexis-i2cat
  */
 
 import { Service } from "./Service.js";
+import { RestServiceClient } from "./RestServiceClient.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
+
+const headers = { "Content-Type" : "application/json" };
 
 class BCFService extends Service
 {
   constructor(parameters)
   {
     super(parameters);
+    this.client = new RestServiceClient(this);
+    if (this.serverType === undefined) this.serverType = "bimrocket";
   }
 
-  getProjects(odataFilter, odataOrderBy, onCompleted, onError) 
+  getParameters()
+  {
+    const parameters = super.getParameters();
+    parameters.serverType = this.serverType;
+    return parameters;
+  }
+
+  setParameters(parameters)
+  {
+    super.setParameters(parameters);
+    this.serverType = parameters.serverType;
+  }
+
+  getProjects(odataFilter, odataOrderBy, onCompleted, onError)
   {
     let query = "";
 
     const nameFilter = odataFilter ? odataFilter.nameFilter : null;
     const conditions = [];
 
-    if (nameFilter && nameFilter.trim()) 
+    if (nameFilter && nameFilter.trim())
     {
       const nameEscaped = nameFilter.trim().replace(/'/g, "''").toLowerCase();
       conditions.push(`contains(tolower(name),'${nameEscaped}')`);
     }
 
-    if (conditions.length > 0 || odataOrderBy) 
+    if (conditions.length > 0 || odataOrderBy)
     {
       query = "?";
-      if (conditions.length > 0) 
+      if (conditions.length > 0)
       {
         const filterText = conditions.join(" and ");
         query += "$filter=" + encodeURIComponent(filterText);
         if (odataOrderBy) query += "&";
       }
-      if (odataOrderBy) 
+      if (odataOrderBy)
       {
         query += "$orderby=" + encodeURIComponent(odataOrderBy);
       }
     }
 
-    this.invoke("GET", "projects" + query, null, onCompleted, onError);
+    this.client.call("GET",
+      "projects" + query,
+      { onCompleted, onError });
   }
-    
 
   getProject(projectId, onCompleted, onError)
   {
-    this.invoke("GET", "projects/" + projectId, null, onCompleted, onError);
+    this.client.call("GET",
+      "projects/" + projectId,
+      { onCompleted, onError });
   }
 
   updateProject(projectId, project, onCompleted, onError)
   {
-    this.invoke("PUT", "projects/" + projectId, project,
-      onCompleted, onError);
+    const body = JSON.stringify(project);
+
+    this.client.call("PUT",
+      "projects/" + projectId,
+      { headers, body, onCompleted, onError });
   }
 
   deleteProject(projectId, onCompleted, onError)
   {
-    this.invoke("DELETE", "projects/" + projectId, null, onCompleted, onError);
+    this.client.call("DELETE",
+      "projects/" + projectId,
+      { onCompleted, onError });
   }
 
   getExtensions(projectId, onCompleted, onError)
   {
-    this.invoke("GET", "projects/" + projectId + "/extensions", null,
-      onCompleted, onError);
+    this.client.call("GET",
+      "projects/" + projectId + "/extensions",
+      { onCompleted, onError });
   }
 
   updateExtensions(projectId, extensions, onCompleted, onError)
   {
-    this.invoke("PUT", "projects/" + projectId + "/extensions",
-      extensions, onCompleted, onError);
+    const body = JSON.stringify(extensions);
+
+    this.client.call("PUT",
+      `projects/${projectId}/extensions`,
+      { headers, body, onCompleted, onError });
   }
 
   getTopics(projectId, odataFilter, odataOrderBy, onCompleted, onError)
@@ -89,190 +119,145 @@ class BCFService extends Service
       if (odataOrderBy) query += "$orderBy=" + odataOrderBy;
     }
 
-    this.invoke("GET", "projects/" + projectId + "/topics" + query,
-      null, onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics${query}`,
+      { onCompleted, onError });
   }
 
   getTopic(projectId, topicGuid, onCompleted, onError)
   {
-    this.invoke("GET", "projects/" + projectId + "/topics/" + topicGuid,
-      null, onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics/${topicGuid}`,
+      { onCompleted, onError });
   }
 
   createTopic(projectId, topic, onCompleted, onError)
   {
-    this.invoke("POST", "projects/" + projectId + "/topics",
-      topic, onCompleted, onError);
+    const body = JSON.stringify(topic);
+
+    this.client.call("POST",
+      `projects/${projectId}/topics`,
+      { headers, body, onCompleted, onError });
   }
 
   updateTopic(projectId, topicGuid, topic, onCompleted, onError)
   {
-    this.invoke("PUT", "projects/" + projectId + "/topics/" +
-      topicGuid, topic, onCompleted, onError);
+    const body = JSON.stringify(topic);
+
+    this.client.call("PUT",
+      `projects/${projectId}/topics/${topicGuid}`,
+      { headers, body, onCompleted, onError });
   }
 
   deleteTopic(projectId, topicGuid, onCompleted, onError)
   {
-    this.invoke("DELETE", "projects/" + projectId + "/topics/" + topicGuid,
-      null, onCompleted, onError);
+    this.client.call("DELETE",
+      `projects/${projectId}/topics/${topicGuid}`,
+      { onCompleted, onError });
   }
 
   getViewpoints(projectId, topicGuid, onCompleted, onError)
   {
-    this.invoke("GET",
-      "projects/" + projectId +
-      "/topics/" + topicGuid + "/viewpoints", null, onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics/${topicGuid}/viewpoints`,
+      { onCompleted, onError });
   }
 
   getViewpoint(projectId, topicGuid, viewpointGuid, onCompleted, onError)
   {
-    this.invoke("GET",
-      "projects/" + projectId +
-      "/topics/" + topicGuid + "/viewpoints/" + viewpointGuid, null,
-      onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics/${topicGuid}/viewpoints/${viewpointGuid}`,
+      { onCompleted, onError });
   }
 
   createViewpoint(projectId, topicGuid, viewpoint, onCompleted, onError)
   {
-    this.invoke("POST",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/viewpoints", viewpoint, onCompleted, onError);
+    const body = JSON.stringify(viewpoint);
+
+    this.client.call("POST",
+      `projects/${projectId}/topics/${topicGuid}/viewpoints`,
+      { headers, body, onCompleted, onError });
   }
 
   deleteViewpoint(projectId, topicGuid, viewpointGuid, onCompleted, onError)
   {
-    this.invoke("DELETE",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/viewpoints/" + viewpointGuid, null, onCompleted, onError);
+    this.client.call("DELETE",
+      `projects/${projectId}/topics/${topicGuid}/viewpoints/${viewpointGuid}`,
+      { onCompleted, onError });
   }
 
   getComments(projectId, topicGuid, onCompleted, onError)
   {
-    this.invoke("GET", "projects/" + projectId + "/topics/" +
-      topicGuid + "/comments", null, onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics/${topicGuid}/comments`,
+      { onCompleted, onError });
   }
 
   getComment(projectId, topicGuid, commentGuid, onCompleted, onError)
   {
-    this.invoke("GET", "projects/" + projectId + "/topics/" +
-      topicGuid + "/comments/" + commentGuid, null, onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics/${topicGuid}/comments/${commentGuid}`,
+      { onCompleted, onError });
   }
 
   createComment(projectId, topicGuid, comment, onCompleted, onError)
   {
-    this.invoke("POST",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/comments", comment, onCompleted, onError);
+    const body = JSON.stringify(comment);
+
+    this.client.call("POST",
+      `projects/${projectId}/topics/${topicGuid}/comments`,
+      { headers, body, onCompleted, onError });
   }
 
   updateComment(projectId, topicGuid, commentGuid, comment,
     onCompleted, onError)
   {
-    this.invoke("PUT",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/comments/" + commentGuid, comment, onCompleted, onError);
+    const body = JSON.stringify(comment);
+
+    this.client.call("PUT",
+      `projects/${projectId}/topics/${topicGuid}/comments/${commentGuid}`,
+      { headers, body, onCompleted, onError });
   }
 
   deleteComment(projectId, topicGuid, commentGuid, onCompleted, onError)
   {
-    this.invoke("DELETE",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/comments/" + commentGuid, null, onCompleted, onError);
+    this.client.call("DELETE",
+      `projects/${projectId}/topics/${topicGuid}/comments/${commentGuid}`,
+      { onCompleted, onError });
   }
 
   getDocumentReferences(projectId, topicGuid, onCompleted, onError)
   {
-    this.invoke("GET",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/document_references", null, onCompleted, onError);
+    this.client.call("GET",
+      `projects/${projectId}/topics/${topicGuid}/document_references`,
+      { onCompleted, onError });
   }
 
   createDocumentReference(projectId, topicGuid, docRef, onCompleted, onError)
   {
-    this.invoke("POST",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/document_references", docRef, onCompleted, onError);
+    const body = JSON.stringify(docRef);
+
+    this.client.call("POST",
+      `projects/${projectId}/topics/${topicGuid}/document_references`,
+      { headers, body, onCompleted, onError });
   }
 
   updateDocumentReference(projectId, topicGuid, docRefGuid, docRef,
     onCompleted, onError)
   {
-    this.invoke("PUT",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/document_references/" + docRefGuid, docRef, onCompleted, onError);
+    const body = JSON.stringify(docRef);
+
+    this.client.call("PUT",
+      `projects/${projectId}/topics/${topicGuid}/document_references/${docRefGuid}`,
+      { headers, body, onCompleted, onError });
   }
 
   deleteDocumentReference(projectId, topicGuid, docRefGuid,
     onCompleted, onError)
   {
-    this.invoke("DELETE",
-      "projects/" + projectId + "/topics/" + topicGuid +
-      "/document_references/" + docRefGuid, null, onCompleted, onError);
-  }
-
-  invoke(method, path, data, onCompleted, onError)
-  {
-    const request = new XMLHttpRequest();
-    if (onError)
-    {
-      request.onerror = error =>
-      {
-        onError({code: 0, message: "Connection error"});
-      };
-    }
-
-    if (onCompleted) request.onload = () =>
-    {
-      if (request.status === 200)
-      {
-        if (request.response)
-        {
-          try
-          {
-            onCompleted(JSON.parse(request.responseText));
-          }
-          catch (ex)
-          {
-            if (onError) onError({code: 0, message: ex});
-          }
-        }
-        else
-        {
-          onCompleted();
-        }
-      }
-      else
-      {
-        let error;
-        try
-        {
-          error = JSON.parse(request.responseText);
-        }
-        catch (ex)
-        {
-          error = {code: request.status, message: "Error " + request.status};
-        }
-        if (onError) onError(error);
-      }
-    };
-
-    request.open(method, this.url + "/bcf/2.1/" + path);
-    request.setRequestHeader("Accept", "application/json");
-    request.setRequestHeader("Content-Type", "application/json");
-
-    const credentials = this.getCredentials();
-
-    WebUtils.setBasicAuthorization(request,
-      credentials.username, credentials.password);
-
-    if (data)
-    {
-      request.send(JSON.stringify(data));
-    }
-    else
-    {
-      request.send();
-    }
+    this.client.call("DELETE",
+      `projects/${projectId}/topics/${topicGuid}/document_references/${docRefGuid}`,
+      { onCompleted, onError });
   }
 }
 

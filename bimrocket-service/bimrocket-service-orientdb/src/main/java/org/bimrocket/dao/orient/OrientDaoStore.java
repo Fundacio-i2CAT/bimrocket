@@ -94,6 +94,9 @@ public abstract class OrientDaoStore<C extends DaoConnection>
         initialized = true;
       }
     }
+
+    db.activateOnCurrentThread();
+
     return db;
   }
 

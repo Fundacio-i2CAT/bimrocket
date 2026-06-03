@@ -8,8 +8,6 @@ import { Panel } from "../Panel.js";
 import { Controls } from "../Controls.js";
 import { Action } from "../Action.js";
 import { ContextMenu, MenuItem } from "../Menu.js";
-import { LoginDialog } from "../LoginDialog.js";
-import { MessageDialog } from "../MessageDialog.js";
 import { ConfirmDialog } from "../ConfirmDialog.js";
 import { Toast } from "../Toast.js";
 import { ServiceManager } from "../../io/ServiceManager.js";
@@ -30,6 +28,7 @@ import { EditACLAction } from "./EditACLAction.js";
 import { EditServiceAction } from "./EditServiceAction.js";
 import { OpenFolderAction } from "./OpenFolderAction.js";
 import { UploadFileAction } from "./UploadFileAction.js";
+import { ErrorHandler } from "../ErrorHandler.js";
 
 class FileExplorer extends Panel
 {
@@ -819,8 +818,8 @@ class FileExplorer extends Panel
           {
             childNode.scrollIntoView(
             {
-               behavior: "smooth",
-               block: "center"
+              behavior: "smooth",
+              block: "center"
             });
           }
           if (this.contextMenuButton.parentElement !== childNode)
@@ -839,7 +838,7 @@ class FileExplorer extends Panel
         childNode.classList.remove("copy");
 
         if (this._source && this._source.basePath === this.basePath &&
-            currentEntryName === this._source.entryName)
+                currentEntryName === this._source.entryName)
         {
           childNode.classList.add(this._isCopy ? "copy" : "cut");
         }
@@ -972,55 +971,14 @@ class FileExplorer extends Panel
     return 0;
   }
 
-  handleError(result, isWriteAction, onLogin, onFailed)
+  handleError(result, isWriteAction, onResolved, onFailed)
   {
-    if (result.status === Result.INVALID_CREDENTIALS)
-    {
-      this.requestCredentials("message.invalid_credentials",
-        onLogin, onFailed);
-    }
-    else if (result.status === Result.FORBIDDEN)
-    {
-      this.requestCredentials(isWriteAction ?
-        "message.action_denied" : "message.access_denied",
-        onLogin, onFailed);
-    }
-    else
-    {
-      if (onFailed) onFailed();
-
-      MessageDialog.create("ERROR", result.message)
-        .setClassName("error")
-        .setI18N(this.application.i18n).show();
-    }
-  }
-
-  requestCredentials(message, onLogin, onFailed)
-  {
-    const loginDialog = new LoginDialog(this.application, message);
-    loginDialog.login = (username, password) =>
-    {
-      this.service.setCredentials(username, password);
-      if (onLogin) onLogin();
-    };
-    loginDialog.onCancel = () =>
-    {
-      loginDialog.hide();
-      if (onFailed) onFailed();
-    };
-    loginDialog.show();
-  }
-
-  addProxyFields(dialog, service)
-  {
-    dialog.useProxyElem = dialog.addCheckBoxField("useProxy",
-      "label.use_proxy", service?.useProxy === true);
+    ErrorHandler.handleError(this.application, this.service,
+      result, isWriteAction, onResolved, onFailed);
   }
 
   setServiceParameters(dialog, service, parameters)
   {
-    parameters.useProxy = dialog.useProxyElem.checked;
-
     service.setParameters(parameters);
     this.application.addService(service, this.group);
     this.refreshServices();

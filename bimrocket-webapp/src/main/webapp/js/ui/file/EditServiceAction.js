@@ -43,7 +43,6 @@ class EditServiceAction extends FileAction
     const serviceTypes = ServiceManager.getTypesOf(FileService);
     let dialog = new ServiceDialog("title.edit_cloud_service",
       serviceTypes, service.constructor.name, service);
-    fileExplorer.addProxyFields(dialog, service);
 
     dialog.setI18N(application.i18n);
     dialog.serviceTypeSelect.disabled = true;

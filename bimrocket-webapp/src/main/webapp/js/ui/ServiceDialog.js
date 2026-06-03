@@ -5,7 +5,7 @@
  */
 
 import { Dialog } from "./Dialog.js";
-import { CredentialsManager } from "../utils/CredentialsManager.js";
+import { ServerSession } from "../io/ServerSession.js";
 
 class ServiceDialog extends Dialog
 {
@@ -28,9 +28,10 @@ class ServiceDialog extends Dialog
       service?.url);
     this.urlElem.spellcheck = false;
 
-    this.credentialsAliasElem = this.addTextField("svcCredAlias",
-      "label.service_credentials_alias", service?.credentialsAlias);
-    this.credentialsAliasElem.spellcheck = false;
+    // add serverType field
+    const serverTypeOptions = ServerSession.getClassNames();
+    this.serverTypeSelect = this.addSelectField("svcServerType",
+      "label.server_type", serverTypeOptions, service?.serverType);
 
     this.saveButton = this.addButton("save", "button.save", () =>
     {
@@ -40,7 +41,7 @@ class ServiceDialog extends Dialog
         name : this.nameElem.value.trim(),
         description : this.descriptionElem.value,
         url : this.urlElem.value,
-        credentialsAlias : this.credentialsAliasElem.value
+        serverType : this.serverTypeSelect.value
       };
 
       this.onSave(this.serviceTypeSelect.value, parameters);
@@ -85,7 +86,7 @@ class ServiceDialog extends Dialog
     this.serviceTypeSelect.focus();
   }
 
-  onSave(serviceType, name, description, url, username, password)
+  onSave(serviceType, parameters)
   {
   }
 
