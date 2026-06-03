@@ -2225,11 +2225,21 @@ class IfcCurveHelper extends IfcHelper
   {
     super(loader, entity);
     this.points = null;
+    this.object3D = null;
   }
 
   getPoints()
   {
     return this.points;
+  }
+
+  getObject3D()
+  {
+    if (this.object3D === null)
+    {
+      this.object3D = new Cord(new CordGeometry(this.getPoints()));
+    }
+    return this.object3D;
   }
 };
 registerIfcHelperClass(IfcCurveHelper);
