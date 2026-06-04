@@ -808,7 +808,7 @@ class IfcTypeProductHelper extends IfcHelper
       const typeProduct = this.entity;
       const loader = this.loader;
 
-      let typeName = typeProduct.Name || typeProduct.GlobalId;
+      let typeName = typeProduct.Name || typeProduct.GlobalId || "???";
       if (typeName.startsWith(THREE.Object3D.HIDDEN_PREFIX))
       {
         typeName = typeName.substring(1);
