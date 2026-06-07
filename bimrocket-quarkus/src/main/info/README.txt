@@ -1,11 +1,11 @@
-BIMROCKET
-=========
+BIMROCKET-Quarkus
+=================
 
 Start-up:
-  <bimrocket-quarkus-home>/startup(.sh|.bat)
+  <bimrocket-quarkus-home>/startup(.sh|.cmd)
 
 Shutdown:
-  <bimrocket-quarkus-home>/shutdown(.sh|.bat)
+  <bimrocket-quarkus-home>/shutdown(.sh|.cmd)
 
 Data directory:
   By default, bimrocket data is stored in the <user.home>/bimrocket directory.

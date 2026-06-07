@@ -6,17 +6,42 @@
   <formats>
     <format>zip</format>
   </formats>
-  <includeBaseDirectory>false</includeBaseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
   <fileSets>
     <fileSet>
       <directory>target/bimrocket-quarkus</directory>
       <outputDirectory></outputDirectory>
     </fileSet>
     <fileSet>
+      <directory>${basedir}/../</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>LICENSE.txt</include>
+      </includes>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>${basedir}/../scripts</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>*.cmd</include>
+      </includes>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>${basedir}/../scripts</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>*.sh</include>
+      </includes>
+      <lineEnding>unix</lineEnding>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <directory>src/main/scripts</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>*.bat</include>
+        <include>*.cmd</include>
       </includes>
       <lineEnding>dos</lineEnding>
     </fileSet>
