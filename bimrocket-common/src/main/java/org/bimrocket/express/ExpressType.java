@@ -61,4 +61,29 @@ public abstract class ExpressType
   {
     return typeName;
   }
+  
+  public boolean isEntity()
+  {
+    return this instanceof ExpressEntity;
+  }
+
+  public boolean isDefinedType()
+  {
+    return this instanceof ExpressDefinedType;
+  }
+
+  public boolean isCollection()
+  {
+    return this instanceof ExpressCollection;
+  }
+
+  public boolean isEnumeration()
+  {
+    return this instanceof ExpressEnumeration;
+  }
+
+  public boolean isPrimitive()
+  {
+    return this instanceof ExpressPrimitive;
+  }
 }

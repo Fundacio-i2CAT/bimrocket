@@ -153,6 +153,18 @@ public class ExpressEntity extends ExpressNamedType
     return allInverseAttributes;
   }
 
+  public boolean isTypeName(String typeName)
+  {
+    ExpressEntity entity = this;
+    do
+    {
+      if (entity.getTypeName().equalsIgnoreCase(typeName)) return true;
+      entity = entity.getSuperEntity();
+    } while (entity != null);
+
+    return false;
+  }
+
   private void collectInverseAttributes(List<ExpressInverseAttribute> list)
   {
     if (superEntity != null)

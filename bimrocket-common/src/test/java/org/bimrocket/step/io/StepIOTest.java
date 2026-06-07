@@ -84,7 +84,7 @@ public class StepIOTest
   {
     assertDoesNotThrow(() ->
     {
-      var data = load("/org/bimrocket/ifc/models/Sample.ifc");
+      var data = load("/org/bimrocket/data/ifc/models/Sample.ifc");
       export(data);
     });
   }

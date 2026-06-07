@@ -31,6 +31,7 @@
 package org.bimrocket.express.data;
 
 import org.bimrocket.express.ExpressConstant;
+import org.bimrocket.express.ExpressEntity;
 import org.bimrocket.express.ExpressType;
 
 /**
@@ -275,6 +276,31 @@ public interface ExpressCursor
   ExpressType getType();
 
   /**
+   * Returns the type name of the container wrapped by this cursor.
+   *
+   * @return the name of the container type.
+   */
+  default String getTypeName()
+  {
+    return getType().getTypeName();
+  }
+
+  /**
+   * Tells if this cursor points to an element of type typeName.
+   *
+   * @return true if this cursor points to an element of type typeName.
+   */
+  default boolean isTypeName(String typeName)
+  {
+    ExpressType t = getType();
+    if (t instanceof ExpressEntity entity)
+    {
+      return entity.isTypeName(typeName);
+    }
+    return t != null && t.getTypeName().equals(typeName);
+  }
+
+  /**
    * Returns the identifier of the container wrapped by this cursor.
    * Only entity containers are required to have an identifier.
    *
@@ -300,9 +326,22 @@ public interface ExpressCursor
 
   /**
    * Returns a copy of this cursor.
-   * The returned copy does not preserve the previous cursor states.
+   * The returned copy does not preserve the navigation stack.
    *
    * @return a copy of this cursor.
    */
-  ExpressCursor copy();
+  default ExpressCursor copy()
+  {
+    return copy(false);
+  }
+
+  /**
+   * Returns a copy of this cursor.
+   *
+   * @param withStack when true the returned cursor preserves the navigation
+   *   stack.
+   * @return a copy of this cursor.
+   */
+  ExpressCursor copy(boolean withStack);
+
 }

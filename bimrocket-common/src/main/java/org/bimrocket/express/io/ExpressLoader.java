@@ -62,7 +62,8 @@ public class ExpressLoader
     if (schemaFileName.startsWith(SCHEMA_PREFIX))
     {
       schemaFileName = schemaFileName.substring(SCHEMA_PREFIX.length());
-      String resource = "/org/bimrocket/ifc/schema/" + schemaFileName + ".exp";
+      String resource = "/org/bimrocket/data/ifc/schema/%s.exp"
+        .formatted(schemaFileName);
       InputStreamReader reader = new InputStreamReader(
         ExpressLexer.class.getResourceAsStream(resource));
       return load(reader);

@@ -30,9 +30,10 @@
  */
 package org.bimrocket.express.data;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 import org.bimrocket.express.ExpressAttribute;
 import org.bimrocket.express.ExpressCollection;
 import org.bimrocket.express.ExpressEntity;
@@ -111,7 +112,7 @@ public abstract class AbstractData<E, C> implements ExpressData
   {
     protected Object container;
     protected ExpressType type;
-    protected Stack<Object> stack;
+    protected Deque<Object> stack;
 
     protected Cursor(Object container)
     {
@@ -339,15 +340,30 @@ public abstract class AbstractData<E, C> implements ExpressData
     }
 
     @Override
-    public ExpressCursor copy()
+    public ExpressCursor copy(boolean withStack)
     {
-      return new Cursor(container, type);
+      Cursor cursor = new Cursor(container, type);
+      if (stack != null && !stack.isEmpty() && withStack)
+      {
+        cursor.stack = new ArrayDeque<>();
+        cursor.stack.addAll(stack);
+      }
+      return cursor;
     }
 
     @Override
     public String toString()
     {
-      return container.toString();
+      String id = getId();
+
+      StringBuilder buffer = new StringBuilder();
+      if (id != null)
+      {
+        buffer.append(id).append(": ");
+      }
+      buffer.append(type.getTypeName());
+
+      return buffer.toString();
     }
 
     protected Object internalGet(Object selector)
@@ -507,7 +523,7 @@ public abstract class AbstractData<E, C> implements ExpressData
 
     protected void internalEnter(Object newContainer, ExpressType newType)
     {
-      if (stack == null) stack = new Stack<>();
+      if (stack == null) stack = new ArrayDeque<>();
       stack.push(container);
       stack.push(type);
       container = newContainer;
