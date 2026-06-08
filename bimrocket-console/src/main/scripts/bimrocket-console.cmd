@@ -10,8 +10,13 @@ REM --------------------------------------------------
 
 call .\jvm.cmd
 
+if "%JAVA_EXEC%"=="" (
+    echo Java not installed^.
+    exit /b 1
+)
+
 REM ------------------------------------
 REM 2. Start application
 REM ------------------------------------
 
-%JAVA_EXEC% -Xmx4g -jar %APP_JAR%
+%JAVA_EXEC% -Xmx4g -jar %APP_JAR% %1

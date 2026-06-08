@@ -25,6 +25,11 @@ fi
 
 . ./jvm.sh
 
+if [ -z "$JAVA_EXEC" ]; then
+    echo "Java not installed."
+    exit 1
+fi
+
 # ------------------------------------
 # 3. Start application
 # ------------------------------------

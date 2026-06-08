@@ -9,8 +9,13 @@ APP_JAR="$SCRIPT_DIR/bimrocket-console.jar"
 
 . ./jvm.sh
 
+if [ -z "$JAVA_EXEC" ]; then
+    echo "Java not installed."
+    exit 1
+fi
+
 # ------------------------------------
 # 2. Start application
 # ------------------------------------
 
-"$JAVA_EXEC" -Xmx4g -jar "$APP_JAR"
+"$JAVA_EXEC" -Xmx4g -jar "$APP_JAR" "$1"

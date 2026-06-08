@@ -97,8 +97,7 @@ REM --------------------------------------------------
         set "JVM_ZIP=%TEMP%\temurin-jdk.zip"
 
         REM Download JVM ZIP
-        powershell -NoProfile -Command ^
-            "Start-BitsTransfer -Source '!JVM_DOWNLOAD_URL!' -Destination '!JVM_ZIP!'"
+        curl -L "!JVM_DOWNLOAD_URL!" -o "!JVM_ZIP!"
 
         REM Extract ZIP
         powershell -NoProfile -Command ^

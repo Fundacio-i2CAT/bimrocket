@@ -26,6 +26,11 @@ REM --------------------------------------------------
 
 call .\jvm.cmd
 
+if "%JAVA_EXEC%"=="" (
+    echo Java not installed^.
+    exit /b 1
+)
+
 REM ------------------------------------
 REM 3. Start application
 REM ------------------------------------
