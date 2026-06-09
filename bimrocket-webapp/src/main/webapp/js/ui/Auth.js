@@ -18,7 +18,7 @@ export class Auth
     const options =
       `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`;
 
-    window.open(authUrl, "authPopup", options);
+    return window.open(authUrl, "authPopup", options);
   }
 }
 

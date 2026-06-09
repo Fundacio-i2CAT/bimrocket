@@ -22,7 +22,7 @@ class ServiceLoginDialog extends LoginDialog
     this.oauthContainer = null;
 
     this.authSuccessListener = (event) => this.handleOAuthSuccess(event);
-	}
+  }
 
 	setService(service)
 	{
@@ -56,7 +56,11 @@ class ServiceLoginDialog extends LoginDialog
   {
     super.hide();
     window.removeEventListener("message", this.authSuccessListener);
-
+    if (this.oauthWindow)
+    {
+      this.oauthWindow.close();
+      this.oauthWindow = null;
+    }
     return this;
   }
 
@@ -71,14 +75,21 @@ class ServiceLoginDialog extends LoginDialog
     const serverSession = this.serverSession;
     if (!serverSession) return;
 
-    serverSession.getOAuth2Providers((providers) =>
+    const baseUrl = serverSession.baseUrl;
+    if (baseUrl === "" || baseUrl.startsWith("/"))
     {
-      if (providers.length > 0) this.addOAuth2Buttons(providers);
-    });
+      // Only show OAuth2 providers for same domain services
+      serverSession.getOAuth2Providers((providers) =>
+      {
+        if (providers.length > 0) this.addOAuth2Buttons(providers);
+      });
+    }
   }
 
   addOAuth2Buttons(providers)
   {
+    this.setSize(280, 240); // increase Dialog height
+
     if (!this.oauthContainer)
     {
       this.oauthContainer = document.createElement("div");
@@ -102,7 +113,7 @@ class ServiceLoginDialog extends LoginDialog
           `auth_${provider.name}`,
           buttonLabel,
           provider.logoUrl,
-          () => Auth.openAuthPopup(authUrl),
+          () => this.oauthWindow = Auth.openAuthPopup(authUrl),
           "oauth_logo_btn"
         );
       }
@@ -112,7 +123,7 @@ class ServiceLoginDialog extends LoginDialog
           this.oauthContainer,
           `auth_${provider.name}`,
           buttonLabel,
-          () => Auth.openAuthPopup(authUrl)
+          () => this.oauthWindow = Auth.openAuthPopup(authUrl)
         );
       }
     });

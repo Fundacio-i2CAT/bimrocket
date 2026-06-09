@@ -349,8 +349,9 @@ div.dialog > .header > button:focus
 .dialog .oauth_buttons
 {
   width: 100%;
-  display: flex;
-  justify-content: space-evenly;
+  display: block;
+  text-align: center;
+  margin-top: 6px;
 
   & button.oauth_logo_btn
   {
