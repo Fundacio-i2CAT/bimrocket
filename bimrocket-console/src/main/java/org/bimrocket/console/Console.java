@@ -93,12 +93,13 @@ public class Console
       String code = Files.readString(Path.of(filename));
       try (Context context = createContext())
       {
+        System.out.println("Running file %s...".formatted(filename));
         context.eval("js", code);
       }
     }
     catch (Exception ex)
     {
-      System.err.println("Error: " + ex.getMessage());
+      System.err.println("Error: " + ex.toString());
     }
   }
 
@@ -211,6 +212,8 @@ public class Console
       .allowAllAccess(true)
       .allowHostAccess(HostAccess.ALL)
       .allowHostClassLookup(s -> true)
+      .out(System.out)
+      .err(System.out)
       .build();
 
     for (Class<? extends Library> cls : libraryClasses)

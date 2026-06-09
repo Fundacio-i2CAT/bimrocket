@@ -76,7 +76,7 @@ REM --------------------------------------------------
         REM Query Adoptium API
         powershell -NoProfile -Command ^
             "$ProgressPreference='SilentlyContinue';" ^
-            "$url='https://api.adoptium.net/v3/assets/latest/%JAVA_VERSION%/hotspot?image_type=jdk^&os=windows^&architecture=!ARCH!^&heap_size=normal^&archive_type=zip';" ^
+            "$url='https://api.adoptium.net/v3/assets/latest/%JAVA_VERSION%/hotspot?image_type=jre^&os=windows^&architecture=!ARCH!^&heap_size=normal^&archive_type=zip';" ^
             "$json=Invoke-RestMethod -Uri $url;" ^
             "$json[0].binary.package.link" > "%TEMP%\jvm_url.txt"
 

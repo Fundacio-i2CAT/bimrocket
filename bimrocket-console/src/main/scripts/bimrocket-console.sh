@@ -18,4 +18,4 @@ fi
 # 2. Start application
 # ------------------------------------
 
-"$JAVA_EXEC" -Xmx4g -jar "$APP_JAR" "$1"
+"$JAVA_EXEC" -Xmx4g -jar "$APP_JAR" "$@"

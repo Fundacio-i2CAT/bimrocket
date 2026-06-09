@@ -80,7 +80,7 @@ public class IfcLibrary extends Library
 
   @Command(
     name = "loadIFC",
-    description = "Load IFC file.",
+    description = "Load an IFC file.",
     parameters = "ifc_file:string")
   public Status load(String filename) throws IOException
   {
@@ -103,7 +103,7 @@ public class IfcLibrary extends Library
 
   @Command(
     name = "exportIFC" ,
-    description = "Export IFC file.",
+    description = "Export an IFC file.",
     parameters = "ifc_file:string")
   public Status export(String filename) throws IOException
   {
@@ -123,7 +123,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Generates a model histogram.")
+    description = "Generate an IFC class histogram.")
   public Status histogram()
   {
     ExpressCursor cursor = cursor();
@@ -166,7 +166,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "List properties of the current element.",
+    description = "List the items of the current object.",
     parameters = "[start=0], [count=20]")
   public Status list(int start, int count)
   {
@@ -218,7 +218,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Enter the specified index or name.",
+    description = "Move the cursor to the object at the specified index or name.",
     parameters = "index:number | name:string")
   public Status enter(int index)
   {
@@ -243,7 +243,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Moves current cursor to parent element.")
+    description = "Move the cursor to the parent object.")
   public Status exit()
   {
     ExpressCursor cursor = cursor();
@@ -260,7 +260,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Moves current cursor to the root element.")
+    description = "Move the cursor to the root object.")
   public Status root()
   {
     ExpressCursor cursor = cursor();
@@ -273,7 +273,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Select the current element.")
+    description = "Select the object referenced by the cursor.")
   public Status select()
   {
     ExpressCursor cursor = cursor();
@@ -299,7 +299,8 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Select the current element or all elements.")
+    description = "Unselect the current object or all selected objects.",
+    parameters = "allObjects:boolean")
   public Status unselect(boolean all)
   {
     if (all)
@@ -321,8 +322,8 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Find by a filter criteria.",
-    parameters = "filter:function")
+    description = "Find objects that meet the specified criteria.",
+    parameters = "criteria:function")
   public Status find(Function<ExpressCursor, Boolean> filter)
   {
     finder = new ExpressDataFinder(filter);
@@ -345,7 +346,7 @@ public class IfcLibrary extends Library
   }
 
   @Command(
-    description = "Finds next",
+    description = "Find the next object that meets the specified criteria.",
     parameters = "[skipChildren:false]")
   public Status next(boolean skipChildren)
   {

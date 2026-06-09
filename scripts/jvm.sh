@@ -68,8 +68,11 @@ else
 
     # Query Adoptium API for latest JDK download URL
     JVM_DOWNLOAD_URL=$(curl -s \
-      "https://api.adoptium.net/v3/assets/latest/${JAVA_VERSION}/hotspot?image_type=jdk&os=${OS}&architecture=${ARCH}&heap_size=normal&type=tar.gz" \
-      | jq -r '.[0].binary.package.link')
+      "https://api.adoptium.net/v3/assets/latest/${JAVA_VERSION}/hotspot?image_type=jre&os=${OS}&architecture=${ARCH}&heap_size=normal&type=tar.gz" \
+      | python3 -c '
+import sys, json
+print(json.load(sys.stdin)[0]["binary"]["package"]["link"])
+')
 
     if [ -z "$JVM_DOWNLOAD_URL" ] || [ "$JVM_DOWNLOAD_URL" == "null" ]; then
       echo "Error: Unable to resolve JVM download URL"

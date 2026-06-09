@@ -68,6 +68,7 @@ public class PsetLibrary extends Library
   }
 
   @Command(
+    description = "Add a pset transform rule.",
     parameters = "pset:string, property:string, newName:string, newValue:function")
   public Status addPsetRule(
     String pset,
@@ -75,30 +76,36 @@ public class PsetLibrary extends Library
     String newName,
     Function<Object, Object> newValue)
   {
-    if (pset == null)
+    pset = pset == null ? "" : pset.trim();
+    property = property == null ? "" : property.trim();
+
+    if (pset.length() == 0 && property.length() == 0)
     {
-      return new Status(1, "pset can not be null.");
+      return new Status(1, "pset or property can not be blank.");
     }
 
-    if (newName == null)
+    if (newName == null || newName.trim().length() == 0)
     {
-      return new Status(1, "newName can not be null.");
+      return new Status(1, "newName can not be blank.");
     }
 
-    String path = property == null ? pset : pset + "/" + property;
+    String path = pset + "/" + property;
     rules.put(path, new Rule(pset, property, newName, newValue));
 
     return Status.OK;
   }
 
-  @Command
+  @Command(
+    description = "Clear all pset transform rules.")
   public Status clearPsetRules()
   {
     rules.clear();
     return Status.OK;
   }
 
-  @Command
+  @Command(
+    description = "Transform all psets with the current rules."
+  )
   public Status transformPsets()
   {
     ExpressData data = data();
@@ -120,7 +127,7 @@ public class PsetLibrary extends Library
       String psetName = cursor.get("Name");
 
       // rename Pset
-      Rule psetRule = rules.get(psetName);
+      Rule psetRule = rules.get(psetName + "/");
       if (psetRule != null)
       {
         cursor.set("Name", psetRule.newName);
@@ -134,7 +141,10 @@ public class PsetLibrary extends Library
       {
         cursor.enter(i);
         String propName = cursor.get("Name");
+
         Rule propRule = rules.get(psetName + "/" + propName);
+        if (propRule == null) propRule = rules.get("/" + propName);
+
         if (propRule != null)
         {
           cursor.set("Name", propRule.newName);
