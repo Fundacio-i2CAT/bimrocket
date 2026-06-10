@@ -86,6 +86,7 @@ class WebdavService extends FileService
         }
       }
     }
+    baseUri = decodeURI(baseUri);
 
     const headers = { "depth" : options?.depth || "1" };
 
