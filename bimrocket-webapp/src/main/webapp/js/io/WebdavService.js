@@ -188,9 +188,9 @@ class WebdavService extends FileService
           metadata.size = parseInt(response.headers.get("Content-Length"));
           onCompleted?.(new Result(OK, "", path, metadata, null, data));
         },
-        onError : (error) =>
+        onError : (error, response) =>
         {
-          onCompleted?.(new Result(ERROR, error?.message));
+          onCompleted?.(this.createError("Can't open", response.status));
         },
         onProgress : (progress) =>
         {
