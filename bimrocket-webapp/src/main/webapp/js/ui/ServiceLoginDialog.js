@@ -23,7 +23,7 @@ class ServiceLoginDialog extends LoginDialog
 
     this.authSuccessListener = (event) => this.handleOAuthSuccess(event);
   }
-
+    
 	setService(service)
 	{
     this.serverSession = ServerSession.getSession(service);
@@ -88,7 +88,7 @@ class ServiceLoginDialog extends LoginDialog
 
   addOAuth2Buttons(providers)
   {
-    this.setSize(280, 240); // increase Dialog height
+    this.setSize(280, 220); // increase Dialog height
 
     if (!this.oauthContainer)
     {

@@ -26,7 +26,7 @@ class WebUtils
         message = "Bad request";
         break;
       case 401:
-        message = "Unathorized";
+        message = "Unauthorized";
         break;
       case 403:
         message = "Access forbidden";

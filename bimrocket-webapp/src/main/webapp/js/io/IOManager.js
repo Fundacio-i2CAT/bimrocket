@@ -128,10 +128,10 @@ class IOManager
     let data = intent.data; // string or ArrayBuffer
     let onCompleted = intent.onCompleted; // onCompleted(object3D)
     let onProgress = intent.onProgress; // onProgress({progress: 0..100, message: text})
-    let onError = intent.onError; // onError(error)
+    let onError = intent.onError; // onError(errorMessage, errorCode)
     let manager = intent.manager; // LoadingManager
     let units = intent.units || "m"; // application units
-
+    
     try
     {
       if (!formatName && !url) throw "Can't determinate format";
@@ -164,7 +164,7 @@ class IOManager
         {
           if (request.readyState === XMLHttpRequest.DONE)
           {
-            if (onProgress) onProgress({progress : 100, message : ""});
+            if (onProgress) onProgress({ progress : 100, message : "" });
 
             if (request.status === 0 ||
               request.status === 200 || request.status === 207)
@@ -185,7 +185,7 @@ class IOManager
               if (onError)
               {
                 let message = WebUtils.getHttpStatusMessage(request.status);
-                onError(message + " (HTTP " + request.status + ")");
+                onError(message + " (HTTP " + request.status + ")", request.status);
               }
             }
           }
@@ -216,14 +216,12 @@ class IOManager
           }
         };
         request.open("GET", url, true);
-        request.withCredentials = true;
-        request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         request.send();
       }
     }
     catch (ex)
     {
-      if (onError) onError(ex);
+      onError?.(String(ex), -1);
     }
   }
 
@@ -233,7 +231,7 @@ class IOManager
     let fileName = intent.name;
     let onCompleted = intent.onCompleted; // returns Blob
     let onProgress = intent.onProgress;
-    let onError = intent.onError;
+    let onError = intent.onError; // onError(errorMessage, errorCode)
     let object = intent.object;
 
     try
@@ -263,7 +261,7 @@ class IOManager
     }
     catch (ex)
     {
-      if (onError) onError(ex);
+      onError?.(String(ex), -1);
     }
   }
 
@@ -305,7 +303,7 @@ class IOManager
     }
     catch (ex)
     {
-      if (onError) onError(ex);
+      onError?.(String(ex), -1);
     }
   }
 
@@ -355,7 +353,7 @@ class IOManager
     }
     catch (ex)
     {
-      if (onError) onError(ex);
+      onError?.(String(ex), -1);
     }
   }
 
@@ -365,7 +363,7 @@ class IOManager
     {
       let geometry = result;
       let material = new THREE.MeshPhongMaterial(
-        {color : 0x008000, side : THREE.DoubleSide});
+        { color : 0x008000, side : THREE.DoubleSide });
       return new THREE.Mesh(geometry, material);
     }
     else if (result instanceof THREE.Object3D)

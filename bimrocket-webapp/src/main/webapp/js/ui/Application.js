@@ -4,18 +4,23 @@
  * @author realor
  */
 
-import { Panel, PanelManager } from "../ui/Panel.js";
-import { ProgressBar } from "../ui/ProgressBar.js";
-import { MenuBar } from "../ui/Menu.js";
+import { Panel, PanelManager } from "./Panel.js";
+import { ProgressBar } from "./ProgressBar.js";
+import { MenuBar } from "./Menu.js";
+import { ToolBar } from "./ToolBar.js";
+import { MessageDialog } from "./MessageDialog.js";
+import { Inspector } from "./Inspector.js";
+import { ErrorHandler } from "./ErrorHandler.js";
+import { ScriptDialog } from "./ScriptDialog.js";
 import { Tool } from "../tools/Tool.js";
-import { ToolBar } from "../ui/ToolBar.js";
-import { MessageDialog } from "../ui/MessageDialog.js";
 import { Cord } from "../core/Cord.js";
 import { Profile } from "../core/Profile.js";
 import { Solid } from "../core/Solid.js";
-import { ObjectBuilder } from "../builders/ObjectBuilder.js";
 import { SolidGeometry } from "../core/SolidGeometry.js";
+import { ObjectBuilder } from "../builders/ObjectBuilder.js";
 import { ServiceManager } from "../io/ServiceManager.js";
+import { Service } from "../io/Service.js";
+import { RestServiceClient } from "../io/RestServiceClient.js";
 import { IOManager } from "../io/IOManager.js";
 import { Selection } from "../utils/Selection.js";
 import { Setup } from "../utils/Setup.js";
@@ -24,12 +29,9 @@ import { WebUtils } from "../utils/WebUtils.js";
 import { ModuleLoader } from "../utils/ModuleLoader.js";
 import { PointSelector } from "../utils/PointSelector.js";
 import { LineDashedShaderMaterial } from "../materials/LineDashedShaderMaterial.js";
-import { Inspector } from "../ui/Inspector.js";
 import { CSS2DRenderer } from "../renderers/CSS2DRenderer.js";
 import { SVGRenderer } from "../renderers/SVGRenderer.js";
 import { Formula } from "../formula/Formula.js";
-import { LoginDialog } from "./LoginDialog.js";
-import { ScriptDialog } from "./ScriptDialog.js";
 import { EffectComposer } from "../postprocessing/EffectComposer.js";
 import { RenderPass } from "../postprocessing/RenderPass.js";
 import { SAOPass } from "../postprocessing/SAOPass.js";
@@ -2071,6 +2073,7 @@ class Application
   loadModelFromUrl()
   {
     const application = this;
+    const progressBar = application.progressBar;
     const params = this.params;
     const url = params.get("url");
     if (!url)
@@ -2078,17 +2081,15 @@ class Application
       application.initTasks();
       return;
     }
+    const serverType = params.get("serverType");
+    const formatInfo = IOManager.getFormatInfo(url);
+    const dataType = formatInfo?.dataType || "arraybuffer";
 
-    let dialog = new LoginDialog(application);
+    const service = new Service({ url, serverType });
 
     const intent =
     {
       url : url,
-      onProgress : data =>
-      {
-        application.progressBar.progress = data.progress;
-        application.progressBar.message = data.message;
-      },
       onCompleted : object =>
       {
         const baseObject = application.baseObject;
@@ -2104,93 +2105,56 @@ class Application
 
         application.initTasks();
       },
-      onError : error =>
+      onError : message =>
       {
-        application.progressBar.visible = false;
-
-        const stringifiedError = String(error);
-
-        if (stringifiedError.includes("404"))
-        {
-          return MessageDialog
-            .create("ERROR", "Model not found")
-            .setClassName("error")
-            .setI18N(this.i18n)
-            .show();
-        }
-        else if (stringifiedError.includes("401") || stringifiedError.includes("403"))
-        {
-          dialog.show();
-        }
-        else
-        {
-          return MessageDialog
-            .create("ERROR", stringifiedError)
-            .setClassName("error")
-            .setI18N(this.i18n)
-            .show();
-        }
+        progressBar.visible = false;
+        MessageDialog.create("ERROR", message)
+          .setClassName("error")
+          .setI18N(this.i18n)
+          .show();
+      },
+      onProgress : progress =>
+      {
+        progressBar.progress = progress.progress;
+        progressBar.message = progress.message;
       },
       options : { units : application.setup.units }
     };
 
-    dialog.login = (username, password) =>
+    const downloadOptions =
     {
-      application.progressBar.visible = true;
-
-      const loginUrl = Environment.SERVER_URL + "/api/security/login";
-      const request = new XMLHttpRequest();
-      request.open("POST", loginUrl);
-      request.setRequestHeader("Accept", "application/json");
-      request.setRequestHeader("Content-Type", "application/json");
-      request.withCredentials = true;
-
-      request.onload = () =>
+      onCompleted: data =>
       {
-        if (request.status === 200 || request.status === 204)
-        {
-          dialog.hide();
-          IOManager.load(intent);
-        }
-        else
-        {
-          application.progressBar.visible = false;
-          MessageDialog.create("ERROR", "Login failed")
-            .setClassName("error")
-            .setI18N(application.i18n).show();
-        }
-      };
-
-      request.onerror = () =>
+        progressBar.message = "Loading file...";
+        progressBar.progress = undefined;
+        progressBar.visible = true;
+        intent.data = data;
+        IOManager.load(intent); // async load
+      },
+      onError: error =>
       {
-        application.progressBar.visible = false;
-        MessageDialog.create("ERROR", "Connection error")
-          .setClassName("error")
-          .setI18N(application.i18n).show();
-      };
-
-      const payload = { username: username, password: password };
-      request.send(JSON.stringify(payload));
+        progressBar.visible = false;
+        
+        ErrorHandler.handleError(application, service, error, false, download);
+      },
+      onProgress: progress =>
+      {
+        progressBar.progress = progress.percent;
+      },
+      dataType      
     };
 
-    dialog.onCancel = () =>
+    const download = () =>
     {
-      dialog.hide();
-      application.progressBar.visible = false;
+      progressBar.visible = true;
+      progressBar.progress = undefined;
+      progressBar.message = "Downloading file...";
+
+      const restClient = new RestServiceClient(service);
+      restClient.call("GET", "", downloadOptions);
     };
 
-    const auth = params.get("auth");
-    if (auth && auth.toLowerCase() === "basic")
-    {
-      dialog.show();
-    }
-    else
-    {
-      application.progressBar.message = "Loading file...";
-      application.progressBar.progress = undefined;
-      application.progressBar.visible = true;
-      IOManager.load(intent); // async load
-    }
+    download();
   }
 
   initTasks()

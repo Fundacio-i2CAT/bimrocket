@@ -409,7 +409,6 @@ class BCFPanel extends Panel
     this.saveExtensionsButton = Controls.addButton(
       this.saveExtensionsButtonsElem, "saveExtensions", "bim|button.save_extensions",
       () => this.saveProjectExtensions());
-
   }
 
   showProjects()
@@ -581,7 +580,7 @@ class BCFPanel extends Panel
       {
         this.loadComments(false,
           () => this.loadViewpoints(false,
-            () => this.loadDocumentReferences(false)));
+          () => this.loadDocumentReferences(false)));
       }
     }
     else
@@ -694,7 +693,8 @@ class BCFPanel extends Panel
     let odataOrderBy = "creation_date,index";
 
     this.showProgressBar();
-    this.service.getTopics(projectId, odataFilter, odataOrderBy, onCompleted, onError);
+    this.service.getTopics(projectId, odataFilter, odataOrderBy, 
+      onCompleted, onError);
   }
 
   saveTopic()
@@ -1657,7 +1657,8 @@ class BCFPanel extends Panel
       {
         let componentsContainer = document.createElement("div");
 
-        let componentsLabel = Controls.addLink(componentsContainer, "bim|label.select_components", "#",
+        let componentsLabel = Controls.addLink(componentsContainer, 
+          "bim|label.select_components", "#",
           "bim|title.select_components", "select_components",
           (event) =>
           {
@@ -1692,8 +1693,6 @@ class BCFPanel extends Panel
         componentsContainer.appendChild(componentsList);
         viewpointContainer.appendChild(componentsContainer);
       }
-
-
 
       if (viewpoint.snapshot)
       {

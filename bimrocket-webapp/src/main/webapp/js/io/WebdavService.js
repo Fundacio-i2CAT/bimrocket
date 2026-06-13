@@ -8,7 +8,6 @@ import { IOManager } from "./IOManager.js";
 import { FileService, Metadata, Result, ACL } from "./FileService.js";
 import { RestServiceClient } from "./RestServiceClient.js";
 import { ServiceManager } from "./ServiceManager.js";
-import { WebUtils } from "../utils/WebUtils.js";
 
 const OK = Result.OK;
 const ERROR = Result.ERROR;
@@ -162,10 +161,10 @@ class WebdavService extends FileService
             onCompleted?.(new Result(ERROR, ex));
           }
         },
-        onError : (error, response) =>
+        onError : error =>
         {
           // ERROR
-          onCompleted?.(this.createError("Can't open", response.status));
+          onCompleted?.(this.createError("Can't open", error));
         }
       });
   }
@@ -188,9 +187,9 @@ class WebdavService extends FileService
           metadata.size = parseInt(response.headers.get("Content-Length"));
           onCompleted?.(new Result(OK, "", path, metadata, null, data));
         },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(this.createError("Can't open", response.status));
+          onCompleted?.(this.createError("Can't open", error));
         },
         onProgress : (progress) =>
         {
@@ -207,9 +206,9 @@ class WebdavService extends FileService
       {
         body : data,
         onCompleted : () => { onCompleted?.(new Result(OK)); },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(this.createError("Write failed", response.status));
+          onCompleted?.(this.createError("Write failed", error));
         }
       });
   }
@@ -219,9 +218,9 @@ class WebdavService extends FileService
     this.client.call("DELETE", path,
       {
         onCompleted : () => { onCompleted?.(new Result(OK)); },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(this.createError("Remove failed", response.status));
+          onCompleted?.(this.createError("Remove failed", error));
         }
       });
   }
@@ -231,10 +230,9 @@ class WebdavService extends FileService
     this.client.call("MKCOL", path,
       {
         onCompleted : () => { onCompleted?.(new Result(OK)); },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(
-            this.createError("Folder creation failed", response.status));
+          onCompleted?.(this.createError("Folder creation failed", error));
         }
       });
   }
@@ -248,10 +246,9 @@ class WebdavService extends FileService
       {
         headers,
         onCompleted : () => { onCompleted?.(new Result(OK)); },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(
-            this.createError("Move operation failed", response.status));
+          onCompleted?.(this.createError("Move operation failed", error));
         }
       });
   }
@@ -265,10 +262,9 @@ class WebdavService extends FileService
       {
         headers,
         onCompleted : () => { onCompleted?.(new Result(OK)); },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(
-            this.createError("Copy operation failed", response.status));
+          onCompleted?.(this.createError("Copy operation failed", error));
         }
       });
   }
@@ -305,10 +301,9 @@ class WebdavService extends FileService
             onCompleted?.(new Result(ERROR, `Failed to parse ACL: ${ex}`));
           }
         },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(
-            this.createError("ACL retrieval failed", response.status));
+          onCompleted?.(this.createError("ACL retrieval failed", error));
         },
         dataType : "text"
       });
@@ -325,14 +320,13 @@ class WebdavService extends FileService
       {
         headers,
         body,
-        onCompleted : (xml) =>
+        onCompleted : xml =>
         {
           onCompleted?.(new Result(OK, "ACL updated"));
         },
-        onError : (error, response) =>
+        onError : error =>
         {
-          onCompleted?.(
-            this.createError("ACL change failed", response.status));
+          onCompleted?.(this.createError("ACL change failed", error));
         }
       });
     }
@@ -344,17 +338,17 @@ class WebdavService extends FileService
 
   /* internal methods */
 
-  createError(message, status)
+  createError(message, error)
   {
-    let statusMessage = WebUtils.getHttpStatusMessage(status);
+    let statusMessage = error.message || "";
     if (statusMessage.length > 0)
     {
       message += ": " + statusMessage;
     }
-    message += " (HTTP " + status + ").";
+    message += " (HTTP " + error.code + ").";
 
     let resultStatus;
-    switch (status)
+    switch (error.code)
     {
       case 400: resultStatus = BAD_REQUEST; break;
       case 401: resultStatus = INVALID_CREDENTIALS; break;

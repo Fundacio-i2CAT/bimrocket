@@ -6,6 +6,7 @@
 
 import { SecurityService } from "./SecurityService.js";
 import { Result } from "./FileService.js";
+import { WebUtils } from "../utils/WebUtils.js";
 
 /**
  * Represents a session of a specific type of server.
@@ -77,6 +78,29 @@ class ServerSession
    */
   setFetchOptions(fetchOptions)
   {
+  }
+
+  /**
+   * Creates a normalized error object from the http status and the 
+   * server response.
+   * 
+   * @param {number} status - the http status
+   * @param {Object} detail - an object that represents the body of the 
+   *  server's response
+   *
+   * @returns {Object} the normalized error { code: number, message: string }
+   */
+  getError(status, detail)
+  {
+    const error = 
+    {
+      code : status,
+      message : WebUtils.getHttpStatusMessage(status)
+    };
+    
+    if (detail) error.detail = detail;
+    
+    return error;
   }
 
   /**
@@ -158,8 +182,8 @@ class ServerSession
 }
 
 /**
- *  ServerSession for Bimrocket servers.
- *  It authenticates the user through the SecurityService.
+ * ServerSession for Bimrocket servers.
+ * It authenticates the user through the SecurityService.
  *
  * @class
  */
@@ -172,7 +196,6 @@ class BimrocketServerSession extends ServerSession
     super(baseUrl);
     this.username = null;
     this.authorization = null;
-    console.info("baseUrl:" + baseUrl);
   }
 
   login(username, password, onCompleted, onError)
@@ -237,6 +260,14 @@ class BimrocketServerSession extends ServerSession
         fetchOptions.credentials = "include";
       }
     }
+  }
+  
+  getError(status, detail)
+  {
+    // bimrocket already returns error detail in normalized form
+    if (typeof detail.code === "number") return detail;
+    
+    return super.getError(status, detail);
   }
 
   handleError(error, retry, authenticate, showError)

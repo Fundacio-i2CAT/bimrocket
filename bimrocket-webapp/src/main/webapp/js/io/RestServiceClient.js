@@ -85,7 +85,11 @@ class RestServiceClient
     }
     else // error
     {
-      const error = await this.readResponse(response, "auto");
+      const detail = await this.readResponse(response, "auto");
+      
+      // normalize error: { code: number, message: string }
+      const error = serverSession.getError(response.status, detail);
+      
       if (onError) onError(error, response);
       else throw error;
     }
