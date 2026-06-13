@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Use system JVM
+USE_SYSTEM_JVM=true
+
+# Local JVM path
 LOCAL_JVM_DIR="$HOME/bimrocket-jvm"
 
 # Default Java LTS version
@@ -11,31 +15,35 @@ JAVA_EXEC=""
 # 1. Check local bundled JVM first
 # ------------------------------------
 
-if [ -d "$LOCAL_JVM_DIR" ] && [ -x "$LOCAL_JVM_DIR/bin/java" ]; then
+if [ -x "$LOCAL_JVM_DIR/bin/java" ]; then
   echo "Local JVM found in $LOCAL_JVM_DIR, using it."
   JAVA_EXEC="$LOCAL_JVM_DIR/bin/java"
+elif [ -x "$LOCAL_JVM_DIR/Contents/Home/bin/java" ]; then
+  echo "Local JVM found in $LOCAL_JVM_DIR, using it."
+  JAVA_EXEC="$LOCAL_JVM_DIR/Contents/Home/bin/java"
 else
 
 # ------------------------------------
 # 2. Check System JVM
 # ------------------------------------
 
-  echo "Checking system Java..."
+  if $USE_SYSTEM_JVM; then
+    echo "Checking system Java..."
 
-  # 2.2 Check system Java installation
-  if command -v java >/dev/null 2>&1; then
-    SYS_JAVA_VER=$(java -version 2>&1 \
-      | awk -F '"' '/version/ {print $2}' \
-      | awk -F '.' '{if ($1=="1") print $2; else print $1}')
+    if command -v java >/dev/null 2>&1; then
+      SYS_JAVA_VER=$(java -version 2>&1 \
+        | awk -F '"' '/version/ {print $2}' \
+        | awk -F '.' '{if ($1=="1") print $2; else print $1}')
 
-    if [ -n "$SYS_JAVA_VER" ] && [ "$SYS_JAVA_VER" -eq "$JAVA_VERSION" ]; then
-      echo "System Java found (version $SYS_JAVA_VER). Using system Java."
-      JAVA_EXEC="java"
+      if [ -n "$SYS_JAVA_VER" ] && [ "$SYS_JAVA_VER" -eq "$JAVA_VERSION" ]; then
+        echo "System Java found (version $SYS_JAVA_VER). Using system Java."
+        JAVA_EXEC="java"
+      else
+        echo "System Java version ($SYS_JAVA_VER) is not supported (requires $JAVA_VERSION)."
+      fi
     else
-      echo "System Java version ($SYS_JAVA_VER) is not supported (requires $JAVA_VERSION)."
+      echo "Java is not available in system PATH."
     fi
-  else
-    echo "Java is not available in system PATH."
   fi
 
 # ------------------------------------
@@ -89,6 +97,9 @@ print(json.load(sys.stdin)[0]["binary"]["package"]["link"])
     if [ -x "$LOCAL_JVM_DIR/bin/java" ]; then
       echo "JVM successfully downloaded and installed."
       JAVA_EXEC="$LOCAL_JVM_DIR/bin/java"
+    elif [ -x "$LOCAL_JVM_DIR/Contents/Home/bin/java" ]; then
+      echo "JVM successfully downloaded and installed."
+      JAVA_EXEC="$LOCAL_JVM_DIR/Contents/Home/bin/java"
     else
       echo "Error: Unexpected JVM archive structure."
       exit 1
