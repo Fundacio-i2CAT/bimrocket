@@ -231,10 +231,10 @@ class Dialog
       className || "checkbox_field");
   }
 
-  addRadioButtons(name, options, value, className)
+  addRadioButtons(name, label, options, value, className, listener)
   {
-    return Controls.addRadioButtons(this.bodyElem, name, options,
-      value, className || "radio_buttons");
+    return Controls.addRadioButtons(this.bodyElem, name, label, options,
+      value, className || "radio_buttons", listener);
   }
 
   addButton(name, label, action)

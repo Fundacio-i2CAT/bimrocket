@@ -20,6 +20,7 @@ import { AddServiceAction } from "./AddServiceAction.js";
 import { CreateFolderAction } from "./CreateFolderAction.js";
 import { RenameFileAction } from "./RenameFileAction.js";
 import { DeleteFileAction } from "./DeleteFileAction.js";
+import { ShareFileAction } from "./ShareFileAction.js";
 import { CopyFileAction } from "./CopyFileAction.js";
 import { CutFileAction } from "./CutFileAction.js";
 import { PasteFileAction } from "./PasteFileAction.js";
@@ -132,8 +133,9 @@ class FileExplorer extends Panel
     contextMenu.addMenuItem(action(CutFileAction));
     contextMenu.addMenuItem(action(PasteFileAction));
 
-    contextMenu.addSeparator("acl");
+    contextMenu.addSeparator("access");
     contextMenu.addMenuItem(action(EditACLAction));
+    contextMenu.addMenuItem(action(ShareFileAction));
 
     contextMenu.addSeparator("upload_download");
     contextMenu.addMenuItem(action(UploadFileAction));

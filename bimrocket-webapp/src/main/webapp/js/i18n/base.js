@@ -390,6 +390,7 @@ export const translations =
   "action.cut" : "Cut",
   "action.paste" : "Paste",
   "action.edit_acl" : "Edit permissions",
+  "action.share" : "Share",
   "action.upload_file" : "Upload file",
   "action.download_file" : "Download file",
   "action.create_folder" : "Create folder",
@@ -568,8 +569,11 @@ export const translations =
   "label.inspector_links_tab" : "Links",
   "label.inspector_featured_tab" : "Featured properties",
 
-  "label.acl_path_editing": "ACL path editing:",
-  "label.acl_permissions": "Definition of permissions (JSON format):",
+  "label.acl_path_editing" : "ACL path editing:",
+  "label.acl_permissions" : "Definition of permissions (JSON format):",
+
+  "label.share_link_type" : "Link type",
+  "label.share_link" : "Link:",
 
   "option.no_groups" : "Without groups",
   "option.value_asc" : "Value (ascending)",
@@ -592,6 +596,9 @@ export const translations =
   "option.select_faces.select_plane" : "Select reference plane",
   "option.select_faces.add_faces" : "Add faces by rectangle",
   "option.select_faces.remove_faces" : "Remove faces by rectangle",
+
+  "option.share_download" : "Download",
+  "option.share_view" : "View",
 
   "title.rename_file" : "Rename file",
   "title.add_cloud_service" : "Add cloud service",
@@ -627,6 +634,7 @@ export const translations =
   "title.confirm_save": "Confirmation",
   "title.overwrite" : "Overwrite file",
   "title.login_dialog" : "Please log in to continue",
+  "title.share_file" : "Share file",
 
   "message.measure_length" : (length, units) => `Length: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Area: ${area} ${units}2`,
@@ -696,6 +704,8 @@ export const translations =
   "message.edit_acl_json_error" : detail => `JSON parsing error. Please check the syntax. (${detail})`,
 
   "message.login_failed" : "Invalid credentials.",
+
+  "message.link_copied" : "Link copied.",
 
   "question.overwrite_file" : filename => `Do you want to overwrite the file ${filename}?`,
   "question.discard_changes" : name => `Discard unsaved changes in ${name || 'editor'}?`,

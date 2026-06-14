@@ -8,7 +8,6 @@ import { Tool } from "./Tool.js";
 import { FileExplorer } from "../ui/file/FileExplorer.js";
 import { SaveDialog } from "../ui/SaveDialog.js";
 import { MessageDialog } from "../ui/MessageDialog.js";
-import { Toast } from "../ui/Toast.js";
 import { ObjectUtils } from "../utils/ObjectUtils.js";
 import { OpenModelAction } from "../ui/file/OpenModelAction.js";
 import { OpenFileAction } from "../ui/file/OpenFileAction.js";

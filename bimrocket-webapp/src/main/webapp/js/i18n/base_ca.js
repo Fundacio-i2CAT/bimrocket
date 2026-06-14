@@ -390,6 +390,7 @@ export const translations =
   "action.cut" : "Retalla",
   "action.paste" : "Enganxa",
   "action.edit_acl" : "Edita permissos",
+  "action.share" : "Comparteix",
   "action.upload_file" : "Puja fitxer",
   "action.download_file" : "Baixa fitxer",
   "action.create_folder" : "Crea carpeta",
@@ -567,8 +568,11 @@ export const translations =
   "label.inspector_links_tab" : "Enllaços",
   "label.inspector_featured_tab" : "Propietats destacades",
 
-  "label.acl_path_editing": "Editant ruta ACL:",
-  "label.acl_permissions": "Definició de permisos (format JSON):",
+  "label.acl_path_editing" : "Editant ruta ACL:",
+  "label.acl_permissions" : "Definició de permisos (format JSON):",
+
+  "label.share_link_type" : "Tipus d'enllaç",
+  "label.share_link" : "Enllaç:",
 
   "option.no_groups" : "Sense agrupacions",
   "option.value_asc" : "Valor (ascendent)",
@@ -591,6 +595,9 @@ export const translations =
   "option.select_faces.select_plane" : "Selecciona pla de referència",
   "option.select_faces.add_faces" : "Afegeix cares per rectangle",
   "option.select_faces.remove_faces" : "Treu cares per rectangle",
+
+  "option.share_download" : "Baixada",
+  "option.share_view" : "Visualització",
 
   "title.rename_file" : "Reanomena fitxer",
   "title.add_cloud_service": "Afegeix servei del núvol",
@@ -626,6 +633,7 @@ export const translations =
   "title.confirm_save" : "Confirmació",
   "title.overwrite" : "Sobreescriure fitxer",
   "title.login_dialog" : "Inicia sessió per continuar",
+  "title.share_file" : "Compartir fitxer",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Àrea: ${area} ${units}2`,
@@ -695,6 +703,8 @@ export const translations =
   "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
 
   "message.login_failed" : "Credencials incorrectes.",
+
+  "message.link_copied" : "Enllaç copiat.",
 
   "question.overwrite_file" : filename => `Vols sobreescriure el fitxer ${filename}?`,
   "question.discard_changes" : name => `Vols descartar els canvis no desats en ${name || "l'editor"}?`,

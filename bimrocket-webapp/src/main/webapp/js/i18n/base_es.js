@@ -390,6 +390,7 @@ export const translations =
   "action.cut" : "Cortar",
   "action.paste" : "Pegar",
   "action.edit_acl" : "Editar permisos",
+  "action.share" : "Compartir",
   "action.upload_file" : "Subir fichero",
   "action.download_file" : "Descargar fichero",
   "action.create_folder" : "Crear carpeta",
@@ -567,8 +568,11 @@ export const translations =
   "label.inspector_links_tab" : "Enlaces",
   "label.inspector_featured_tab" : "Propiedades destacadas",
 
-  "label.acl_path_editing": "Editando ruta ACL:",
-  "label.acl_permissions": "Definición de permisos (formato JSON):",
+  "label.acl_path_editing" : "Editando ruta ACL:",
+  "label.acl_permissions" : "Definición de permisos (formato JSON):",
+
+  "label.share_link_type" : "Tipo de enlace",
+  "label.share_link" : "Enlace:",
 
   "option.no_groups" : "Sin agrupaciones",
   "option.value_asc" : "Valor (ascendente)",
@@ -591,6 +595,9 @@ export const translations =
   "option.select_faces.select_plane" : "Seleccionar plano de referència",
   "option.select_faces.add_faces" : "Añadir caras por rectángulo",
   "option.select_faces.remove_faces" : "Quitar caras por rectángulo",
+
+  "option.share_download" : "Descarga",
+  "option.share_view" : "Visualización",
 
   "title.rename_file" : "Renombrar fichero",
   "title.add_cloud_service": "Añadir servicio de nube",
@@ -626,6 +633,7 @@ export const translations =
   "title.confirm_save": "Confirmación",
   "title.overwrite" : "Sobreescribir fichero",
   "title.login_dialog" : "Inicia sesión para continuar",
+  "title.share_file" : "Compartir fichero",
 
   "message.measure_length" : (length, units) => `Longitud: ${length} ${units}`,
   "message.measure_area" : (area, units) => `Área: ${area} ${units}2`,
@@ -695,6 +703,8 @@ export const translations =
   "message.edit_acl_json_error" : detail => `Error al procesar el JSON. Revisa la sintaxis. (${detail})`,
 
   "message.login_failed" : "Credenciales incorrectas.",
+
+  "message.link_copied" : "Enlace copiado.",
 
   "question.overwrite_file" : filename => `Quieres sobreescribir el fichero ${filename}?`,
   "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,
