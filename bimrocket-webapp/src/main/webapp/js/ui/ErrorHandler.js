@@ -34,9 +34,13 @@ class ErrorHandler
         message = isWriteAction ?
           "message.action_denied" : "message.accces_denied";
       }
-      else
+      else if (error.message)
       {
         message = error.message;
+      }
+      else
+      {
+        message = String(error);
       }
 
       new ServiceLoginDialog(application)
@@ -50,7 +54,7 @@ class ErrorHandler
     const showError = () =>
     {
       onFailed?.();
-      let message = error.message;
+      const message = error.message || String(error);
       MessageDialog.create("ERROR", message)
         .setClassName("error")
         .setI18N(application.i18n).show();

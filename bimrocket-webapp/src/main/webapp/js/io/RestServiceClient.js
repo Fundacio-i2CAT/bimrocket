@@ -57,41 +57,49 @@ class RestServiceClient
       headers
     };
 
-    // Inject authorization header and credentials as needed
-    let serverSession = ServerSession.getSession(service);
-    serverSession.setFetchOptions(fetchOptions);
-
-    if (body)
+    try
     {
-      fetchOptions.body = body;
-    }
+      // Inject authorization header and credentials as needed
+      let serverSession = ServerSession.getSession(service);
+      serverSession.setFetchOptions(fetchOptions);
 
-    const targetUrl = this.getTargetUrl(path);
-    const response = await fetch(targetUrl, fetchOptions);
-
-    if (response.ok)
-    {
-      let data;
-      if (onProgress)
+      if (body)
       {
-        data = await this.readWithProgress(response, dataType, onProgress);
+        fetchOptions.body = body;
       }
-      else
+
+      const targetUrl = this.getTargetUrl(path);
+      const response = await fetch(targetUrl, fetchOptions);
+
+      if (response.ok)
       {
-        data = await this.readResponse(response, dataType);
+        let data;
+        if (onProgress)
+        {
+          data = await this.readWithProgress(response, dataType, onProgress);
+        }
+        else
+        {
+          data = await this.readResponse(response, dataType);
+        }
+        onCompleted?.(data, response);
+        return data;
       }
-      onCompleted?.(data, response);
-      return data;
+      else // error
+      {
+        const detail = await this.readResponse(response, "auto");
+
+        // normalize error: { code: number, message: string }
+        const error = serverSession.getError(response.status, detail);
+
+        if (onError) onError(error, response);
+        else throw error;
+      }
     }
-    else // error
+    catch (ex)
     {
-      const detail = await this.readResponse(response, "auto");
-      
-      // normalize error: { code: number, message: string }
-      const error = serverSession.getError(response.status, detail);
-      
-      if (onError) onError(error, response);
-      else throw error;
+      if (onError) onError(ex);
+      else throw ex;
     }
   }
 

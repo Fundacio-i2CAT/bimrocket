@@ -341,11 +341,14 @@ class WebdavService extends FileService
   createError(message, error)
   {
     let statusMessage = error.message || "";
-    if (statusMessage.length > 0)
+    if (statusMessage)
     {
       message += ": " + statusMessage;
     }
-    message += " (HTTP " + error.code + ").";
+    if (error.code)
+    {
+      message += ` (HTTP ${error.code})`;
+    }
 
     let resultStatus;
     switch (error.code)
