@@ -3,11 +3,11 @@
 # Use system JVM
 USE_SYSTEM_JVM=true
 
-# Local JVM path
-LOCAL_JVM_DIR="$HOME/bimrocket-jvm"
-
 # Default Java LTS version
 JAVA_VERSION="21"
+
+# Local JVM path
+LOCAL_JVM_DIR="$HOME/bimrocket-jvm-$JAVA_VERSION"
 
 JAVA_EXEC=""
 

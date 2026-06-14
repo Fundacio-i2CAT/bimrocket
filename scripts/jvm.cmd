@@ -1,9 +1,10 @@
 REM BIMROCKET-JVM
 
-set "LOCAL_JVM_DIR=%USERPROFILE%\bimrocket-jvm"
-
 REM Default Java LTS version
 set "JAVA_VERSION=21"
+
+REM Local JVM path
+set "LOCAL_JVM_DIR=%USERPROFILE%\bimrocket-jvm-%JAVA_VERSION%"
 
 set "JAVA_EXEC="
 
