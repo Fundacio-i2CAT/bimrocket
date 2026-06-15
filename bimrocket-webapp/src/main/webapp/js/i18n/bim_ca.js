@@ -16,7 +16,7 @@ export const translations =
   "button.new_user" : "Usuari nou",
   "button.back_topics" : "Torna als projectes",
   "button.new_role" : "Rol nou",
-  "button.filter_projects": "Mostrar només els projectes carregats al visor",
+  "button.filter_projects": "Mostra només els projectes carregats al visor",
 
   "tool.bim_inventory.label" : "Inventari BIM",
   "tool.bim_inventory.help" : "Inventari BIM",
@@ -28,7 +28,7 @@ export const translations =
   "tool.bim_inspector.help" : "Mostra la representació IFC",
 
   "tool.bcf.label" : "BCF",
-  "tool.bcf.help" : "Gestió d'incidencies BCF",
+  "tool.bcf.help" : "Gestió d'incidències BCF",
 
   "tool.ifcdb.label" : "IFCDB",
 
@@ -37,7 +37,7 @@ export const translations =
   "tool.bim_delta.label" : "Detecció de canvis",
 
   "tool.bim_explode.label" : "Explota model",
-  "tool.bim_explode.help" : "Selecciona un edfici i aplica desplaçaments en cada eix.",
+  "tool.bim_explode.help" : "Selecciona un edifici i aplica desplaçaments en cada eix.",
 
   "tool.bim_reset_view.label" : "Inicialitza vista",
 
@@ -68,7 +68,7 @@ export const translations =
   "tab.bsdd_classes" : "Classes",
   "tab.bsdd_properties" : "Propietats",
 
-  "tab.bim_delta_tree" : "Àrbre",
+  "tab.bim_delta_tree" : "Arbre",
   "tab.bim_delta_json" : "JSON",
 
   "label.bcf_service" : "Servei BCF:",
@@ -124,11 +124,11 @@ export const translations =
   "label.inherited_roles" : "Rols heretats:",
   "label.select_role" : "Selecciona rol",
   "label.confirm_password" : "Confirma paraula de pas:",
-  "label.search_users" : "Cercar usuaris:",
-  "label.search_id" : "Cercar per id:",
-  "label.search_name" : "Cercar per nom:",
-  "label.search_roles" : "Cercar rols:",
-  "label.search_description" : "Cercar per descripció:",
+  "label.search_users" : "Cerca usuaris:",
+  "label.search_id" : "Cerca per id:",
+  "label.search_name" : "Cerca per nom:",
+  "label.search_roles" : "Cerca rols:",
+  "label.search_description" : "Cerca per descripció:",
 
   "col.index" : "Ídx.",
   "col.topic" : "Incidència",
@@ -178,7 +178,7 @@ export const translations =
   "message.doc_ref_deleted" : "Referència a document esborrada.",
   "message.doc_ref_saved" : "Referència a document desada.",
   "message.topic_searched" : "No s'ha trobat cap incidència.",
-  "message.no_components_selected": "No s'han trobat objectes per a aquesta vista",
+  "message.no_components_selected": "No s'han trobat objectes per a aquesta vista.",
 
   "message.extensions_phase_started": "Fase de revisió iniciada correctament.",
   "message.extensions_phase_ended": "Fase de revisió finalitzada correctament.",
@@ -200,7 +200,7 @@ export const translations =
   "message.user_searched" : "No s'ha trobat cap usuari.",
   "message.fields_required" : "El nom i l'email són obligatoris.",
   "message.connection_success" : "Connexió correcta.",
-  "message.connected" : "Connexió ja establerta",
+  "message.connected" : "Connexió ja establerta.",
   "message.no_model_found" : "No s'ha trobat cap model.",
   "message.model_saved" : "Model desat.",
   "message.model_updated" : "Model actualitzat.",

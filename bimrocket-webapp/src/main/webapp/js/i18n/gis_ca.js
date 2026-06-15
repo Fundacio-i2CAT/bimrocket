@@ -49,7 +49,7 @@ export const translations =
   "option.mapView.heremaps" : "HERE Maps",
   "option.mapView.maptiler" : "MapTiler",
   "option.mapView.openmaptiles" : "OpenMapTiles",
-  "option.mapView.mapboxheight" : "MapBox Height",
+  "option.mapView.mapboxheight" : "Altura de MapBox",
   "option.mapView.wms" : "WMS",
   "option.mapView.planar" : "Pla",
   "option.mapView.spherical" : "Esfèric",
@@ -58,5 +58,5 @@ export const translations =
   "option.mapView.martini" : "Martini",
 
   "controller.WFSController" : "Carrega geometria d'un servei WFS.",
-  "controller.MapViewController" : "Càrrega tessel·les d'un servidor de mapes."
+  "controller.MapViewController" : "Carrega tessel·les d'un servidor de mapes."
 };

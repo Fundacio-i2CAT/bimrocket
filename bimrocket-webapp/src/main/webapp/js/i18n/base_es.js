@@ -8,7 +8,7 @@ export const translations =
 {
   "button.accept" : "Aceptar",
   "button.cancel" : "Cancelar",
-  "button.delete" : "Borrar",
+  "button.delete" : "Eliminar",
   "button.edit" : "Editar",
   "button.open" : "Abrir",
   "button.close" : "Cerrar",
@@ -62,10 +62,10 @@ export const translations =
   "button.select" : "Seleccionar",
   "button.anchor_section" : "Anclar sección",
   "button.add_property" : "Añadir propiedad",
-  "button.edit_properties" : "Editar propietades",
+  "button.edit_properties" : "Editar propiedades",
   "button.add_formula" : "Añadir fórmula",
   "button.add_controller" : "Añadir controlador",
-  "button.remove_controller" : "Borrar controlador",
+  "button.remove_controller" : "Eliminar controlador",
   "button.start_controller" : "Iniciar controlador",
   "button.stop_controller" : "Parar controlador",
   "button.object_builder" : "Constructor de objeto",
@@ -82,7 +82,7 @@ export const translations =
   "button.menu_show" : "MENÚ",
   "button.menu_hide" : "CERRAR",
 
-  "units.km" : "kilometros",
+  "units.km" : "kilómetros",
   "units.m" : "metros",
   "units.cm" : "centímetros",
   "units.mm" : "milímetros",
@@ -91,7 +91,7 @@ export const translations =
   "menu.file" : "Archivo",
   "menu.edit" : "Edición",
   "menu.view" : "Ver",
-  "menu.view.standard_view" : "Vista estandard",
+  "menu.view.standard_view" : "Vista estándard",
   "menu.view.style" : "Estilo",
   "menu.view.projection" : "Proyección",
   "menu.select" : "Selección",
@@ -131,7 +131,7 @@ export const translations =
   "tool.select.help" : "Puntero: selección por punto",
 
   "tool.select_by_box.label" : "Seleccionar por caja",
-  "tool.select_by_box.help" : "Arrastra el puntero para dibuixar la caja de selección",
+  "tool.select_by_box.help" : "Arrastra el puntero para dibujar la caja de selección",
 
   "tool.select_faces.label" : "Seleccionar caras",
 
@@ -171,7 +171,7 @@ export const translations =
   "tool.search.label" : "Búsqueda",
 
   "tool.measure_length.label" : "Medir longitud",
-  "tool.measure_length.help" : "Dibuja la linia a medir.",
+  "tool.measure_length.help" : "Dibuja la linea a medir.",
 
   "tool.measure_area.label" : "Medir área",
   "tool.measure_area.help" : "Dibuja el área a medir.",
@@ -256,7 +256,7 @@ export const translations =
   "tool.fly.options" : "Opciones de vuelo",
   "tool.fly.detect_collision" : "Detectar colisión",
   "tool.fly.stick_control" : "Control por stick",
-  "tool.fly.ground_distance_control" : "Control de distància al suelo",
+  "tool.fly.ground_distance_control" : "Control de distancia al suelo",
   "tool.fly.ground_distance" : "Distancia al suelo:",
 
   "tool.view.label" : "Ver",
@@ -305,7 +305,7 @@ export const translations =
   "tool.view.left" : "Izquierda",
   "tool.view.right" : "Derecha",
 
-  "tool.remove.label" : "Borrar",
+  "tool.remove.label" : "Eliminar",
 
   "tool.copy.label" : "Copiar",
 
@@ -329,7 +329,7 @@ export const translations =
 
   "tool.hidden_style.label" : "Oculto",
 
-  "tool.activate_camera.label" : "Activar camera",
+  "tool.activate_camera.label" : "Activar cámara",
 
   "tool.perspective.label" : "Perspectiva",
 
@@ -358,8 +358,8 @@ export const translations =
   "tool.solar_simulator.drag" : "Cambia la hora arrastrando el puntero sobre el gráfico.",
   "tool.solar_simulator.cast_shadows" : "Proyectar sombras",
   "tool.solar_simulator.adjust_intensity" : "Ajustar la intensidad solar",
-  "tool.solar_simulator.max_length_info" : "Longitud máxima de los lados de los triángules en la fase 1",
-  "tool.solar_simulator.max_area_info" : "Area máxima de los triángulos en la fase 2",
+  "tool.solar_simulator.max_length_info" : "Longitud máxima de los lados de los triángulos en la fase 1",
+  "tool.solar_simulator.max_area_info" : "Área máxima de los triángulos en la fase 2",
 
   "tool.start_controllers.label" : "Iniciar controlad.",
 
@@ -406,11 +406,11 @@ export const translations =
   "action.ChangeMaterial" : "Cambiar material",
   "action.SetBuilder" : "Asignar constructor",
   "action.AddProperty" : "Añadir propiedad",
-  "action.RemoveProperty" : "Borrar propiedad",
+  "action.RemoveProperty" : "Eliminar propiedad",
   "action.EditProperties" : "Editar propiedades",
   "action.EditFormula" : "Editar fórmula",
   "action.AddController" : "Añadir controlador",
-  "action.RemoveController" : "Borrar controlador",
+  "action.RemoveController" : "Eliminar controlador",
   "action.StartController" : "Iniciar controlador",
   "action.StopController" : "Parar controlador",
   "action.AddFeatured" : "Añadir a destacadas",
@@ -592,7 +592,7 @@ export const translations =
   "option.render_mode.simplified" : "Simplificado",
   "option.render_mode.batch" : "Batch",
 
-  "option.select_faces.select_plane" : "Seleccionar plano de referència",
+  "option.select_faces.select_plane" : "Seleccionar plano de referencia",
   "option.select_faces.add_faces" : "Añadir caras por rectángulo",
   "option.select_faces.remove_faces" : "Quitar caras por rectángulo",
 
@@ -605,14 +605,14 @@ export const translations =
   "title.save_to_cloud" : "Guardar en la nube",
   "title.create_folder_in_cloud" : "Crear carpeta en la nube",
   "title.object_properties" : "Propiedades de objeto",
-  "title.delete_cloud_service" : "Borrar servicio de nube",
-  "title.delete_from_cloud" : "Borrar de la nube",
+  "title.delete_file_service" : "Eliminar servicio de ficheros",
+  "title.delete_from_file_service" : "Eliminar del servicio de ficheros",
   "title.unsaved_changes" : "Cambios no guardados",
   "title.formula" : "Fórmula",
-  "title.remove_property" : "Borrar propiedad",
-  "title.remove_featured_properties" : "Borrar propiedades destacadas",
+  "title.remove_property" : "Eliminar propiedad",
+  "title.remove_featured_properties" : "Eliminar propiedades destacadas",
   "title.add_controller" : "Añadir controlador",
-  "title.remove_controller" : "Borrar controlador",
+  "title.remove_controller" : "Eliminar controlador",
   "title.properties" : "Propiedades",
   "title.script_editor" : "Editor de código",
   "title.report_editor" : "Editor de informes",
@@ -624,7 +624,7 @@ export const translations =
   "title.login" : "Identificación",
   "title.new_material" : "Nuevo material",
   "title.rename_material" : "Renombrar material",
-  "title.delete_conversation" : "Borrar conversación",
+  "title.delete_conversation" : "Eliminar conversación",
   "title.chatgpt_setup" : "Configuración de ChatGPT",
   "title.acl_editor" : "Editor de permisos ACL",
   "title.acl_editor_success" : "Permisos guardados",
@@ -675,7 +675,7 @@ export const translations =
   "message.geometry_id" : id => `Id de geometría: ${id}`,
   "message.vertex_count" : count => `Vértices: ${count}`,
   "message.face_count" : count => `Caras: ${count}`,
-  "message.is_manifold" : manifold => `Es variedad: ${manifold ? "si" : "no"}`,
+  "message.is_manifold" : manifold => `Es variedad: ${manifold ? "sí" : "no"}`,
   "message.geometry_count" : count => `Geometrías: ${count}`,
   "message.instance_count" : count => `Instancias: ${count}`,
   "message.modeled_triangle_count" : count => `Triángulos modelizados: ${count}`,
@@ -706,17 +706,17 @@ export const translations =
 
   "message.link_copied" : "Enlace copiado.",
 
-  "question.overwrite_file" : filename => `Quieres sobreescribir el fichero ${filename}?`,
-  "question.discard_changes" : name => `Descartar los cambios no guardados en ${name || 'el editor'}?`,
-  "question.delete_service" : name => `Quieres borrar el servicio ${name}?`,
-  "question.delete_folder" : name => `Quieres borrar la carpeta ${name}?`,
-  "question.delete_file" : name => `Quieres borrar el fichero ${name}?`,
-  "question.remove_property" : name => `Quieres borrar la propiedad ${name}?`,
-  "question.remove_controller" : name => `Quieres borrar el controlador ${name}?`,
-  "question.remove_featured_properties" : "Quieres borrar todas las propiedades destacadas?",
-  "question.create_new_scene" : "Quieres crear una nueva escena?",
-  "question.delete_conversation" : "Quieres borrar la conversación?",
-  "question.confirm_save_changes": "Quieres confirmar los cambios?",
+  "question.overwrite_file" : filename => `¿Quieres sobreescribir el fichero ${filename}?`,
+  "question.discard_changes" : name => `¿Descartar los cambios no guardados en ${name || 'el editor'}?`,
+  "question.delete_service" : name => `¿Quieres eliminar el servicio ${name}?`,
+  "question.delete_folder" : name => `¿Quieres eliminar la carpeta ${name}?`,
+  "question.delete_file" : name => `¿Quieres eliminar el fichero ${name}?`,
+  "question.remove_property" : name => `¿Quieres eliminar la propiedad ${name}?`,
+  "question.remove_controller" : name => `¿Quieres eliminar el controlador ${name}?`,
+  "question.remove_featured_properties" : "¿Quieres eliminar todas las propiedades destacadas?",
+  "question.create_new_scene" : "¿Quieres crear una nueva escena?",
+  "question.delete_conversation" : "¿Quieres eliminar la conversación?",
+  "question.confirm_save_changes": "¿Quieres confirmar los cambios?",
   "question.confirm_logout": "¿Seguro que quieres cerrar sesión?",
 
   "controller.AutoPilotController" : "Conduce un objeto.",

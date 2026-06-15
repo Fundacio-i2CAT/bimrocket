@@ -18,7 +18,7 @@ export const translations =
   "label.wfs.layer_name" : "Layer name:",
   "label.wfs.url" : "WFS URL:",
   "label.wfs.geometry_type" : "Geometry format:",
-  "label.wfs.limit_distance" : "Geometries load limit:",
+  "label.wfs.limit_distance" : "Geometry load limit:",
   "label.wfs.limit_distance_help" : "Distance in 'm' or 'km' according to the existing IFC model. If there is no IFC, it does not apply.",
   "label.wfs.srs_name" : "Coordinate system:",
   "label.wfs.srs_name_help" : "Ex. EPSG:3857",
@@ -49,14 +49,14 @@ export const translations =
   "option.mapView.heremaps" : "HERE Maps",
   "option.mapView.maptiler" : "MapTiler",
   "option.mapView.openmaptiles" : "OpenMapTiles",
-  "option.mapView.mapboxheight" : "MapBox Height",
+  "option.mapView.mapboxheight" : "MapBox height",
   "option.mapView.wms" : "WMS",
   "option.mapView.planar" : "Planar",
   "option.mapView.spherical" : "Spherical",
   "option.mapView.height" : "Height",
-  "option.mapView.height_shader" : "Height Shader",
+  "option.mapView.height_shader" : "Height shader",
   "option.mapView.martini" : "Martini",
 
   "controller.WFSController" : "Loads geometry from Web Feature Service.",
-  "controller.MapViewController" : "Load tiles from a map server."
+  "controller.MapViewController" : "Loads tiles from a map server."
 };

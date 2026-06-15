@@ -82,7 +82,7 @@ export const translations =
   "button.menu_show" : "MENÚ",
   "button.menu_hide" : "TANCA",
 
-  "units.km" : "kilometres",
+  "units.km" : "quilòmetres",
   "units.m" : "metres",
   "units.cm" : "centímetres",
   "units.mm" : "mil·límetres",
@@ -97,7 +97,7 @@ export const translations =
   "menu.select" : "Selecció",
   "menu.select_context" : "Selecciona per context",
   "menu.design" : "Disseny",
-  "menu.design.add" : "Afegir",
+  "menu.design.add" : "Afegeix",
   "menu.design.add_solid" : "Sòlid",
   "menu.design.add_profile" : "Perfil",
   "menu.design.add_cord" : "Corda",
@@ -152,7 +152,7 @@ export const translations =
   "tool.options.format" : "Format:",
   "tool.options.options" : "Opcions (JSON):",
 
-  "tool.print.label" : "Imprimir",
+  "tool.print.label" : "Imprimeix",
   "tool.print.help" : "Imprimir escena a pdf",
 
   "tool.svg_exporter.label" : "Exporta SVG",
@@ -171,10 +171,10 @@ export const translations =
   "tool.search.label" : "Cerca",
 
   "tool.measure_length.label" : "Mesura longitud",
-  "tool.measure_length.help" : "Dibuixa la linia a mesurar.",
+  "tool.measure_length.help" : "Dibuixa la línia a mesurar.",
 
   "tool.measure_area.label" : "Mesura àrea",
-  "tool.measure_area.help" : "Dibuixa l'àrea a measurar.",
+  "tool.measure_area.help" : "Dibuixa l'àrea a mesurar.",
 
   "tool.measure_angle.label" : "Mesura angle",
   "tool.measure_angle.select_first_point" : "Selecciona primer punt.",
@@ -302,7 +302,7 @@ export const translations =
   "tool.view.top" : "Zenital",
   "tool.view.front" : "Frontal",
   "tool.view.back" : "Posterior",
-  "tool.view.left" : "Esquerre",
+  "tool.view.left" : "Esquerra",
   "tool.view.right" : "Dreta",
 
   "tool.remove.label" : "Esborra",
@@ -389,7 +389,7 @@ export const translations =
   "action.copy" : "Copia",
   "action.cut" : "Retalla",
   "action.paste" : "Enganxa",
-  "action.edit_acl" : "Edita permissos",
+  "action.edit_acl" : "Edita permisos",
   "action.share" : "Comparteix",
   "action.upload_file" : "Puja fitxer",
   "action.download_file" : "Baixa fitxer",
@@ -605,8 +605,8 @@ export const translations =
   "title.save_to_cloud" : "Desa al núvol",
   "title.create_folder_in_cloud" : "Crea carpeta al núvol",
   "title.object_properties" : "Propietats d'objecte",
-  "title.delete_cloud_service" : "Esborra servei de núvol",
-  "title.delete_from_cloud" : "Esborra del núvol",
+  "title.delete_file_service" : "Esborra servei de fitxers",
+  "title.delete_from_file_service" : "Esborra del servei de fitxers",
   "title.unsaved_changes" : "Canvis no desats",
   "title.formula" : "Fórmula",
   "title.remove_property" : "Esborra propietat",
@@ -675,7 +675,7 @@ export const translations =
   "message.geometry_id" : id => `Id de geometria: ${id}`,
   "message.vertex_count" : count => `Vèrtexs: ${count}`,
   "message.face_count" : count => `Cares: ${count}`,
-  "message.is_manifold" : manifold => `És varietat: ${manifold ? "si" : "no"}`,
+  "message.is_manifold" : manifold => `És varietat: ${manifold ? "sí" : "no"}`,
   "message.geometry_count" : count => `Geometries: ${count}`,
   "message.instance_count" : count => `Instàncies: ${count}`,
   "message.modeled_triangle_count" : count => `Triangles modelitzats: ${count}`,
@@ -686,7 +686,7 @@ export const translations =
   "message.access_denied" : "Accés denegat.",
   "message.action_denied" : "Acció denegada.",
 
-  "message.invalid_revolution_axis" : "Eix de revolució invàlid. Aquest eix no es pot projectar sobre el pla del perfil.",
+  "message.invalid_revolution_axis" : "Eix de revolució no vàlid. Aquest eix no es pot projectar sobre el pla del perfil.",
 
   "message.select_source_object" : "Selecciona l'objecte origen, introdueix el nom de l'enllaç i prem el botó [Següent].",
   "message.select_target_object" : "Selecciona l'objecte destí i prem el botó [Enllaça].",
@@ -700,7 +700,7 @@ export const translations =
 
   "message.edit_acl_success" : "Els permisos s'han actualitzat correctament.",
   "message.invalid_privileges" : "Hi ha errors en els privilegis introduïts.",
-  "message.edit_acl_json_error" : detail => `Error al processar el JSON. Revisa la sintaxi. (${detail})`,
+  "message.edit_acl_json_error" : detail => `Error en processar el JSON. Revisa la sintaxi. (${detail})`,
 
   "message.login_failed" : "Credencials incorrectes.",
 

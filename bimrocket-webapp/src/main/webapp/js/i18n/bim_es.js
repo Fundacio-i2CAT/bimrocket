@@ -14,7 +14,7 @@ export const translations =
   "button.references" : "Referencias",
   "button.save_extensions" : "Guardar extensiones",
   "button.new_user" : "Usuario nuevo",
-  "button.back_topicss" : "Volver a proyectos",
+  "button.back_topics" : "Volver a proyectos",
   "button.new_role" : "Rol nuevo",
   "button.filter_projects": "Mostrar sólo los proyectos cargados en el visor",
 
@@ -37,7 +37,7 @@ export const translations =
   "tool.bim_delta.label" : "Detección de cambios",
 
   "tool.bim_explode.label" : "Explotar modelo",
-  "tool.bim_explode.help" : "Selecciona un edficio y aplica desplazamientos en cada eje.",
+  "tool.bim_explode.help" : "Selecciona un edificio y aplica desplazamientos en cada eje.",
 
   "tool.bim_reset_view.label" : "Inicializar vista",
 
@@ -54,7 +54,7 @@ export const translations =
   "tab.comments" : "Comentarios",
   "tab.viewpoints" : "Vistas",
   "tab.doc_refs" : "Documentos",
-  "tab.audit" : "Auditoria",
+  "tab.audit" : "Auditoría",
 
   "tab.types" : "Tipos",
   "tab.classifications" : "Clasificaciones",
@@ -178,9 +178,9 @@ export const translations =
   "message.doc_ref_deleted" : "Referencia a documento borrada.",
   "message.doc_ref_saved" : "Referencia a documento guardada.",
   "message.topic_searched" : "No se han encontrado incidencias.",
-  "message.no_components_selected": "No se han encontrado objetos para esta vista",
+  "message.no_components_selected": "No se han encontrado objetos para esta vista.",
 
-  "message.operation_completed": "Operación completada",
+  "message.operation_completed": "Operación completada.",
 
   "message.bsdd_dictionary_count" : count => `Diccionarios: ${count}`,
   "message.bsdd_class_count" : count => `Clases: ${count}`,
@@ -207,16 +207,16 @@ export const translations =
   "message.role_deleted" : "Rol borrado.",
   "message.role_searched" : "No se ha encontrado ningún rol.",
 
-  "question.delete_project" : "Quieres borrar este proyecto y todas sus incidencias?",
-  "question.delete_topic" : "Quieres borrar esta incidencia?",
-  "question.delete_comment" : "Quieres borrar este comentario?",
-  "question.delete_viewpoint" : "Quieres borrar este punto de vista?",
-  "question.delete_doc_ref" : "Quieres borrar esta referencia a documento?",
-  "question.delete_bcf_service" : name => `Quieres borrar el servicio ${name}?`,
-  "question.delete_ifcdb_service" : name => `Quieres borrar el servicio ${name}?`,
-  "question.delete_ifcdb_model" : name => `Quieres borrar el modelo ${name}?`,
-  "question.delete_user" : "Quieres borrar este usuario?",
-  "question.delete_role" : "Quieres borrar este rol?",
+  "question.delete_project" : "¿Quieres borrar este proyecto y todas sus incidencias?",
+  "question.delete_topic" : "¿Quieres borrar esta incidencia?",
+  "question.delete_comment" : "¿Quieres borrar este comentario?",
+  "question.delete_viewpoint" : "¿Quieres borrar este punto de vista?",
+  "question.delete_doc_ref" : "¿Quieres borrar esta referencia a documento?",
+  "question.delete_bcf_service" : name => `¿Quieres borrar el servicio ${name}?`,
+  "question.delete_ifcdb_service" : name => `¿Quieres borrar el servicio ${name}?`,
+  "question.delete_ifcdb_model" : name => `¿Quieres borrar el modelo ${name}?`,
+  "question.delete_user" : "¿Quieres borrar este usuario?",
+  "question.delete_role" : "¿Quieres borrar este rol?",
 
   "placeholder.keep_password": "Dejar en blanco para mantener la contraseña actual",
   "placeholder.confirm_password": "Repite la nueva contraseña",

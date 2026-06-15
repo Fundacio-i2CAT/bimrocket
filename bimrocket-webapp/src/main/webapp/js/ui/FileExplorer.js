@@ -205,7 +205,7 @@ class FileExplorer extends Panel
     let name = this.entryName;
     if (this.service === null)
     {
-      ConfirmDialog.create("title.delete_cloud_service",
+      ConfirmDialog.create("title.delete_file_service",
         "question.delete_service", name)
         .setAction(() =>
         {
@@ -223,7 +223,7 @@ class FileExplorer extends Panel
       let question = this.entryType === Metadata.FILE ?
         "question.delete_file" : "question.delete_folder";
 
-      ConfirmDialog.create("title.delete_from_cloud", question, name)
+      ConfirmDialog.create("title.delete_from_file_service", question, name)
         .setAction(() => this.deletePath(this.getFullPath(name)))
         .setAcceptLabel("button.delete")
         .setI18N(application.i18n).show();

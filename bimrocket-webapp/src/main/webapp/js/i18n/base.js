@@ -85,7 +85,7 @@ export const translations =
   "units.km" : "kilometers",
   "units.m" : "meters",
   "units.cm" : "centimeters",
-  "units.mm" : "milimeters",
+  "units.mm" : "millimeters",
   "units.in" : "inches",
 
   "menu.file" : "File",
@@ -155,7 +155,7 @@ export const translations =
   "tool.print.label" : "Print",
   "tool.print.help" : "Print scene to pdf",
 
-  "tool.svg_exporter.label" : "SVG Export",
+  "tool.svg_exporter.label" : "Export SVG",
 
   "tool.draw.label" : "Draw",
   "tool.draw.add_vertex" : "Add vertex to the cord.",
@@ -209,13 +209,13 @@ export const translations =
   "tool.place.help" : "Select a point to place the object.",
 
   "tool.extrude.label" : "Extrude",
-  "tool.extrude.drag_pointer" : "Drag the pointer to extrude the selected object dinamically.",
+  "tool.extrude.drag_pointer" : "Drag the pointer to extrude the selected object dynamically.",
   "tool.extrude.select_object" : "Select profile or solid to extrude.",
 
   "tool.revolve.label" : "Revolve",
   "tool.revolve.set_axis_first_point" : "Set the first point of the axis of revolution.",
   "tool.revolve.set_axis_second_point" : "Set the second point of the axis of revolution.",
-  "tool.revolve.drag_pointer" : "Drag pointer to revolve the selected object dinamically.",
+  "tool.revolve.drag_pointer" : "Drag pointer to revolve the selected object dynamically.",
   "tool.revolve.select_object" : "Select profile or solid to revolve.",
 
   "tool.union.label" : "Union",
@@ -606,8 +606,8 @@ export const translations =
   "title.save_to_cloud" : "Save to cloud",
   "title.create_folder_in_cloud" : "Create folder in cloud service",
   "title.object_properties" : "Object properties",
-  "title.delete_cloud_service" : "Delete cloud service",
-  "title.delete_from_cloud" : "Delete from cloud",
+  "title.delete_file_service" : "Delete file service",
+  "title.delete_from_file_service" : "Delete from file service",
   "title.unsaved_changes" : "Unsaved changes",
   "title.formula" : "Formula",
   "title.remove_property" : "Remove property",
@@ -726,7 +726,7 @@ export const translations =
   "controller.ColorController" : "Colors an object.",
   "controller.DisplayController" : "Displays a value on a panel.",
   "controller.LightController" : "Lights an object.",
-  "controller.LoadController" : "Loads a model into scene.",
+  "controller.LoadController" : "Loads a model into the scene.",
   "controller.ProximityController" : "Detects proximity to objects.",
   "controller.PushButtonController" : "Shows a push button.",
   "controller.RotationController" : "Rotates an object.",

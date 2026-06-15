@@ -49,7 +49,7 @@ export const translations =
   "option.mapView.heremaps" : "HERE Maps",
   "option.mapView.maptiler" : "MapTiler",
   "option.mapView.openmaptiles" : "OpenMapTiles",
-  "option.mapView.mapboxheight" : "MapBox Height",
+  "option.mapView.mapboxheight" : "Altura de MapBox",
   "option.mapView.wms" : "WMS",
   "option.mapView.planar" : "Plano",
   "option.mapView.spherical" : "Esferico",
