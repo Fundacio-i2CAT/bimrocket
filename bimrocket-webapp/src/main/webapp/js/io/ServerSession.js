@@ -5,8 +5,19 @@
  */
 
 import { SecurityService } from "./SecurityService.js";
-import { Result } from "./FileService.js";
+import { ServiceError } from "./Service.js";
 import { WebUtils } from "../utils/WebUtils.js";
+
+const {
+  INVALID_CREDENTIALS,
+  FORBIDDEN,
+  BAD_REQUEST,
+  NOT_FOUND,
+  INTERNAL_ERROR,
+  NOT_IMPLEMENTED,
+  UNKNOWN_ERROR
+} = ServiceError;
+
 
 /**
  * Represents a session of a specific type of server.
@@ -81,32 +92,50 @@ class ServerSession
   }
 
   /**
-   * Creates a normalized error object from the http status and the 
+   * Creates a ServiceError object from the http status and the
    * server response.
-   * 
+   *
    * @param {number} status - the http status
-   * @param {Object} detail - an object that represents the body of the 
+   * @param {Object} responseBody - an object that represents the body of the
    *  server's response
    *
-   * @returns {Object} the normalized error { code: number, message: string }
+   * @returns {Object} the ServiceError { code: number, message: string }
    */
-  getError(status, detail)
+  getServiceError(status, responseBody)
   {
-    const error = 
+    let code;
+    switch (status)
     {
-      code : status,
-      message : WebUtils.getHttpStatusMessage(status)
-    };
-    
-    if (detail) error.detail = detail;
-    
-    return error;
+      case 400:
+      case 405:
+        code = BAD_REQUEST;
+        break;
+      case 401:
+        code = INVALID_CREDENTIALS;
+        break;
+      case 403:
+        code = FORBIDDEN;
+        break;
+      case 404:
+        code = NOT_FOUND;
+        break;
+      case 500:
+        code = INTERNAL_ERROR;
+        break;
+      case 501:
+        code = NOT_IMPLEMENTED;
+        break;
+      default:
+        code = UNKNOWN_ERROR;
+        break;
+    }
+    return new ServiceError(code);
   }
 
   /**
    * Determine the action to be taken based on the error that has occurred.
    *
-   * @param {Object|Result} error - the error that has occurred
+   * @param {ServiceError} error - the error that has occurred
    * @param {function} retry - called when the error was fixed (token renewal)
    * @param {function} authenticate - called when user authentication is required
    * @param {function} showError - called to show this error to the user
@@ -261,21 +290,19 @@ class BimrocketServerSession extends ServerSession
       }
     }
   }
-  
-  getError(status, detail)
+
+  getServiceError(status, responseBody)
   {
-    // bimrocket already returns error detail in normalized form
-    if (typeof detail.code === "number") return detail;
-    
-    return super.getError(status, detail);
+    const error = super.getServiceError(status, responseBody);
+    error.message = responseBody.message || WebUtils.getHttpStatusMessage(status);
+
+    return error;
   }
 
   handleError(error, retry, authenticate, showError)
   {
-    if (error.code === 401 ||
-        error.code === 403 ||
-        error.status === Result.INVALID_CREDENTIALS ||
-        error.status === Result.FORBIDDEN)
+    if (error.code === INVALID_CREDENTIALS ||
+        error.code === FORBIDDEN)
     {
       authenticate?.();
     }
@@ -311,6 +338,14 @@ class GenericServerSession extends ServerSession
   constructor(baseUrl)
   {
     super(baseUrl);
+  }
+
+  getServiceError(status, responseBody)
+  {
+    const error = super.getServiceError(status, responseBody);
+    error.message = WebUtils.getHttpStatusMessage(status);
+
+    return error;
   }
 }
 

@@ -4,7 +4,10 @@
  * @author realor
  */
 
-import { Service } from "./Service.js";
+import { Service, ServiceError } from "./Service.js";
+
+const NotImplementedError =
+  new ServiceError(ServiceError.NOT_IMPLEMENTED, "Not implemented.");
 
 class FileService extends Service
 {
@@ -25,7 +28,7 @@ class FileService extends Service
    */
   find(path, options, onCompleted)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -40,7 +43,7 @@ class FileService extends Service
    */
   read(path, onCompleted, onProgress)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -55,7 +58,7 @@ class FileService extends Service
    */
   write(path, data, onCompleted, onProgress)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -69,7 +72,7 @@ class FileService extends Service
    */
   remove(path, onCompleted, onProgress)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -81,7 +84,7 @@ class FileService extends Service
    */
   makeCollection(path, onCompleted)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -96,7 +99,7 @@ class FileService extends Service
    */
   move(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -111,7 +114,7 @@ class FileService extends Service
    */
   copy(sourcePath, destinationPath, onCompleted, onProgress)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -125,7 +128,7 @@ class FileService extends Service
    */
   getProperties(path, names, onCompleted)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -138,7 +141,7 @@ class FileService extends Service
    */
   setProperties(path, properties, onCompleted)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -151,7 +154,7 @@ class FileService extends Service
    */
   getACL(path, onCompleted)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   /**
@@ -164,7 +167,7 @@ class FileService extends Service
    */
   setACL(path, acl, onCompleted)
   {
-    onCompleted(new Result(Result.ERROR, "Not implemented."));
+    onCompleted(new Result({ error : NotImplementedError }));
   }
 
   // deprecated methods
@@ -203,20 +206,21 @@ class FileService extends Service
 class Result
 {
   static OK = 0;
-  static ERROR = 1; // unknown error
-  static INVALID_CREDENTIALS = 2;
-  static FORBIDDEN = 3;
-  static BAD_REQUEST = 4;
-  static NOT_FOUND = 5;
+  static ERROR = 1;
 
-  constructor(status, message, path, metadata, entries, data)
+  constructor(info)
   {
-    this.status = status;
-    this.message = message;
-    this.path = path;
-    this.metadata = metadata; // Metadata
-    this.entries = entries; // array of Metadata
-    this.data = data; // file data or ACL
+    if (info)
+    {
+      this.status = info.error ? Result.ERROR : Result.OK;
+      this.message = info.message; // string
+      this.path = info.path; // resource path
+      this.metadata = info.metadata; // Metadata
+      this.entries = info.entries; // array of Metadata
+      this.data = info.data; // file data or ACL
+      this.error = info.error; // ServiceError
+    }
+    else this.status = Result.OK;
   }
 }
 

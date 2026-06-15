@@ -6,18 +6,13 @@
 
 import { IOManager } from "./IOManager.js";
 import { FileService, Metadata, Result, ACL } from "./FileService.js";
+import { ServiceError } from "./Service.js";
 import { RestServiceClient } from "./RestServiceClient.js";
 import { ServiceManager } from "./ServiceManager.js";
 
-const OK = Result.OK;
-const ERROR = Result.ERROR;
-const INVALID_CREDENTIALS = Result.INVALID_CREDENTIALS;
-const FORBIDDEN = Result.INVALID_CREDENTIALS;
-const BAD_REQUEST = Result.BAD_REQUEST;
-const NOT_FOUND = Result.NOT_FOUND;
+const UNKNOWN_ERROR = ServiceError.UNKNOWN_ERROR;
 
-const COLLECTION = Metadata.COLLECTION;
-const FILE = Metadata.FILE;
+const { COLLECTION, FILE } = Metadata;
 
 class WebdavService extends FileService
 {
@@ -154,11 +149,12 @@ class WebdavService extends FileService
               }
             }
 
-            onCompleted?.(new Result(OK, "", path, metadata, entries, null));
+            onCompleted?.(new Result({ path, metadata, entries }));
           }
           catch (ex)
           {
-            onCompleted?.(new Result(ERROR, ex));
+            const error = new ServiceError(UNKNOWN_ERROR, String(ex));
+            onCompleted?.(new Result({ error }));
           }
         },
         onError : error =>
@@ -185,7 +181,7 @@ class WebdavService extends FileService
         {
           onProgress?.({ progress : 100, message : "Download completed." });
           metadata.size = parseInt(response.headers.get("Content-Length"));
-          onCompleted?.(new Result(OK, "", path, metadata, null, data));
+          onCompleted?.(new Result({ path, metadata, data }));
         },
         onError : error =>
         {
@@ -205,7 +201,7 @@ class WebdavService extends FileService
     this.client.call("PUT", path,
       {
         body : data,
-        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onCompleted : () => { onCompleted?.(new Result()); },
         onError : error =>
         {
           onCompleted?.(this.createError("Write failed", error));
@@ -217,7 +213,7 @@ class WebdavService extends FileService
   {
     this.client.call("DELETE", path,
       {
-        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onCompleted : () => { onCompleted?.(new Result()); },
         onError : error =>
         {
           onCompleted?.(this.createError("Remove failed", error));
@@ -229,7 +225,7 @@ class WebdavService extends FileService
   {
     this.client.call("MKCOL", path,
       {
-        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onCompleted : () => { onCompleted?.(new Result()); },
         onError : error =>
         {
           onCompleted?.(this.createError("Folder creation failed", error));
@@ -245,7 +241,7 @@ class WebdavService extends FileService
     this.client.call("MOVE", sourcePath,
       {
         headers,
-        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onCompleted : () => { onCompleted?.(new Result()); },
         onError : error =>
         {
           onCompleted?.(this.createError("Move operation failed", error));
@@ -261,7 +257,7 @@ class WebdavService extends FileService
     this.client.call("COPY", sourcePath,
       {
         headers,
-        onCompleted : () => { onCompleted?.(new Result(OK)); },
+        onCompleted : () => { onCompleted?.(new Result()); },
         onError : error =>
         {
           onCompleted?.(this.createError("Copy operation failed", error));
@@ -293,17 +289,20 @@ class WebdavService extends FileService
         {
           try
           {
-            const acl = this.convertXMLToACL(xml);
-            onCompleted?.(new Result(OK, "ACL read", path, null, null, acl));
+            const data = this.convertXMLToACL(xml);
+            onCompleted?.(new Result({ message : "ACL read", path, data }));
           }
           catch (ex)
           {
-            onCompleted?.(new Result(ERROR, `Failed to parse ACL: ${ex}`));
+            const error =
+              new ServiceError(UNKNOWN_ERROR, `Failed to parse ACL: ${ex}`);
+            onCompleted?.(new Result({ error }));
           }
         },
         onError : error =>
         {
-          onCompleted?.(this.createError("ACL retrieval failed", error));
+          error.message = "ACL retrieval failed: " + error.message;
+          onCompleted?.({ error });
         },
         dataType : "text"
       });
@@ -322,7 +321,7 @@ class WebdavService extends FileService
         body,
         onCompleted : xml =>
         {
-          onCompleted?.(new Result(OK, "ACL updated"));
+          onCompleted?.(new Result({ message: "ACL updated" }));
         },
         onError : error =>
         {
@@ -332,7 +331,8 @@ class WebdavService extends FileService
     }
     catch (ex)
     {
-      onCompleted?.(new Result(ERROR, `ACL change failed: ${ex}`, path));
+      const error = new ServiceError(UNKNOWN_ERROR, `ACL change failed: ${ex}`);
+      onCompleted?.(new Result({ error, path }));
     }
   }
 
@@ -340,26 +340,8 @@ class WebdavService extends FileService
 
   createError(message, error)
   {
-    let statusMessage = error.message || "";
-    if (statusMessage)
-    {
-      message += ": " + statusMessage;
-    }
-    if (error.code)
-    {
-      message += ` (HTTP ${error.code})`;
-    }
-
-    let resultStatus;
-    switch (error.code)
-    {
-      case 400: resultStatus = BAD_REQUEST; break;
-      case 401: resultStatus = INVALID_CREDENTIALS; break;
-      case 403: resultStatus = FORBIDDEN; break;
-      case 404: resultStatus = NOT_FOUND; break;
-      default: resultStatus = ERROR;
-    }
-    return new Result(resultStatus, message);
+    error.message = error.message ? message + ": " + error.message : message;
+    return new Result({ error });
   }
 
   convertXMLToACL(xmlString)

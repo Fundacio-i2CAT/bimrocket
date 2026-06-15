@@ -5,17 +5,17 @@
  */
 
 import { FileService, Metadata, Result } from "./FileService.js";
+import { ServiceError } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
 
-const OK = Result.OK;
-const ERROR = Result.ERROR;
-const INVALID_CREDENTIALS = Result.INVALID_CREDENTIALS;
-const FORBIDDEN = Result.INVALID_CREDENTIALS;
-const BAD_REQUEST = Result.BAD_REQUEST;
-const NOT_FOUND = Result.NOT_FOUND;
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  INTERNAL_ERROR,
+  UNKNOWN_ERROR
+} = ServiceError;
 
-const COLLECTION = Metadata.COLLECTION;
-const FILE = Metadata.FILE;
+const { COLLECTION, FILE } = Metadata;
 
 class IDBFileService extends FileService
 {
@@ -107,12 +107,12 @@ class Operation
 
   onLastNode()
   {
-    this.error(ERROR, "Invalid operation.");
+    this.error(BAD_REQUEST, "Invalid operation.");
   }
 
   onNewNode()
   {
-    this.error(ERROR, "Invalid operation.");
+    this.error(BAD_REQUEST, "Invalid operation.");
   }
 
   execute()
@@ -146,13 +146,13 @@ class Operation
         db.close();
         if (this.isUpdate)
         {
-          this.onCompleted?.(new Result(OK));
+          this.onCompleted?.(new Result());
         }
       };
 
       tx.onerror = (event) =>
       {
-        this.error(ERROR, event.error);
+        this.error(INTERNAL_ERROR, event.error);
       };
 
       this.onStoreReady();
@@ -160,7 +160,7 @@ class Operation
 
     openReq.onerror = (event) =>
     {
-      this.error(ERROR, event.error);
+      this.error(INTERNAL_ERROR, event.error);
     };
   }
 
@@ -226,7 +226,7 @@ class Operation
 
     getReq.onerror = (event) =>
     {
-      this.error(ERROR, event.error);
+      this.error(UNKNOWN_ERROR, event.error);
     };
   }
 
@@ -239,9 +239,10 @@ class Operation
     return rootNode.lastId;
   }
 
-  error(status, msg)
+  error(code, message)
   {
-    this.onCompleted?.(new Result(status, msg));
+    const error = new ServiceError(code, message);
+    this.onCompleted?.(new Result({ error }));
   }
 
   getSize(data)
@@ -335,7 +336,7 @@ class ReadOperation extends Operation
         }
       }
     }
-    this.onCompleted?.(new Result(OK, "", path, metadata, entries, data));
+    this.onCompleted?.(new Result({ path, metadata, entries, data }));
   }
 }
 
@@ -390,7 +391,7 @@ class WriteOperation extends Operation
       node.data = this.data;
       this.store.put(node);
 
-      this.onCompleted?.(new Result(OK));
+      this.onCompleted?.(new Result());
     }
     else // attempt to replace collection by file
     {
@@ -556,7 +557,7 @@ class RenameOperation extends Operation
       if (parentNode.entries[newName])
       {
         // a resource already exists with newName
-        this.error(ERROR, "A file alredy exists with the same name.");
+        this.error(BAD_REQUEST, "A file alredy exists with the same name.");
         return;
       }
       let entry = parentNode.entries[name];
@@ -799,7 +800,6 @@ class CopyOperation extends TransferOperation
     const oldNode = nodes[this.index];
     if (oldNode)
     {
-      console.info("remove " + oldNode.id);
       store.delete(oldNode.id);
     }
 

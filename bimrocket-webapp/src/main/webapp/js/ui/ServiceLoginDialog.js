@@ -6,10 +6,12 @@
  */
 
 import { LoginDialog } from "./LoginDialog.js";
-import { SecurityService } from "../io/SecurityService.js";
 import { Controls } from "./Controls.js";
-import { ServerSession } from "../io/ServerSession.js";
 import { Auth } from "./Auth.js";
+import { ServerSession } from "../io/ServerSession.js";
+import { ServiceError } from "../io/Service.js";
+
+const { INVALID_CREDENTIALS, FORBIDDEN } = ServiceError;
 
 class ServiceLoginDialog extends LoginDialog
 {
@@ -23,24 +25,85 @@ class ServiceLoginDialog extends LoginDialog
 
     this.authSuccessListener = (event) => this.handleOAuthSuccess(event);
   }
-    
+
+ /**
+   * Sets the service to log in.
+   *
+   * @param {Service} service - the service to log in
+   * @returns {ServiceLoginDialog}
+   */
 	setService(service)
 	{
     this.serverSession = ServerSession.getSession(service);
     return this;
 	}
 
-	setOnLogin(onLogin)
+ /**
+   * Sets the function to call when login succeeds.
+   *
+   * @param {function} onLogin - the function to call when login succeeds
+   * @returns {ServiceLoginDialog}
+   */
+  setOnLogin(onLogin)
 	{
 		this.onLogin = onLogin;
 		return this;
 	}
 
+  /**
+   * Sets the function to call when login fails.
+   *
+   * @param {function} onFailed - the function to call when login fails
+   * @returns {ServiceLoginDialog}
+   */
 	setOnFailed(onFailed)
 	{
 		this.onFailed = onFailed;
 		return this;
 	}
+
+  /**
+   * Sets the isWriteAction property
+   *
+   * @param {boolean} isWriteAction - true if the action that generated
+   *   the error is a write action, false otherwise
+   * @returns {ServiceLoginDialog}
+   */
+  setWriteAction(isWriteAction)
+  {
+    this.isWriteAction = isWriteAction;
+    return this;
+  }
+
+  /**
+   * Sets the login message from the given error
+   *
+   * @param {ServiceError} error - the error that has ocurred
+   * @returns {ServiceLoginDialog}
+   */
+  setError(error)
+  {
+    let message;
+    if (error.code === INVALID_CREDENTIALS)
+    {
+      message = "message.invalid_credentials";
+    }
+    else if (error.code === FORBIDDEN)
+    {
+      message = this.isWriteAction ?
+        "message.action_denied" : "message.accces_denied";
+    }
+    else if (error.message)
+    {
+      message = error.message;
+    }
+    else
+    {
+      message = String(error);
+    }
+    this.setMessage(message);
+    return this;
+  }
 
   show()
   {
@@ -153,11 +216,11 @@ class ServiceLoginDialog extends LoginDialog
       this.hide();
       this.onLogin?.();
     },
-    (error) =>
+    error =>
     {
       progressBar.visible = false;
+      this.setError(error);
       this.show();
-			this.setMessage("message.login_failed");
     });
   }
 }

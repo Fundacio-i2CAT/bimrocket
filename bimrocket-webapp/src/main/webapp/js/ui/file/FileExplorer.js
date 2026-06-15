@@ -513,7 +513,7 @@ class FileExplorer extends Panel
       const path = this.getFullPath(entryName);
       this.service.find(path, { depth : "0" }, result =>
       {
-        const exists = result?.status !== Result.NOT_FOUND;
+        const exists = result.status === Result.OK;
         resolve(exists);
 
         onSuccess?.(exists);
@@ -537,7 +537,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, false,
+      this.handleError(result.error, false,
         () => {
                 if (entryName === "") this.list(onSuccess);
                 else this.open(onSuccess);
@@ -564,7 +564,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true,
+      this.handleError(result.error, true,
         () => this.save(entryName, data, onSuccess));
     }
   }
@@ -596,7 +596,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.remove(onSuccess));
+      this.handleError(result.error, true, () => this.remove(onSuccess));
     }
   }
 
@@ -618,7 +618,8 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.makeFolder(entryName, onSuccess));
+      this.handleError(result.error, true,
+        () => this.makeFolder(entryName, onSuccess));
     }
   }
 
@@ -640,7 +641,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true,
+      this.handleError(result.error, true,
         () => this.rename(newEntryName, onSuccess));
     }
   }
@@ -658,7 +659,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, false, () => this.download(onSuccess));
+      this.handleError(result.error, false, () => this.download(onSuccess));
     }
   }
 
@@ -677,7 +678,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.upload(file, onSuccess));
+      this.handleError(result.error, true, () => this.upload(file, onSuccess));
     }
   }
 
@@ -701,7 +702,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.paste(onSuccess));
+      this.handleError(result.error, true, () => this.paste(onSuccess));
     }
   }
 
@@ -973,10 +974,10 @@ class FileExplorer extends Panel
     return 0;
   }
 
-  handleError(result, isWriteAction, onResolved, onFailed)
+  handleError(error, isWriteAction, onResolved, onFailed)
   {
     ErrorHandler.handleError(this.application, this.service,
-      result, isWriteAction, onResolved, onFailed);
+      error, isWriteAction, onResolved, onFailed);
   }
 
   setServiceParameters(dialog, service, parameters)

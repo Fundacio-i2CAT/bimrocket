@@ -371,7 +371,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, false,
+      this.handleError(result.error, false,
         () => this.openPath(path),
         () => { if (path === "/") this.service = null; });
     }
@@ -394,7 +394,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true,
+      this.handleError(result.error, true,
         () => this.savePath(path, data, onSuccess));
     }
   }
@@ -427,7 +427,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.deletePath(path));
+      this.handleError(result.error, true, () => this.deletePath(path));
     }
   }
 
@@ -451,7 +451,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.makeFolder(path));
+      this.handleError(result.error, true, () => this.makeFolder(path));
     }
   }
 
@@ -468,7 +468,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, false, () => this.download(path));
+      this.handleError(result.error, false, () => this.download(path));
     }
   }
 
@@ -489,7 +489,7 @@ class FileExplorer extends Panel
     }
     else
     {
-      this.handleError(result, true, () => this.upload(files));
+      this.handleError(result.error, true, () => this.upload(files));
     }
   }
 

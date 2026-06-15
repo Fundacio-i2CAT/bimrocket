@@ -5,6 +5,7 @@
  */
 
 import { ServerSession } from "./ServerSession.js";
+import { ServiceError } from "./Service.js";
 
 class RestServiceClient
 {
@@ -60,7 +61,7 @@ class RestServiceClient
     try
     {
       // Inject authorization header and credentials as needed
-      let serverSession = ServerSession.getSession(service);
+      const serverSession = ServerSession.getSession(service);
       serverSession.setFetchOptions(fetchOptions);
 
       if (body)
@@ -87,10 +88,10 @@ class RestServiceClient
       }
       else // error
       {
-        const detail = await this.readResponse(response, "auto");
+        const responseBody = await this.readResponse(response, "auto");
 
-        // normalize error: { code: number, message: string }
-        const error = serverSession.getError(response.status, detail);
+        // get ServiceError
+        const error = serverSession.getServiceError(response.status, responseBody);
 
         if (onError) onError(error, response);
         else throw error;
@@ -98,6 +99,7 @@ class RestServiceClient
     }
     catch (ex)
     {
+      const error = new ServiceError(ServiceError.UNKNOWN_ERROR, ex.message);
       if (onError) onError(ex);
       else throw ex;
     }

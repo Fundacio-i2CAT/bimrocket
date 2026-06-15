@@ -11,6 +11,17 @@ import { MessageDialog } from "./MessageDialog.js";
 
 class ErrorHandler
 {
+  /**
+   * Handles a ServiceError.
+   *
+   * @param {Application} application - the current application
+   * @param {Service} service - the service that generated the error
+   * @param {ServiceError} error - the error that has ocurred
+   * @param {boolean} isWriteAction - true if the action that generated
+   *   the error is a write action, false otherwise
+   * @param {function} onResolved - function to call after error is resolved
+   * @param {function} onFailed - function to call if error can not be resolved
+   */
   static handleError(application, service, error,
     isWriteAction, onResolved, onFailed)
   {
@@ -21,31 +32,10 @@ class ErrorHandler
 
     const authenticate = () =>
     {
-      let message;
-
-      if (error.code === 401 ||
-        error.status === Result.INVALID_CREDENTIALS)
-      {
-        message = "message.invalid_credentials";
-      }
-      else if (error.code === 403 ||
-               error.status === Result.FORBIDDEN)
-      {
-        message = isWriteAction ?
-          "message.action_denied" : "message.accces_denied";
-      }
-      else if (error.message)
-      {
-        message = error.message;
-      }
-      else
-      {
-        message = String(error);
-      }
-
       new ServiceLoginDialog(application)
         .setService(service)
-        .setMessage(message)
+        .setError(error)
+        .setWriteAction(isWriteAction)
         .setOnLogin(onResolved)
         .setOnFailed(onFailed)
         .show();
@@ -54,7 +44,7 @@ class ErrorHandler
     const showError = () =>
     {
       onFailed?.();
-      const message = error.message || String(error);
+      const message = error.message;
       MessageDialog.create("ERROR", message)
         .setClassName("error")
         .setI18N(application.i18n).show();

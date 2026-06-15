@@ -66,7 +66,7 @@ class ACLEditorDialog extends Dialog
           }
           else
           {
-            this.handleError(result, saveAction);
+            this.handleError(result.error, saveAction);
           }
         });
       }
@@ -94,10 +94,10 @@ class ACLEditorDialog extends Dialog
     });
   }
 
-  handleError(result, onResolved, onFailed)
+  handleError(error, onResolved, onFailed)
   {
     ErrorHandler.handleError(this.application, this.fileService,
-      result, false, onResolved, onFailed);
+      error, false, onResolved, onFailed);
   }
 
   setACL(acl)
@@ -125,8 +125,7 @@ class ACLEditorDialog extends Dialog
       }
       else
       {
-        this.handleError(result,
-          () => this.load());
+        this.handleError(result.error, () => this.load());
       }
     });
   }

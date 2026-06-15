@@ -131,7 +131,7 @@ class ReportPanel extends Panel
             }
             else
             {
-              this.addError(path, result.message);
+              this.addError(path, result.error);
               processNextReport();
             }
           });
@@ -337,8 +337,9 @@ class ReportPanel extends Panel
 
   addError(title, error)
   {
+    const message = error.message;
     const errorElem = document.createElement("div");
-    errorElem.textContent = title ? title + ": " + error : error;
+    errorElem.textContent = title ? title + ": " + message : message;
     errorElem.className = "report_error";
     this.reportElem.appendChild(errorElem);
   }
