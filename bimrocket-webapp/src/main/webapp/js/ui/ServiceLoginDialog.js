@@ -151,8 +151,6 @@ class ServiceLoginDialog extends LoginDialog
 
   addOAuth2Buttons(providers)
   {
-    this.setSize(280, 220); // increase Dialog height
-
     if (!this.oauthContainer)
     {
       this.oauthContainer = document.createElement("div");

@@ -6,6 +6,7 @@
 
 import { Dialog } from "./Dialog.js";
 import { Controls } from "./Controls.js";
+import { I18N } from "../i18n/I18N.js";
 
 class LoginDialog extends Dialog
 {
@@ -15,7 +16,7 @@ class LoginDialog extends Dialog
     this.application = application;
     this.setI18N(this.application.i18n);
 
-    this.setSize(280, 200);
+    this.setSize(280, "auto");
 
     const formElem = document.createElement("form");
     formElem.id = "login_dialog";
@@ -55,16 +56,14 @@ class LoginDialog extends Dialog
 
 	setMessage(message)
 	{
-		const translatedMessage = this.application.i18n.get(message);
-
 		if (!this.errorElem)
 		{
-			this.errorElem = this.addText(translatedMessage, "error block");
+      this.errorElem = this.addText(message, "error block");
 			this.bodyElem.insertBefore(this.errorElem, this.bodyElem.firstChild);
 		}
 		else
 		{
-			this.errorElem.textContent = translatedMessage;
+			I18N.set(this.errorElem, "textContent", message);
 		}
 		return this;
 	}

@@ -173,10 +173,12 @@ class Dialog
       this.dialogElem.style.height = this.dialogElem.style.maxHeight;
     }
     else
-    {
+    {      
       this.dialogElem.classList.remove("maximized");
-      this.dialogElem.style.width = this._width + "px";
-      this.dialogElem.style.height = this._height + "px";
+      this.dialogElem.style.width = 
+        this._width === "auto" ? "auto" : this._width + "px";
+      this.dialogElem.style.height = 
+        this._height === "auto" ? "auto" : this._height + "px";
     }
   }
 
