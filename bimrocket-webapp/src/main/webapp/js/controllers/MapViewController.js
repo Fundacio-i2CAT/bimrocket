@@ -41,6 +41,7 @@ class MapViewController extends Controller
     this.heightProvider = "";
     this.utmZoneNumber = 0; // 0: web mercator
     this.utmZoneLetter = "";
+    this.zOffset = 0;
     this.maxRequestsPerSecond = 100;
 
     this._mapView = null;
@@ -234,7 +235,7 @@ class MapViewController extends Controller
 
     const rotation = -Math.acos((u.x * v.y + u.y * v.y) / (vmod * umod));
 
-    const matrix = new THREE.Matrix4().makeTranslation(E0, N0, 0)
+    const matrix = new THREE.Matrix4().makeTranslation(E0, N0, this.zOffset)
       .multiply(new THREE.Matrix4().makeRotationZ(rotation))
       .multiply(new THREE.Matrix4().makeScale(scale, scale, 1))
       .multiply(new THREE.Matrix4().makeTranslation(-wm0.x, -wm0.y, 0))
@@ -245,7 +246,7 @@ class MapViewController extends Controller
 
   applyWebMercatorMatrix(object)
   {
-    object.position.set(0, 0, 0);
+    object.position.set(0, 0, this.zOffset);
     object.rotation.x = Math.PI / 2;
     object.scale.set(1, 1, 1);
   }
