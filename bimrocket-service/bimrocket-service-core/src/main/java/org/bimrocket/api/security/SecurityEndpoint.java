@@ -50,9 +50,12 @@ import static jakarta.ws.rs.core.MediaType.TEXT_HTML;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import static org.bimrocket.api.ApiResult.OK;
 import org.bimrocket.dao.expression.Expression;
 import org.bimrocket.dao.expression.OrderByExpression;
@@ -333,33 +336,14 @@ public class SecurityEndpoint
 
   private String getLoginSuccessPage()
   {
-    String message = "Login successfull.";
-    String targetOrigin = "*";
-
-    return """
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <title>Authentication completed</title>
-        </head>
-        <body>
-          <script>
-            (function() {
-              const message = "%s";
-              if (window.opener)
-              {
-                window.opener.postMessage(message, "%s");
-                window.close();
-              }
-              else
-              {
-                document.body.textContent = message;
-              }
-            })();
-          </script>
-        </body>
-      </html>
-    """.formatted(message, targetOrigin);
+    try
+    {
+      URL resource = this.getClass().getResource("/META-INF/oauth_login.html");
+      return IOUtils.toString(resource, "UTF-8");
+    }
+    catch (IOException ex)
+    {
+      return ex.toString();
+    }
   }
 }

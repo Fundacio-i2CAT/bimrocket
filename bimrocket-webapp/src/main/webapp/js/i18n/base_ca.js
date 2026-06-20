@@ -573,6 +573,8 @@ export const translations =
 
   "label.share_link_type" : "Tipus d'enllaç",
   "label.share_link" : "Enllaç:",
+  
+  "label.other_auth_systems": "Altres sistemes d'identificació:",  
 
   "option.no_groups" : "Sense agrupacions",
   "option.value_asc" : "Valor (ascendent)",

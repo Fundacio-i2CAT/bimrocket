@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Authentication completed.</title>
+    <style>
+      body
+      {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .message
+      {
+        text-align: center;
+      }
+
+      .message button
+      {
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="message">
+      <div>Login successful.</div>
+      <div>
+        <button onclick="window.close()">Close</button>
+      </div>
+    </div>
+    <script>
+      (function () {
+        const bc = new BroadcastChannel("auth");
+        bc.postMessage({status: "ok"});
+        window.close();
+      })();
+    </script>
+  </body>
+</html>

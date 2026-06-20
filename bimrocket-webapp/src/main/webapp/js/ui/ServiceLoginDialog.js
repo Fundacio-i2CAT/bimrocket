@@ -8,6 +8,7 @@
 import { LoginDialog } from "./LoginDialog.js";
 import { Controls } from "./Controls.js";
 import { Auth } from "./Auth.js";
+import { I18N } from "../i18n/I18N.js";
 import { ServerSession } from "../io/ServerSession.js";
 import { ServiceError } from "../io/Service.js";
 
@@ -22,8 +23,6 @@ class ServiceLoginDialog extends LoginDialog
 		this.onLogin = null;
 		this.onFailed = null;
     this.oauthContainer = null;
-
-    this.authSuccessListener = (event) => this.handleOAuthSuccess(event);
   }
 
  /**
@@ -108,7 +107,16 @@ class ServiceLoginDialog extends LoginDialog
   show()
   {
     super.show();
-    window.addEventListener("message", this.authSuccessListener);
+
+    this.bc = new BroadcastChannel("auth");
+    this.bc.onmessage = (event) => 
+    {
+      if (event.data.status === "ok")
+      {
+        this.hide();
+        this.onLogin?.();
+      }      
+    };
 
     this.loadOAuth2Providers();
 
@@ -117,13 +125,16 @@ class ServiceLoginDialog extends LoginDialog
 
   hide()
   {
-    super.hide();
-    window.removeEventListener("message", this.authSuccessListener);
+    this.bc?.close();
+    
     if (this.oauthWindow)
     {
       this.oauthWindow.close();
       this.oauthWindow = null;
     }
+    
+    super.hide();
+    
     return this;
   }
 
@@ -152,10 +163,15 @@ class ServiceLoginDialog extends LoginDialog
   addOAuth2Buttons(providers)
   {
     if (!this.oauthContainer)
-    {
+    {      
       this.oauthContainer = document.createElement("div");
       this.oauthContainer.className = "oauth_buttons";
       this.footerElem.append(this.oauthContainer);
+      
+      const authSystemsElem = document.createElement("div");
+      I18N.set(authSystemsElem, "textContent", "label.other_auth_systems");
+      this.oauthContainer.append(authSystemsElem);
+      this.application.i18n.update(authSystemsElem);
     }
     else
     {
@@ -188,15 +204,6 @@ class ServiceLoginDialog extends LoginDialog
         );
       }
     });
-  }
-
-  handleOAuthSuccess(event)
-  {
-    if (event.data.includes("success"))
-    {
-      this.hide();
-      this.onLogin?.();
-    }
   }
 
   login(username, password)

@@ -574,6 +574,8 @@ export const translations =
 
   "label.share_link_type" : "Link type",
   "label.share_link" : "Link:",
+  
+  "label.other_auth_systems": "Other identification systems:",
 
   "option.no_groups" : "Without groups",
   "option.value_asc" : "Value (ascending)",
