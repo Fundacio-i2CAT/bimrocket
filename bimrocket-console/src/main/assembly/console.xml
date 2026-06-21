@@ -13,13 +13,6 @@
       <outputDirectory>lib</outputDirectory>
     </fileSet>
     <fileSet>
-      <directory>target</directory>
-      <outputDirectory></outputDirectory>
-      <includes>
-        <include>bimrocket-console.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
       <directory>${basedir}/../</directory>
       <outputDirectory></outputDirectory>
       <includes>
@@ -66,4 +59,11 @@
       <outputDirectory></outputDirectory>
     </fileSet>
   </fileSets>
+  <files>
+    <file>
+      <source>${project.build.directory}/bimrocket-console-${project.version}.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>bimrocket-console.jar</destName>
+    </file>
+  </files>
 </assembly>

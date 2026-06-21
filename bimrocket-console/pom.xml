@@ -42,7 +42,7 @@
   </dependencies>
 
   <build>
-    <finalName>bimrocket-console</finalName>
+    <finalName>bimrocket-console-${project.version}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
@@ -92,7 +92,6 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 
 
