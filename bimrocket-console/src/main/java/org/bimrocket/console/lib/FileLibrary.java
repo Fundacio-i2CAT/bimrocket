@@ -33,6 +33,7 @@ package org.bimrocket.console.lib;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.bimrocket.console.annotation.Command;
 import org.bimrocket.console.annotation.CommandLibrary;
@@ -79,6 +80,7 @@ public class FileLibrary extends Library
     File[] files = dir.listFiles(f -> pattern.matcher(f.getName()).matches());
     if (files != null)
     {
+      Arrays.sort(files, (f1, f2) -> f1.getName().compareTo(f2.getName()));
       for (File file : files)
       {
         if (file.isDirectory())

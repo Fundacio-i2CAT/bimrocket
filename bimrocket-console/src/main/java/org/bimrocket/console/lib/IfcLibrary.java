@@ -438,14 +438,14 @@ public class IfcLibrary extends Library
     print(type.getTypeName());
     if (type instanceof ExpressCollection)
     {
-      print("[" + cursor.size() + "]");
+      print("[%,d]".formatted(cursor.size()));
     }
     println(":");
 
     for (int i = thisStart; i <= thisEnd; i++)
     {
       for (int j = 0; j < depth; j++) print(indent);
-      print("[" + i + "]");
+      print("[%,d]".formatted(i));
       if (type instanceof ExpressEntity entity)
       {
         print(" ");
