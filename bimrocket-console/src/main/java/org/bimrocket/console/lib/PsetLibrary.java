@@ -33,11 +33,10 @@ package org.bimrocket.console.lib;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import org.bimrocket.console.annotation.Command;
 import org.bimrocket.console.annotation.CommandLibrary;
 import org.bimrocket.console.Library;
-import org.bimrocket.console.Status;
 import org.bimrocket.express.data.ExpressCursor;
 import org.bimrocket.express.data.ExpressData;
 import org.bimrocket.express.data.ExpressDataFinder;
@@ -59,105 +58,114 @@ public class PsetLibrary extends Library
     super(context, out);
   }
 
-  public Status addPsetRule(
+  public void addPsetRule(
     String pset,
     String property,
     String newName)
   {
-    return addPsetRule(pset, property, newName, null);
+    addPsetRule(pset, property, newName, null);
   }
 
   @Command(
     description = "Add a pset transform rule.",
-    parameters = "pset:string, property:string, newName:string, newValue:function")
-  public Status addPsetRule(
+    arguments = "pset:String, property:String, newName:String, updater:function")
+  public void addPsetRule(
     String pset,
     String property,
     String newName,
-    Function<Object, Object> newValue)
+    Consumer<ExpressCursor> updater)
   {
     pset = pset == null ? "" : pset.trim();
     property = property == null ? "" : property.trim();
+    newName = newName == null ? "" : newName.trim();
 
     if (pset.length() == 0 && property.length() == 0)
     {
-      return new Status(1, "pset or property can not be blank.");
+      throw new RuntimeException("pset or property are required.");
     }
 
-    if (newName == null || newName.trim().length() == 0)
+    if (newName.length() == 0 && updater == null)
     {
-      return new Status(1, "newName can not be blank.");
+      throw new RuntimeException("newName or updater are required.");
     }
 
     String path = pset + "/" + property;
-    rules.put(path, new Rule(pset, property, newName, newValue));
-
-    return Status.OK;
+    rules.put(path, new Rule(pset, property, newName, updater));
   }
 
   @Command(
     description = "Clear all pset transform rules.")
-  public Status clearPsetRules()
+  public void clearPsetRules()
   {
     rules.clear();
-    return Status.OK;
   }
 
   @Command(
     description = "Transform all psets with the current rules."
   )
-  public Status transformPsets()
+  public void transformPsets()
   {
     ExpressData data = data();
     if (data == null)
     {
-      return new Status(1, "No file loaded.");
+      throw new RuntimeException("No file loaded.");
     }
 
-    Function<ExpressCursor, Boolean> filter = cursor ->
-    {
-      return cursor.isTypeName("IfcPropertySet");
-    };
-
-    ExpressDataFinder finder = new ExpressDataFinder(filter);
-    boolean found = finder.find(data().getRoot());
-    while (found)
-    {
-      ExpressCursor cursor = finder.cursor();
-      String psetName = cursor.get("Name");
-
-      // rename Pset
-      Rule psetRule = rules.get(psetName + "/");
-      if (psetRule != null)
+    ExpressDataFinder.create()
+      .filter(cur -> cur.is("IfcPropertySet"))
+      .action(cur ->
       {
-        cursor.set("Name", psetRule.newName);
-        println("%s: rename %s to %s"
-          .formatted(cursor.getId(), psetName, psetRule.newName));
-      }
+        String globalId = cur.get("GlobalId");
+        String psetName = cur.get("Name");
 
-      // rename Properties
-      cursor.enter("HasProperties");
-      for (int i = 0; i < cursor.size(); i++)
-      {
-        cursor.enter(i);
-        String propName = cursor.get("Name");
-
-        Rule propRule = rules.get(psetName + "/" + propName);
-        if (propRule == null) propRule = rules.get("/" + propName);
-
-        if (propRule != null)
+        // rename Pset
+        Rule psetRule = rules.get(psetName + "/");
+        if (psetRule != null && psetRule.newName != null)
         {
-          cursor.set("Name", propRule.newName);
-          println("%s: rename %s.%s to %s"
-            .formatted(cursor.getId(), psetName, propName, propRule.newName));
+          cur.set("Name", psetRule.newName);
+          println("%s: rename %s to %s"
+            .formatted(cur.getId(), psetName, psetRule.newName));
         }
-        cursor.exit();
-      }
-      cursor.exit();
 
-      found = finder.next(false);
-    }
-    return Status.OK;
+        // rename Properties
+        cur.enter("HasProperties");
+        for (int i = 0; i < cur.size(); i++)
+        {
+          cur.enter(i);
+
+          if (cur.is("IfcPropertySingleValue"))
+          {
+            String propName = cur.get("Name");
+
+            Rule propRule = rules.get(psetName + "/" + propName);
+            if (propRule == null) propRule = rules.get("/" + propName);
+
+            if (propRule != null)
+            {
+              if (propRule.newName != null)
+              {
+                cur.set("Name", propRule.newName);
+                println("%s: rename %s.%s to %s"
+                  .formatted(globalId, psetName, propName, propRule.newName));
+              }
+
+              if (propRule.updater != null)
+              {
+                propRule.updater.accept(cur);
+                println("%s: update %s.%s"
+                  .formatted(globalId, psetName, propName));
+              }
+            }
+          }
+          cur.exit();
+        }
+        cur.exit();
+
+        return true;
+      })
+      .minDepth(0)
+      .maxDepth(0)
+      .find(cursor());
   }
 
   class Rule
@@ -165,15 +173,15 @@ public class PsetLibrary extends Library
     final String pset;
     final String property;
     final String newName;
-    final Function<Object, Object> newValue;
+    final Consumer<ExpressCursor> updater;
 
     Rule(String pset, String property,
-      String newName, Function<Object, Object> newValue)
+      String newName, Consumer<ExpressCursor> updater)
     {
       this.pset = pset;
       this.property = property;
       this.newName = newName;
-      this.newValue = newValue;
+      this.updater = updater;
     }
   }
 }

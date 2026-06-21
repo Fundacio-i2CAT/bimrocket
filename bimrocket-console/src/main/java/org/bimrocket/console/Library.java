@@ -30,11 +30,10 @@
  */
 package org.bimrocket.console;
 
+import java.io.File;
 import org.bimrocket.console.annotation.Command;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import org.bimrocket.console.annotation.CommandLibrary;
 import org.bimrocket.express.data.ExpressCursor;
 import org.bimrocket.express.data.ExpressData;
@@ -50,7 +49,7 @@ public abstract class Library
   public static final String LIBS_VAR = "libs";
   public static final String DATA_VAR = "data";
   public static final String CURSOR_VAR = "cursor";
-  public static final String SELECTION_VAR = "selection";
+  public static final String CWD_VAR = "cwd";
 
   final protected Context context;
   final protected Value bindings;
@@ -79,6 +78,32 @@ public abstract class Library
     return context;
   }
 
+  protected String argString(String command, String name, String defaultValue)
+  {
+    Value value = context.eval("js", "globalThis.args?.%s?.%s || null"
+      .formatted(command, name));
+    if (value.isNull())
+    {
+      value = context.eval("js",
+        "((globalThis.args ||= {}).%s ||= {}).%s = \"%s\""
+        .formatted(command, name, defaultValue.replace("\\", "\\\\")));
+    }
+    return value.as(String.class);
+  }
+
+  protected int argInteger(String command, String name, int defaultValue)
+  {
+    Value value = context.eval("js", "globalThis.args?.%s?.%s || null"
+      .formatted(command, name));
+    if (value.isNull())
+    {
+      value = context.eval("js",
+        "((globalThis.args ||= {}).%s ||= {}).%s = %d"
+        .formatted(command, name, defaultValue));
+    }
+    return value.as(Integer.class);
+  }
+
   protected ExpressCursor cursor()
   {
     Value member = bindings.getMember(CURSOR_VAR);
@@ -101,19 +126,43 @@ public abstract class Library
     bindings.putMember(DATA_VAR, data);
   }
 
-  @SuppressWarnings("unchecked")
-  protected Map<String, ExpressCursor> selection()
+  protected File cwd()
   {
-    Map<String, ExpressCursor> selection;
-    Value member = bindings.getMember(SELECTION_VAR);
+    Value member = bindings.getMember(CWD_VAR);
     if (member == null)
     {
-      selection = new HashMap<>();
-      bindings.putMember(SELECTION_VAR, selection);
+      return new File(System.getProperty("user.dir"));
     }
-    else selection = member.as(Map.class);
+    else
+    {
+      return member.as(File.class);
+    }
+  }
 
-    return selection;
+  protected void cwd(File cwd)
+  {
+    bindings.putMember(CWD_VAR, cwd);
+  }
+
+  protected File getFile(String path)
+  {
+    try
+    {
+      File file;
+      if (path.startsWith("/") || path.contains(":"))
+      {
+        file = new File(path);
+      }
+      else
+      {
+        file = new File(cwd(), path);
+      }
+      return file.getCanonicalFile();
+    }
+    catch (Exception ex)
+    {
+      return null;
+    }
   }
 
   protected void print(Object object)

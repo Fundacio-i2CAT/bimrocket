@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -38,8 +38,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -113,33 +111,33 @@ public class StepExporter
     export(new File(filename));
   }
 
-  public void export(String filename, Collection<ExpressCursor> cursors)
+  public void export(String filename, ExpressCursor cursor)
     throws IOException
   {
-    export(new File(filename), cursors);
+    export(new File(filename), cursor);
   }
 
   public void export(File file) throws IOException
   {
-    export(file, Collections.emptyList());
+    export(file, null);
   }
 
-  public void export(File file, Collection<ExpressCursor> cursors)
+  public void export(File file, ExpressCursor cursor)
     throws IOException
   {
     try (BufferedWriter writer =
           new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file))))
     {
-      export(writer, cursors);
+      export(writer, cursor);
     }
   }
 
   public void export(Writer writer)
   {
-    export(writer, Collections.emptyList());
+    export(writer, null);
   }
 
-  public void export(Writer writer, Collection<ExpressCursor> cursors)
+  public void export(Writer writer, ExpressCursor cursor)
   {
     tagCount = 0;
     entityTags.clear();
@@ -151,19 +149,13 @@ public class StepExporter
       fileSchema.getSchemas().add(schema.getName());
     }
 
-    if (cursors.isEmpty())
+    if (cursor == null)
     {
-      registerEntities(data.getRoot());
+      registerEntities(data.getCursor());
     }
     else
     {
-      for (ExpressCursor cursor : cursors)
-      {
-        if (cursor.getData() == data)
-        {
-          registerEntities(cursor);
-        }
-      }
+      registerEntities(cursor);
     }
 
     printer = new PrintWriter(writer);
@@ -191,7 +183,7 @@ public class StepExporter
 
   protected void printHeaderData()
   {
-    ExpressCursor cursor = headerData.getRoot();
+    ExpressCursor cursor = headerData.getCursor();
     for (int i = 0; i < cursor.size(); i++)
     {
       cursor.enter(i);

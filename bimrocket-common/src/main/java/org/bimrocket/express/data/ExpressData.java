@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -31,6 +31,7 @@
 package org.bimrocket.express.data;
 
 import org.bimrocket.express.ExpressSchema;
+import java.util.Set;
 
 /**
  *
@@ -38,11 +39,47 @@ import org.bimrocket.express.ExpressSchema;
  */
 public interface ExpressData
 {
+  public static String MAIN_BRANCH = "main";
+
   /**
    * Gets Express schema of this model
    * @return the model schema
    */
   public abstract ExpressSchema getSchema();
 
-  public ExpressCursor getRoot();
+  /**
+   * Gets a cursor on the main branch of this ExpressData.
+   *
+   * @return the ExpressCursor
+   */
+  public ExpressCursor getCursor();
+
+  /**
+   * Gets a cursor on the specified branch of this ExpressData
+   * The group is created if it does not exists.
+   *
+   * @param branch the branch name
+   * @return the ExpressCursor
+   */
+  public ExpressCursor getCursor(String branch);
+
+  /**
+   * Gets the branch names of this ExpressData
+   *
+   * @return a list of branch names
+   */
+  public Set<String> getBranchNames();
+
+  /**
+   * Removes the specified branch.
+   *
+   * @param branch the branch name to remove
+   */
+  public void removeBranch(String branch);
+
+
+  /**
+   * Removes all branches.
+   */
+  public void removeBranches();
 }

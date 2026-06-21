@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.bimrocket.console.lib.FileLibrary;
 import org.bimrocket.console.lib.PsetLibrary;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
@@ -74,6 +75,7 @@ public class Console
     System.setProperty("polyglot.engine.WarnInterpreterOnly", "false");
     libraryClasses.add(IfcLibrary.class);
     libraryClasses.add(PsetLibrary.class);
+    libraryClasses.add(FileLibrary.class);
 
     Console console = new Console();
     if (args.length == 0)
@@ -179,24 +181,17 @@ public class Console
           if (command != null && command.length() > 0)
           {
             Value result = context.eval("js", command);
-            if (result.isHostObject())
+            if (!result.isNull())
             {
-              Object object = result.asHostObject();
-              if (object instanceof Status status)
-              {
-                if (status.getCode() > 0)
-                {
-                  out.println(status.getMessage());
-                }
-                continue;
-              }
+              out.println(result);
             }
-            out.println(result);
           }
         }
         catch (PolyglotException ex)
         {
-          out.println("Error: " + ex.getMessage());
+          String message = ex.getMessage();
+          if (message == null) message = ex.toString();
+          out.println("Error: " + message);
         }
       }
     }
@@ -235,12 +230,10 @@ public class Console
     String command = index == -1 ? line : line.substring(0, index);
     if (!commands.contains(command)) return line;
 
+    List<String> args = new ArrayList<>();
     StringBuilder buffer = new StringBuilder();
-    buffer.append(command);
-    buffer.append("(");
     boolean inArg = false;
     int quote = -1;
-    int argCount = 0;
 
     for (int i = command.length(); i <= line.length(); i++)
     {
@@ -257,52 +250,64 @@ public class Console
           buffer.append(ch);
           if (ch == (char)quote)
           {
+            args.add(buffer.toString());
             inArg = false;
             quote = -1;
           }
         }
         else
         {
-          if (ch == 0)
+          if (ch == ' ' || ch == 0)
           {
-            // skip
+            args.add(buffer.toString());
+            inArg = false;
           }
-          else if (Character.isDigit(ch))
+          else
           {
             buffer.append(ch);
           }
-          else if (ch == ' ')
-          {
-            inArg = false;
-          }
-          else return line;
         }
       }
       else // not inArg
       {
-        if (ch == 0 || ch == ' ')
+        if (ch == '(')
+        {
+          return line;
+        }
+        else if (ch == 0 || ch == ' ')
         {
           // skip
         }
-        else if (Character.isDigit(ch) || ch == '"' || ch == '\'')
+        else
         {
-          if (argCount > 0)
-          {
-            buffer.append(", ");
-          }
+          buffer.setLength(0);
           buffer.append(ch);
           inArg = true;
-          argCount++;
 
           if (ch == '"' || ch == '\'')
           {
             quote = ch;
           }
         }
-        else return line;
       }
     }
+
+    buffer.setLength(0);
+    buffer.append(command);
+    buffer.append("(");
+    for (int i = 0; i < args.size(); i++)
+    {
+      if (i > 0) buffer.append(", ");
+      String arg = args.get(i);
+      char ch = arg.charAt(0);
+      if ("+-0123456789'\"".indexOf(ch) == -1)
+      {
+        arg = '"' + arg + '"';
+      }
+      buffer.append(arg);
+    }
     buffer.append(")");
+
     line = buffer.toString();
     System.out.println(line);
     return line;
@@ -349,7 +354,7 @@ public class Console
           if (name.length() == 0) name = method.getName();
 
           System.out.println("- " + name +
-            "(" + annotation.parameters() + "): " + annotation.description());
+            "(" + annotation.arguments() + "): " + annotation.description());
         }
       }
     }

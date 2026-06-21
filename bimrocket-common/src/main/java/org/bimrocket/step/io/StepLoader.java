@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -116,13 +116,13 @@ public class StepLoader
       {
         if (token.isKeyword("HEADER"))
         {
-          cursor = headerData.getRoot();
+          cursor = headerData.getCursor();
           index = 0;
         }
         else if (token.isKeyword("DATA"))
         {
           processFileSchema();
-          cursor = data.getRoot();
+          cursor = data.getCursor();
           index = 0;
         }
         else if (token.isKeyword("ENDSEC"))
@@ -183,7 +183,7 @@ public class StepLoader
             }
             else // backward reference
             {
-              if (rootCursor == null) rootCursor = data.getRoot();
+              if (rootCursor == null) rootCursor = data.getCursor();
               ExpressCursor tagCursor = rootCursor.enter(tagIndex);
               cursor.set(index++, tagCursor);
               rootCursor.exit();
@@ -195,7 +195,7 @@ public class StepLoader
         {
           if (indexStack.isEmpty() && currentTag != null)
           {
-            if (rootCursor == null) rootCursor = data.getRoot();
+            if (rootCursor == null) rootCursor = data.getCursor();
             int tagIndex = rootCursor.size() - 1;
             backwardRefMap.put(currentTag, tagIndex);
             ArrayList<Reference> references = forwardRefMap.remove(currentTag);

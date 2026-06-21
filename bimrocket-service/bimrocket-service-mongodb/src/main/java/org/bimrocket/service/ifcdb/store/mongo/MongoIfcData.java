@@ -75,6 +75,9 @@ public class MongoIfcData extends AbstractListData<Document> implements IfcData
   public void updateCache()
   {
     cache.clear();
+    
+    var elements = getElements();
+    
     for (Document element : elements)
     {
       if (element.get("_id") instanceof ObjectId objectId)
@@ -155,7 +158,7 @@ public class MongoIfcData extends AbstractListData<Document> implements IfcData
   protected void addCollectionValue(List<Object> collection, Object value,
     ExpressType type)
   {
-    if (elements.equals(collection))
+    if (getElements().equals(collection))
     {
       collection.add(value); // value is Document (entity)
     }
@@ -178,7 +181,7 @@ public class MongoIfcData extends AbstractListData<Document> implements IfcData
   protected void setCollectionValue(List<Object> collection, int index,
     Object value, ExpressType type)
   {
-    if (elements.equals(collection))
+    if (getElements().equals(collection))
     {
       collection.set(index, value); // value is Document (entity)
     }

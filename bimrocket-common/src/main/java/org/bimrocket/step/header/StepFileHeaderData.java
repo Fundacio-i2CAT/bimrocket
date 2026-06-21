@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -46,7 +46,7 @@ import org.bimrocket.express.data.AbstractListData;
  * @author realor
  */
 
-public class StepFileHeaderData extends AbstractListData<StepFileHeader>
+public final class StepFileHeaderData extends AbstractListData<StepFileHeader>
 {
   static ExpressSchema schema = getHeaderSchema();
   private final StepFileDescription fileDescription = new StepFileDescription();
@@ -56,6 +56,7 @@ public class StepFileHeaderData extends AbstractListData<StepFileHeader>
   public StepFileHeaderData()
   {
     super(schema);
+    var elements = getElements();
     elements.add(fileDescription);
     elements.add(fileName);
     elements.add(fileSchema);
@@ -152,6 +153,7 @@ public class StepFileHeaderData extends AbstractListData<StepFileHeader>
   protected void addCollectionValue(List<Object> collection, Object value,
     ExpressType type)
   {
+    var elements = getElements();
     if (elements.equals(collection)) return;
     super.addCollectionValue(collection, value, type);
   }
@@ -160,6 +162,7 @@ public class StepFileHeaderData extends AbstractListData<StepFileHeader>
   protected void setCollectionValue(List<Object> collection, int index, Object value,
     ExpressType type)
   {
+    var elements = getElements();
     if (elements.equals(collection)) return;
     super.setCollectionValue(collection, index, value, type);
   }

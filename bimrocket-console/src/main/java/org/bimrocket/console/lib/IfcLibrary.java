@@ -36,11 +36,12 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.function.Function;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Predicate;
 import org.bimrocket.console.annotation.Command;
 import org.bimrocket.console.annotation.CommandLibrary;
 import org.bimrocket.console.Library;
-import org.bimrocket.console.Status;
 import org.bimrocket.express.ExpressCollection;
 import org.bimrocket.express.ExpressEntity;
 import org.bimrocket.express.ExpressType;
@@ -62,7 +63,7 @@ import org.graalvm.polyglot.Context;
   description = "IFC")
 public class IfcLibrary extends Library
 {
-  ExpressDataFinder finder = null;
+  private String branch;
 
   public IfcLibrary(Context context, PrintStream out)
   {
@@ -76,107 +77,359 @@ public class IfcLibrary extends Library
 
     context.eval("js",
       "const C = (value) => new org.bimrocket.express.ExpressConstant(value)");
+
+    argInteger("list", "start", 0);
+    argInteger("list", "count", 20);
+
+    argInteger("find", "maxResults", 0);
+    argInteger("find", "minDepth", 0);
+    argInteger("find", "maxDepth", 1);
+
+    argInteger("tree", "maxDepth", 1);
+    argInteger("tree", "count", 10);
+
+    argInteger("histogram", "maxDepth", 1);
+
+    argString("find", "resultBranch", "output");
+    argString("findRoots", "resultBranch", "roots");
   }
 
   @Command(
     name = "loadIFC",
     description = "Load an IFC file.",
-    parameters = "ifc_file:string")
-  public Status load(String filename) throws IOException
+    arguments = "filename:String")
+  public void load(String filename) throws IOException
   {
-    File file = new File(filename);
+    File file = getFile(filename);
     if (!file.exists() || !file.isFile())
-      return new Status(1, "Can't open file");
+      throw new IOException("Can't open file %s".formatted(file.getAbsolutePath()));
     double size = ((double)file.length()) / (1024L * 1024L);
 
-    println("Loading from %s (%.2f MB)...".formatted(filename, size));
+    println("Loading from %s (%.2f MB)...".formatted(file.getAbsolutePath(), size));
     Chronometer chrono = new Chronometer();
     StepLoader loader = new StepLoader();
-    loader.load(filename);
+    loader.load(file);
     data(loader.getData());
-    cursor(data().getRoot());
+    cursor(data().getCursor());
     double seconds = chrono.seconds();
     println("Load completed in " + seconds + " seconds.");
 
-    return Status.OK;
+    this.branch = ExpressData.MAIN_BRANCH;
   }
 
   @Command(
     name = "exportIFC" ,
     description = "Export an IFC file.",
-    parameters = "ifc_file:string")
-  public Status export(String filename) throws IOException
+    arguments = "filename:String")
+  public void export(String filename) throws IOException
   {
-    ExpressCursor cursor = cursor();
-
-    if (cursor == null)
+    if (cursor() == null)
     {
-      return new Status(1, "No file loaded.");
+      throw new IOException("No file loaded.");
     }
-    println("Exporting to " + filename + "...");
+    File file = getFile(filename);
+    if (!file.getParentFile().exists())
+    {
+      if (!file.getParentFile().mkdirs())
+        throw new IOException("Can't create folders.");
+    }
+    println("Exporting to " + file.getAbsolutePath() + "...");
     Chronometer chrono = new Chronometer();
     StepExporter exporter = new StepExporter(data());
-    exporter.export(filename, selection().values());
+
+    exporter.export(file, cursor());
+
     double seconds = chrono.seconds();
     println("Export completed in " + seconds + " seconds.");
-    return Status.OK;
+  }
+
+  public void branch()
+  {
+    branch(null);
   }
 
   @Command(
-    description = "Generate an IFC class histogram.")
-  public Status histogram()
+    description = "Move the cursor to the given branch.",
+    arguments = "[branch:String]")
+  public void branch(String branch)
   {
-    ExpressCursor cursor = cursor();
     ExpressData data = data();
+    if (data ==  null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
 
-    if (cursor == null)
+    if (branch != null)
     {
-      return new Status(1, "No file loaded.");
+      this.branch = branch;
+      cursor(data.getCursor(branch));
     }
+
+    println("Current branch is " + this.branch);
+  }
+
+  @Command(
+    description = "Print the data branch names.")
+  public void branches()
+  {
+    if (data() == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+
+    Set<String> branchNames = data().getBranchNames();
+    for (String branchName : branchNames)
+    {
+      String current = branchName.equals(branch) ? " (current)" : "";
+      println("- %s%s".formatted(branchName, current));
+    }
+  }
+
+  @Command(
+    description = "Remove the specified branch.",
+    arguments = "branch:String")
+  public void removeBranch(String branch)
+  {
+    if (data() == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+
+    if (branch == null)
+    {
+      throw new RuntimeException("Invalid branch.");
+    }
+
+    if (branch.equals(this.branch))
+    {
+      throw new RuntimeException("Can't remove the current branch.");
+    }
+
+    data().removeBranch(branch);
+  }
+
+  public void histogram()
+  {
+    histogram(argInteger("histogram", "maxDepth", 1));
+  }
+
+  @Command(
+    description = "Generate an IFC entity class histogram.",
+    arguments = "[maxDepth:int]")
+  public void histogram(int maxDepth)
+  {
+    if (data() == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+
     HashMap<String, Integer> map = new HashMap<>();
-    ExpressCursor cur = data.getRoot();
-    int size = cur.size();
-    for (int i = 0; i < size; i++)
-    {
-      cur.enter(i);
-      String typeName = cur.getType().getTypeName();
-      Integer count = map.get(typeName);
-      if (count == null) count = 0;
-      count++;
-      map.put(typeName, count);
-      cur.exit();
-    }
+
+    int total = ExpressDataFinder.create()
+      .action(cur ->
+      {
+        ExpressType type = cur.getType();
+        String typeName = type.getTypeName();
+        Integer count = map.get(typeName);
+        if (count == null) count = 0;
+        count++;
+        map.put(typeName, count);
+        return true;
+      })
+      .minDepth(0)
+      .maxDepth(maxDepth)
+      .find(cursor());
+
+    println("Entities found: " + total);
+
     ArrayList<String> keys = new ArrayList<>(map.keySet());
     Collections.sort(keys);
     for (String key : keys)
     {
       println(key + ": " + map.get(key));
     }
-    return Status.OK;
   }
 
-  public Status list()
+  public void list()
   {
-    return list(0);
+    list(argInteger("list", "start", 0));
   }
 
-  public Status list(int start)
+  public void list(int start)
   {
-    return list(start, 20);
+    list(start, argInteger("list", "count", 20));
   }
 
   @Command(
-    description = "List the items of the current object.",
-    parameters = "[start=0], [count=20]")
-  public Status list(int start, int count)
+    description = "Print the objects referenced by the current cursor as a list.",
+    arguments = "[start:int], [count:int]")
+  public void list(int start, int count)
   {
-    if (cursor() == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
     ExpressCursor cursor = cursor();
+    if (cursor == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+    printCursor(cursor, start, start + count, 0);
+  }
 
+  public void tree()
+  {
+    tree(argInteger("tree", "maxDepth", 1));
+  }
+
+  public void tree(int maxDepth)
+  {
+    tree(maxDepth, argInteger("tree", "count", 10));
+  }
+
+  @Command(
+    description = "Print the objects referenced by the current cursor as a tree.",
+    arguments = "[maxDepth:int], [count:int]")
+  public void tree(int maxDepth, int count)
+  {
+    ExpressCursor cursor = cursor();
+    if (cursor == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+    cursor = cursor.copy();
+    printCursor(cursor, 0, count, maxDepth);
+  }
+
+  @Command(
+    description = "Move the cursor to the object at the specified index or name.",
+    arguments = "index:int | name:String")
+  public void enter(int index)
+  {
+    ExpressCursor cursor = cursor();
+    if (cursor == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+    cursor.enter(index);
+  }
+
+  public void enter(String name)
+  {
+    ExpressCursor cursor = cursor();
+    if (cursor == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+    cursor.enter(name);
+  }
+
+  @Command(
+    description = "Move the cursor to the parent object.")
+  public void exit()
+  {
+    ExpressCursor cursor = cursor();
+    if (cursor == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+    if (cursor.getDepth() == 0)
+    {
+      throw new RuntimeException("Can't go parent.");
+    }
+    cursor.exit();
+  }
+
+  public void find(Predicate<ExpressCursor> filter)
+  {
+    find(filter, argString("find", "resultBranch", "output"));
+  }
+
+  @Command(
+    description = "Find objects that meet the specified filter conditions.",
+    arguments = "filter:function, [resultBranch:String]")
+  public void find(Predicate<ExpressCursor> filter, String resultBranch)
+  {
+    if (data() == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+
+    data().removeBranch(resultBranch);
+
+    ExpressCursor resultCursor = data().getCursor(resultBranch);
+
+    int count = ExpressDataFinder.create()
+      .filter(filter)
+      .action(cur -> { resultCursor.add(cur); return true; })
+      .minDepth(argInteger("find", "minDepth", 0))
+      .maxDepth(argInteger("find", "maxDepth", 1))
+      .maxResults(argInteger("find", "maxResults", 0))
+      .find(cursor());
+
+    println("Matches found: " + count);
+
+    this.branch = resultBranch;
+    cursor(data().getCursor(this.branch));
+    println("Current branch is " + this.branch);
+  }
+
+  public void findRoots()
+  {
+    findRoots(argString("findRoots", "resultBranch", "roots"));
+  }
+
+  @Command(
+    description = "Find root objects for the current branch.",
+    arguments = "[resultBranch:String]")
+  public void findRoots(String resultBranch)
+  {
+    if (data() == null)
+    {
+      throw new RuntimeException("No file loaded.");
+    }
+
+    data().removeBranch(resultBranch);
+
+    Set<String> noRoots = new HashSet<>();
+
+    ExpressDataFinder.create()
+    .action(c ->
+    {
+      noRoots.add(c.getId());
+      return true;
+    })
+    .minDepth(2)
+    .maxDepth(0)
+    .find(data().getCursor(branch));
+
+    ExpressCursor resultCursor = data().getCursor(resultBranch);
+
+    // extract roots
+    ExpressCursor cur = data().getCursor(branch);
+    for (int i = 0; i < cur.size(); i++)
+    {
+      cur.enter(i);
+      if (cur.getType().isEntity())
+      {
+        if (!noRoots.contains(cur.getId())) resultCursor.add(cur);
+      }
+      cur.exit();
+    }
+
+    this.branch = resultBranch;
+    cursor(data().getCursor(this.branch));
+    println("Current branch is " + this.branch);
+  }
+
+  private void printCursor(ExpressCursor cursor,
+    int start, int end, int maxDepth)
+  {
     ExpressType type = cursor.getType();
+    int depth = cursor.getDepth();
+    String indent = "  ";
+    int size = cursor.size();
+    int thisStart = Math.min(start, size - 1);
+    int thisEnd = Math.min(end, size - 1);
+
+    for (int j = 0; j < depth; j++) print(indent);
+
     String id = cursor.getId();
     if (id != null)
     {
@@ -188,25 +441,31 @@ public class IfcLibrary extends Library
       print("[" + cursor.size() + "]");
     }
     println(":");
-    int end = Math.min(start + count, cursor.size());
-    for (int i = start; i < end; i++)
+
+    for (int i = thisStart; i <= thisEnd; i++)
     {
+      for (int j = 0; j < depth; j++) print(indent);
+      print("[" + i + "]");
       if (type instanceof ExpressEntity entity)
       {
-        print(i + " ");
+        print(" ");
         print(entity.getAllAttributes().get(i).getName());
-      }
-      else
-      {
-        print(i);
       }
       print(": ");
       Object value = cursor.get(i);
       if (CONTAINER.equals(value))
       {
         cursor.enter(i);
-        print(cursor().getType().getTypeName());
-        println("[...]");
+        if (depth < maxDepth)
+        {
+          println();
+          printCursor(cursor, start, end, maxDepth);
+        }
+        else
+        {
+          print(cursor.getType().getTypeName());
+          println("[...]");
+        }
         cursor.exit();
       }
       else
@@ -214,157 +473,6 @@ public class IfcLibrary extends Library
         println(value);
       }
     }
-    return Status.OK;
-  }
-
-  @Command(
-    description = "Move the cursor to the object at the specified index or name.",
-    parameters = "index:number | name:string")
-  public Status enter(int index)
-  {
-    ExpressCursor cursor = cursor();
-    if (cursor == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
-    cursor.enter(index);
-    return Status.OK;
-  }
-
-  public Status enter(String name)
-  {
-    ExpressCursor cursor = cursor();
-    if (cursor == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
-    cursor.enter(name);
-    return Status.OK;
-  }
-
-  @Command(
-    description = "Move the cursor to the parent object.")
-  public Status exit()
-  {
-    ExpressCursor cursor = cursor();
-    if (cursor == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
-    if (cursor.getDepth() == 0)
-    {
-      return new Status(1, "Can't go parent.");
-    }
-    cursor.exit();
-    return Status.OK;
-  }
-
-  @Command(
-    description = "Move the cursor to the root object.")
-  public Status root()
-  {
-    ExpressCursor cursor = cursor();
-    if (cursor == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
-    cursor(data().getRoot());
-    return Status.OK;
-  }
-
-  @Command(
-    description = "Select the object referenced by the cursor.")
-  public Status select()
-  {
-    ExpressCursor cursor = cursor();
-    if (cursor == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
-
-    if (!(cursor.getType() instanceof ExpressEntity))
-    {
-      return new Status(1, "Not an entity.");
-    }
-
-    String id = cursor.getId();
-    selection().put(id, cursor);
-    println("Entity #" + id + " selected.");
-    return Status.OK;
-  }
-
-  public Status unselect()
-  {
-    return unselect(false);
-  }
-
-  @Command(
-    description = "Unselect the current object or all selected objects.",
-    parameters = "allObjects:boolean")
-  public Status unselect(boolean all)
-  {
-    if (all)
-    {
-      selection().clear();
-      println(("Selection cleared."));
-      return Status.OK;
-    }
-
-    ExpressCursor cursor = cursor();
-    if (cursor == null)
-    {
-      return new Status(1, "No file loaded.");
-    }
-
-    String id = cursor.getId();
-    selection().remove(id);
-    return Status.OK;
-  }
-
-  @Command(
-    description = "Find objects that meet the specified criteria.",
-    parameters = "criteria:function")
-  public Status find(Function<ExpressCursor, Boolean> filter)
-  {
-    finder = new ExpressDataFinder(filter);
-    if (finder.find(data().getRoot()))
-    {
-      cursor(finder.cursor());
-      println("Match found: #" + cursor().getId());
-    }
-    else
-    {
-      println("Not found.");
-      finder = null;
-    }
-    return Status.OK;
-  }
-
-  public Status next()
-  {
-    return next(false);
-  }
-
-  @Command(
-    description = "Find the next object that meets the specified criteria.",
-    parameters = "[skipChildren:false]")
-  public Status next(boolean skipChildren)
-  {
-    if (finder == null)
-    {
-      return new Status(1, "Call find first.");
-    }
-
-    if (finder.next(skipChildren))
-    {
-      cursor(finder.cursor());
-      println("Match found: #" + cursor().getId());
-    }
-    else
-    {
-      println("Not found.");
-      finder = null;
-    }
-    return Status.OK;
   }
 }
+

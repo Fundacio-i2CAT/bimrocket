@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -50,7 +50,7 @@ public class GenericDataTest
     ExpressSchema schema = schemaLoader.load("schema:IFC4");
 
     GenericData data = new GenericData(schema);
-    ExpressCursor cursor = data.getRoot();
+    ExpressCursor cursor = data.getCursor();
 
     cursor
       .create("IfcProject")
@@ -105,7 +105,7 @@ public class GenericDataTest
     {
       GenericDataTest test = new GenericDataTest();
       var data = test.createGenericData();
-      System.out.println(data.elements);
+      System.out.println(data.getElements());
     }
     catch (Exception ex)
     {

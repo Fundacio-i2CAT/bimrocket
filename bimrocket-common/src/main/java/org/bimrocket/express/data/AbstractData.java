@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -32,8 +32,12 @@ package org.bimrocket.express.data;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.bimrocket.express.ExpressAttribute;
 import org.bimrocket.express.ExpressCollection;
 import org.bimrocket.express.ExpressEntity;
@@ -53,7 +57,7 @@ import org.bimrocket.express.ExpressType;
 public abstract class AbstractData<E, C> implements ExpressData
 {
   final ExpressSchema schema;
-  protected List<E> elements = new ArrayList<>();
+  protected final Map<String, List<E>> branches = new HashMap<>();
   protected String definedTypeValueName = "value";
 
   public AbstractData(ExpressSchema schema)
@@ -68,14 +72,51 @@ public abstract class AbstractData<E, C> implements ExpressData
   }
 
   @Override
-  public ExpressCursor getRoot()
+  public ExpressCursor getCursor()
   {
-    return new Cursor(elements);
+    return new Cursor(getElements());
   }
+
+  @Override
+  public ExpressCursor getCursor(String branch)
+  {
+    return new Cursor(getElements(branch));
+  }
+
+  @Override
+  public Set<String> getBranchNames()
+  {
+    return Collections.unmodifiableSet(branches.keySet());
+  }
+
+  @Override
+  public void removeBranch(String group)
+  {
+    branches.remove(group);
+  }
+
+  @Override
+  public void removeBranches()
+  {
+    branches.clear();
+  }
+
+  // internal methods
 
   public List<E> getElements()
   {
-    return elements;
+    return getElements(MAIN_BRANCH);
+  }
+
+  public List<E> getElements(String branch)
+  {
+    List<E> branchElements = branches.get(branch);
+    if (branchElements == null)
+    {
+      branchElements = new ArrayList<>();
+      branches.put(branch, branchElements);
+    }
+    return branchElements;
   }
 
   // element methods

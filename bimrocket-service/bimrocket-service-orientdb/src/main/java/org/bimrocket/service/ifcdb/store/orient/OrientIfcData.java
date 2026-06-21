@@ -164,7 +164,7 @@ public class OrientIfcData extends AbstractListData<OElement> implements IfcData
   {
     value = toInternalValue(value, type);
 
-    if (!elements.equals(collection))
+    if (!getElements().equals(collection))
     {
       removeFromRoots(value);
     }
@@ -177,7 +177,7 @@ public class OrientIfcData extends AbstractListData<OElement> implements IfcData
   {
     value = toInternalValue(value, type);
 
-    if (!elements.equals(collection))
+    if (!getElements().equals(collection))
     {
       removeFromRoots(value);
     }

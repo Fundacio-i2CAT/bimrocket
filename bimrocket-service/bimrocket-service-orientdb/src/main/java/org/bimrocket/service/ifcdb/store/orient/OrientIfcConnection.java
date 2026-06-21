@@ -357,9 +357,11 @@ public class OrientIfcConnection implements IfcdbConnection
 
     try (rs)
     {
+      var elements = data.getElements();
+
       rs.elementStream().forEach(element ->
       {
-        data.getElements().add(element);
+        elements.add(element);
         // add element to the local cache to speed up traversal
         db.getLocalCache().updateRecord(element);
 
@@ -449,10 +451,12 @@ public class OrientIfcConnection implements IfcdbConnection
 
     try (OResultSet rs = db.query(query))
     {
+      var elements = data.getElements();
+
       rs.elementStream().forEach(element ->
       {
-        data.getElements().add(element);
-       // add element to the local cache to speed up traversal
+        elements.add(element);
+        // add element to the local cache to speed up traversal
         db.getLocalCache().updateRecord(element);
 
         if (data.ifcProject == null &&

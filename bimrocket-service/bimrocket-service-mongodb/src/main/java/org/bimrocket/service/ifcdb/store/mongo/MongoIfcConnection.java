@@ -309,7 +309,9 @@ public class MongoIfcConnection implements IfcdbConnection
     MongoCursor<Document> cursor = objectCol.find(
       and(eq("_modelId", modelId), eq("_version", version))).cursor();
 
-    cursor.forEachRemaining(object -> data.getElements().add(object));
+    var elements = data.getElements();
+
+    cursor.forEachRemaining(object -> elements.add(object));
 
     data.updateCache();
 
@@ -326,20 +328,22 @@ public class MongoIfcConnection implements IfcdbConnection
 
     MongoIfcData mongoData = (MongoIfcData)data;
 
-    for (Document element : mongoData.getElements())
+    var elements = mongoData.getElements();
+
+    for (Document element : elements)
     {
       element.put("_modelId", modelId);
       element.put("_version", version);
     }
 
     MongoCollection<Document> ifcObjects = db.getCollection(OBJECT_COL);
-    ifcObjects.insertMany(mongoData.getElements());
+    ifcObjects.insertMany(elements);
 
     MongoCollection<Document> versionCol = db.getCollection(VERSION_COL);
     Bson filter = and(eq("modelId", modelId), eq("version", version));
     Document ifcdbVersion = versionCol.find(filter).first();
     if (ifcdbVersion == null) throw new NotFoundException("Invalid version");
-    ifcdbVersion.put("elementCount", mongoData.getElements().size());
+    ifcdbVersion.put("elementCount", elements.size());
     versionCol.replaceOne(filter, ifcdbVersion);
 
     LOGGER.log(Level.INFO, "Model loaded in {0} seconds", chrono.totalSeconds());
@@ -365,7 +369,9 @@ public class MongoIfcConnection implements IfcdbConnection
     LOGGER.log(Level.INFO, "Query execution: {0} seconds", chrono.seconds());
     chrono.mark();
 
-    cursor.forEachRemaining(document -> data.getElements().add(document));
+    var elements = data.getElements();
+
+    cursor.forEachRemaining(document -> elements.add(document));
 
     LOGGER.log(Level.INFO,"Total time: {0} seconds", chrono.totalSeconds());
 

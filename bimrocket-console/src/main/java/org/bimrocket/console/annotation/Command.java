@@ -42,8 +42,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Command
-{  
+{
   String name() default "";
   String description() default "";
-  String parameters() default "";
+  String arguments() default "";
 }

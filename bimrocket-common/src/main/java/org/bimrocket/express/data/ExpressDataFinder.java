@@ -30,11 +30,11 @@
  */
 package org.bimrocket.express.data;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
+import org.bimrocket.express.ExpressEntity;
 import static org.bimrocket.express.data.ExpressCursor.CONTAINER;
 
 /**
@@ -43,84 +43,109 @@ import static org.bimrocket.express.data.ExpressCursor.CONTAINER;
  */
 public class ExpressDataFinder
 {
-  private final Function<ExpressCursor, Boolean> filter;
-  private ExpressCursor cursor;
-  private final Deque<Integer> stack = new ArrayDeque<>();
-  private final Set<String> visited = new HashSet<>();
+  private Predicate<ExpressCursor> filter;
+  private Predicate<ExpressCursor> action;
+  private int maxResults = 0;
+  private int minDepth = 0;
+  private int maxDepth = 0;
 
-  public ExpressDataFinder()
+  private ExpressCursor cursor;
+  private final Set<String> visited = new HashSet<>();
+  private int count;
+  private boolean finding;
+
+  ExpressDataFinder()
   {
     this.filter = cur -> true;
+    this.action = cur -> true;
   }
 
-  public ExpressDataFinder(Function<ExpressCursor, Boolean> filter)
+  public static ExpressDataFinder create()
+  {
+    return new ExpressDataFinder();
+  }
+
+  public ExpressDataFinder filter(Predicate<ExpressCursor> filter)
   {
     this.filter = filter;
+    return this;
   }
 
-  public boolean find(ExpressCursor cursor)
+  public ExpressDataFinder action(Predicate<ExpressCursor> action)
   {
-    this.cursor = cursor.copy();
-    stack.clear();
+    this.action = action;
+    return this;
+  }
+
+  public ExpressDataFinder maxResults(int maxResults)
+  {
+    this.maxResults = maxResults;
+    return this;
+  }
+
+  public ExpressDataFinder minDepth(int minDepth)
+  {
+    this.minDepth = minDepth;
+    return this;
+  }
+
+  public ExpressDataFinder maxDepth(int maxDepth)
+  {
+    this.maxDepth = maxDepth;
+    return this;
+  }
+
+  public int find(ExpressCursor cursor)
+  {
     visited.clear();
-    return next(false);
+
+    this.cursor = cursor.copy();
+
+    finding = true;
+
+    this.find();
+
+    return count;
   }
 
-  public boolean next(boolean skipChildren)
+  private void find()
   {
-    while (moveNext(skipChildren))
+    if (maxResults > 0 && count >= maxResults)
     {
-      skipChildren = false;
-      if (filter.apply(cursor)) return true;
-    }
-    return false;
-  }
-
-  public ExpressCursor cursor()
-  {
-    return cursor.copy(true);
-  }
-
-  boolean moveNext(boolean skipChildren)
-  {
-    int index;
-
-    if (skipChildren)
-    {
-      if (cursor.getDepth() == 0) return false;
-
-      cursor.exit();
-      index = stack.pop();
-      index++;
-    }
-    else
-    {
-      index = 0;
+      finding = false;
+      return;
     }
 
-    while (true)
+    int depth = cursor.getDepth();
+
+    if (maxDepth > 0 && depth > maxDepth) return;
+
+    if (cursor.getType() instanceof ExpressEntity && depth >= minDepth)
     {
-      while (index < cursor.size())
+      String id = cursor.getId();
+      if (visited.contains(id)) return;
+
+      visited.add(id);
+
+      if (filter.test(cursor))
       {
-        if (CONTAINER.equals(cursor.get(index)))
-        {
-          stack.push(index);
-          cursor.enter(index);
-          String id = cursor.getId();
-          if (!visited.contains(id))
-          {
-            visited.add(id);
-            return true;
-          }
-        }
-        index++;
+        count++;
+
+        finding = action.test(cursor);
       }
+    }
 
-      if (cursor.getDepth() == 0) return false;
+    if (!finding) return;
 
-      cursor.exit();
-      index = stack.pop();
-      index++;
+    // explore children
+    for (int i = 0; i < cursor.size(); i++)
+    {
+      if (CONTAINER.equals(cursor.get(i)))
+      {
+        cursor.enter(i);
+        find();
+        cursor.exit();
+      }
     }
   }
 }
