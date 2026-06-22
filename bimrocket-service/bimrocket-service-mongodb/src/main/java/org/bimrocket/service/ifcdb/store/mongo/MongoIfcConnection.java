@@ -122,8 +122,6 @@ public class MongoIfcConnection implements IfcdbConnection
     MongoCollection<IfcdbModel> modelCol =
       db.getCollection(MODEL_COL, IfcdbModel.class);
 
-    MongoCursor<IfcdbModel> cursor;
-
     MongoExpressionGenerator generator = new MongoExpressionGenerator();
     List<Document> aggregate = generator.generateAggregate(filter, orderByList);
 
@@ -142,12 +140,14 @@ public class MongoIfcConnection implements IfcdbConnection
                       new Document("$literal", userRoleIds)))),
                 0)))));
     }
-    cursor = modelCol.aggregate(aggregate).cursor();
 
     List<IfcdbModel> ifcdbModels = new ArrayList<>();
-    while (cursor.hasNext())
+    try (var cursor = modelCol.aggregate(aggregate).cursor())
     {
-      ifcdbModels.add(cursor.next());
+      while (cursor.hasNext())
+      {
+        ifcdbModels.add(cursor.next());
+      }
     }
     return ifcdbModels;
   }

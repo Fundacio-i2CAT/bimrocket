@@ -68,44 +68,51 @@ public class BcfMongoDaoConnection extends MongoDaoConnection
   public List<BcfProject> findProjects(
     Expression filter, List<OrderByExpression> orderByList, Set<String> roleIds)
   {
-    MongoCollection<BcfProject> collection =
-      db.getCollection("BcfProject", BcfProject.class);
+    MongoCollection<BcfProject> collection
+      = db.getCollection("BcfProject", BcfProject.class);
 
     var generator = new MongoExpressionGenerator();
 
-    List<Document> aggregate =
-      generator.generateAggregate(filter, orderByList);
+    List<Document> aggregate = generator.generateAggregate(filter, orderByList);
 
     if (!roleIds.contains(ADMIN_ROLE))
     {
       aggregate.add(
         new Document("$lookup",
           new Document("from", "BcfExtensions")
-            .append("localField", "id")
-            .append("foreignField", "projectId")
+            .append("localField", "_id")
+            .append("foreignField", "_id")
             .append("pipeline", List.of(
               new Document("$match",
                 new Document("$expr",
-                  new Document("$gt",
-                    List.of(
-                      new Document("$size",
-                        new Document("$setIntersection",
-                          List.of(
-                             new Document("$getField", "readRoleIds"),
-                             new Document("$literal", roleIds)))),
-                      0))))))
-            .append("as", "extensions")));
+                  new Document("$ne", List.of(
+                    new Document("$setIntersection", List.of(
+                      new Document("$cond", List.of(
+                        new Document("$eq", List.of(
+                          new Document("$size", "$readRoleIds"),
+                          0
+                        )),
+                        List.of("EVERYONE"),
+                        "$readRoleIds"
+                      )),
+                      new Document("$literal", roleIds)
+                    )),
+                    List.of()
+                  ))
+                )
+              ),
+              new Document("$limit", 1)
+            ))
+            .append("as", "extensions")
+        ));
 
       aggregate.add(
         new Document("$match",
-          new Document("$expr",
-            new Document("$gt",
-              List.of(
-                new Document("$size", "$extensions"),
-                0)))));
+          new Document("extensions.0",
+            new Document("$exists", true))));
     }
 
-    List<BcfProject> projects = new ArrayList<>();    
+    List<BcfProject> projects = new ArrayList<>();
     try (var cursor = collection.aggregate(session, aggregate).cursor())
     {
       while (cursor.hasNext())
