@@ -90,7 +90,7 @@ class ServiceLoginDialog extends LoginDialog
     else if (error.code === FORBIDDEN)
     {
       message = this.isWriteAction ?
-        "message.action_denied" : "message.accces_denied";
+        "message.action_denied" : "message.access_denied";
     }
     else if (error.message)
     {
