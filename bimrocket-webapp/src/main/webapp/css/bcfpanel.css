@@ -42,7 +42,7 @@
   margin: 0px;
 }
 
-.bcf_body > div > input,
+.bcf_body > div > input:not([type="checkbox"], [type="radio"]),
 .bcf_body > div > select,
 .bcf_body > div > textarea,
 .bcf_body > div > div

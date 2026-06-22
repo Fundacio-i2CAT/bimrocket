@@ -31,7 +31,7 @@ input, button, select, textarea
   border-radius: 2px;
 }
 
-input[type=radio]
+input[type=checkbox], input[type=radio]
 {
   border: none;
   padding: 0;

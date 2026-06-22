@@ -120,6 +120,11 @@ class BCFPanel extends Panel
     this.projectNameFilterField = Controls.addTextField(this.filterProjectsElem,
       "projectNameFilter", "bim|label.filter_project_name");
 
+    this.projectNameFilterField.addEventListener("keyup", (event) =>
+    {
+      if (event.keyCode === 13) this.refreshProjects();
+    });
+
     this.filterVisibilityButton = Controls.addCheckBoxField(this.filterProjectsElem,
       "filterProjects", "bim|button.filter_projects", false, "bcf_checkbox");
 
@@ -139,7 +144,7 @@ class BCFPanel extends Panel
     this.filterProjectsElem.appendChild(this.projectTreeContainer);
 
     this.projectTree = new Tree(this.projectTreeContainer);
-    
+
     this.projectFindElem = document.createElement("div");
     this.projectFindElem.className = "p_4";
     this.searchPanelElem.appendChild(this.projectFindElem);
@@ -462,11 +467,11 @@ class BCFPanel extends Panel
         this.showContextMenu(event, project);
       });
     }
-    
+
     if (projects.length === 0)
     {
       I18N.set(this.projectFindElem, "textContent", "bim|message.no_project_found");
-      this.application.i18n.update(this.projectFindElem);      
+      this.application.i18n.update(this.projectFindElem);
       this.projectTreeContainer.style.display = "none";
       this.projectFindElem.style.display = "";
     }
@@ -474,7 +479,7 @@ class BCFPanel extends Panel
     {
       this.projectTreeContainer.style.display = "";
       this.projectFindElem.style.display = "none";
-    }    
+    }
   }
 
   clearFilters = () =>
@@ -710,7 +715,7 @@ class BCFPanel extends Panel
     let odataOrderBy = "creation_date,index";
 
     this.showProgressBar();
-    this.service.getTopics(projectId, odataFilter, odataOrderBy, 
+    this.service.getTopics(projectId, odataFilter, odataOrderBy,
       onCompleted, onError);
   }
 
@@ -1675,7 +1680,7 @@ class BCFPanel extends Panel
       {
         let componentsContainer = document.createElement("div");
 
-        let componentsLabel = Controls.addLink(componentsContainer, 
+        let componentsLabel = Controls.addLink(componentsContainer,
           "bim|label.select_components", "#",
           "bim|title.select_components", "select_components",
           (event) =>
