@@ -90,9 +90,16 @@ public class MongoDao<E, ID> implements Dao<E, ID>
     }
 
     List<E> elements = new ArrayList<>();
-    while (cursor.hasNext())
+    try
     {
-      elements.add(cursor.next());
+      while (cursor.hasNext())
+      {
+        elements.add(cursor.next());
+      }
+    }
+    finally
+    {
+      cursor.close();
     }
     return elements;
   }

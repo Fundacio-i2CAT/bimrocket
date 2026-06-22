@@ -177,7 +177,8 @@ export const translations =
   "message.project_extensions_saved" : "Extensiones guardadas.",
   "message.doc_ref_deleted" : "Referencia a documento borrada.",
   "message.doc_ref_saved" : "Referencia a documento guardada.",
-  "message.topic_searched" : "No se han encontrado incidencias.",
+  "message.no_project_found" : "No se han encontrado proyectos.",  
+  "message.no_topic_found" : "No se han encontrado incidencias.",
   "message.no_components_selected": "No se han encontrado objetos para esta vista.",
 
   "message.operation_completed": "Operación completada.",

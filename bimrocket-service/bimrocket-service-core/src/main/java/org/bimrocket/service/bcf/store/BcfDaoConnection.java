@@ -40,6 +40,8 @@ import org.bimrocket.api.bcf.BcfTopic;
 import org.bimrocket.api.bcf.BcfViewpoint;
 import org.bimrocket.dao.Dao;
 import org.bimrocket.dao.DaoConnection;
+import org.bimrocket.dao.expression.Expression;
+import org.bimrocket.dao.expression.OrderByExpression;
 
 /**
  *
@@ -47,7 +49,8 @@ import org.bimrocket.dao.DaoConnection;
  */
 public interface BcfDaoConnection extends DaoConnection
 {
-  List<BcfProject> findProjects(Set<String> roles);
+  List<BcfProject> findProjects(
+    Expression filter, List<OrderByExpression> orderByList, Set<String> roles);
 
   Dao<BcfProject, String> getProjectDao();
 

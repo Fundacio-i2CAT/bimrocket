@@ -139,6 +139,10 @@ class BCFPanel extends Panel
     this.filterProjectsElem.appendChild(this.projectTreeContainer);
 
     this.projectTree = new Tree(this.projectTreeContainer);
+    
+    this.projectFindElem = document.createElement("div");
+    this.projectFindElem.className = "p_4";
+    this.searchPanelElem.appendChild(this.projectFindElem);
 
     this.filterPanelElem = document.createElement("div");
     this.filterPanelElem.className = "bcf_body";
@@ -458,6 +462,19 @@ class BCFPanel extends Panel
         this.showContextMenu(event, project);
       });
     }
+    
+    if (projects.length === 0)
+    {
+      I18N.set(this.projectFindElem, "textContent", "bim|message.no_project_found");
+      this.application.i18n.update(this.projectFindElem);      
+      this.projectTreeContainer.style.display = "none";
+      this.projectFindElem.style.display = "";
+    }
+    else
+    {
+      this.projectTreeContainer.style.display = "";
+      this.projectFindElem.style.display = "none";
+    }    
   }
 
   clearFilters = () =>
@@ -1284,6 +1301,7 @@ class BCFPanel extends Panel
 
     this.clearTopics();
     this.showProgressBar();
+    this.projectFindElem.textContent = "";
     this.service.getProjects(odataFilter, odataOrderBy, onCompleted, onError);
   }
 
@@ -1466,7 +1484,7 @@ class BCFPanel extends Panel
       let rowElem = topicsElem.tBodies[0].insertRow();
       let cell = rowElem.insertCell(0);
       cell.colSpan = 3;
-      I18N.set(cell, "textContent", "bim|message.topic_searched");
+      I18N.set(cell, "textContent", "bim|message.no_topic_found");
       this.application.i18n.update(cell);
       cell.style.textAlign = "center";
       return;

@@ -52,12 +52,12 @@ class BCFService extends Service
       if (conditions.length > 0)
       {
         const filterText = conditions.join(" and ");
-        query += "$filter=" + encodeURIComponent(filterText);
+        query += "$filter=" + filterText;
         if (odataOrderBy) query += "&";
       }
       if (odataOrderBy)
       {
-        query += "$orderby=" + encodeURIComponent(odataOrderBy);
+        query += "$orderBy=" + odataOrderBy;
       }
     }
 

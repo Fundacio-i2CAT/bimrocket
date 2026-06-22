@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -180,16 +180,17 @@ public class BcfService
 
   /* Projects */
 
-  public List<BcfProject> getProjects(Expression filter, List<OrderByExpression> orderBy)
+  public List<BcfProject> getProjects(
+    Expression filter, List<OrderByExpression> orderBy)
   {
     LOGGER.log(Level.FINE, "getProjects");
 
     try (var conn = daoStore.getConnection())
     {
-      Dao<BcfProject, String> projectDao = conn.getProjectDao();
-      List<BcfProject> projects = projectDao.find(filter, orderBy);
+      Set<String> roleIds = securityService.getCurrentUser().getRoleIds();
+      List<BcfProject> projects = conn.findProjects(filter, orderBy, roleIds);
 
-      if (!securityService.getCurrentUser().getRoleIds().contains(ADMIN_ROLE))
+      if (!roleIds.contains(ADMIN_ROLE))
       {
         // remove template project if user is not ADMIN
         removeTemplateProject(projects);

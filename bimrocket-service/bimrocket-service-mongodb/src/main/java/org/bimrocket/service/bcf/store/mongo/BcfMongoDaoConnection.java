@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -32,7 +32,6 @@ package org.bimrocket.service.bcf.store.mongo;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +43,14 @@ import org.bimrocket.api.bcf.BcfProject;
 import org.bimrocket.api.bcf.BcfTopic;
 import org.bimrocket.api.bcf.BcfViewpoint;
 import org.bimrocket.dao.Dao;
+import org.bimrocket.dao.expression.Expression;
+import org.bimrocket.dao.expression.OrderByExpression;
 import org.bimrocket.dao.mongo.MongoDao;
 import org.bimrocket.dao.mongo.MongoDaoConnection;
+import org.bimrocket.dao.mongo.MongoExpressionGenerator;
 import org.bimrocket.service.bcf.store.BcfDaoConnection;
 import static org.bimrocket.service.security.SecurityConstants.ADMIN_ROLE;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 /**
  *
@@ -64,18 +65,20 @@ public class BcfMongoDaoConnection extends MongoDaoConnection
   }
 
   @Override
-  public List<BcfProject> findProjects(Set<String> roles)
+  public List<BcfProject> findProjects(
+    Expression filter, List<OrderByExpression> orderByList, Set<String> roleIds)
   {
     MongoCollection<BcfProject> collection =
       db.getCollection("BcfProject", BcfProject.class);
-    MongoCursor<BcfProject> cursor;
-    if (roles.contains(ADMIN_ROLE))
+
+    var generator = new MongoExpressionGenerator();
+
+    List<Document> aggregate =
+      generator.generateAggregate(filter, orderByList);
+
+    if (!roleIds.contains(ADMIN_ROLE))
     {
-      cursor = collection.find(session).cursor();
-    }
-    else
-    {
-      List<Bson> aggregate = List.of(
+      aggregate.add(
         new Document("$lookup",
           new Document("from", "BcfExtensions")
             .append("localField", "id")
@@ -89,22 +92,26 @@ public class BcfMongoDaoConnection extends MongoDaoConnection
                         new Document("$setIntersection",
                           List.of(
                              new Document("$getField", "readRoleIds"),
-                             new Document("$literal", roles)))),
+                             new Document("$literal", roleIds)))),
                       0))))))
-            .append("as", "extensions")),
+            .append("as", "extensions")));
+
+      aggregate.add(
         new Document("$match",
           new Document("$expr",
             new Document("$gt",
               List.of(
                 new Document("$size", "$extensions"),
                 0)))));
-
-      cursor = collection.aggregate(session, aggregate).cursor();
     }
-    List<BcfProject> projects = new ArrayList<>();
-    while (cursor.hasNext())
+
+    List<BcfProject> projects = new ArrayList<>();    
+    try (var cursor = collection.aggregate(session, aggregate).cursor())
     {
-      projects.add(cursor.next());
+      while (cursor.hasNext())
+      {
+        projects.add(cursor.next());
+      }
     }
     return projects;
   }

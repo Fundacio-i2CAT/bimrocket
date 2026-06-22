@@ -177,7 +177,8 @@ export const translations =
   "message.project_extensions_saved" : "Extensions desades.",
   "message.doc_ref_deleted" : "Referència a document esborrada.",
   "message.doc_ref_saved" : "Referència a document desada.",
-  "message.topic_searched" : "No s'ha trobat cap incidència.",
+  "message.no_project_found" : "No s'ha trobat cap projecte.",  
+  "message.no_topic_found" : "No s'ha trobat cap incidència.",
   "message.no_components_selected": "No s'han trobat objectes per a aquesta vista.",
 
   "message.extensions_phase_started": "Fase de revisió iniciada correctament.",

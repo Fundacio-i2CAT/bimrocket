@@ -177,7 +177,8 @@ export const translations =
   "message.project_extensions_saved" : "Project extensions saved.",
   "message.doc_ref_deleted" : "Document reference deleted.",
   "message.doc_ref_saved" : "Document reference saved.",
-  "message.topic_searched" : "No topics found.",
+  "message.no_project_found" : "No project found.",
+  "message.no_topic_found" : "No topic found.",
   "message.no_components_selected": "No objects were found for this view",
 
   "message.bsdd_dictionary_count" : count => `Dictionaries: ${count}`,

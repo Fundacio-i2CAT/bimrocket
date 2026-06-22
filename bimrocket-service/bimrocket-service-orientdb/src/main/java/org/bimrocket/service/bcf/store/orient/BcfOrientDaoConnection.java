@@ -1,7 +1,7 @@
 /*
  * BIMROCKET
  *
- * Copyright (C) 2021-2025, Ajuntament de Sant Feliu de Llobregat
+ * Copyright (C) 2021-2026, Ajuntament de Sant Feliu de Llobregat
  *
  * This program is licensed and may be used, modified and redistributed under
  * the terms of the European Public License (EUPL), either version 1.1 or (at
@@ -46,8 +46,12 @@ import org.bimrocket.api.bcf.BcfProject;
 import org.bimrocket.api.bcf.BcfTopic;
 import org.bimrocket.api.bcf.BcfViewpoint;
 import org.bimrocket.dao.Dao;
+import org.bimrocket.dao.expression.Expression;
+import static org.bimrocket.dao.expression.Expression.BOOLEAN;
+import org.bimrocket.dao.expression.OrderByExpression;
 import org.bimrocket.dao.orient.OrientDao;
 import org.bimrocket.dao.orient.OrientDaoConnection;
+import org.bimrocket.dao.orient.OrientExpressionPrinter;
 import org.bimrocket.service.bcf.store.BcfDaoConnection;
 import static org.bimrocket.service.security.SecurityConstants.ADMIN_ROLE;
 
@@ -64,26 +68,40 @@ public class BcfOrientDaoConnection extends OrientDaoConnection
   }
 
   @Override
-  public List<BcfProject> findProjects(Set<String> roleIds)
+  public List<BcfProject> findProjects(
+    Expression filter, List<OrderByExpression> orderByList, Set<String> roleIds)
   {
-    String where;
+    String query = "select * from BcfProject ";
+
+    if (filter != null)
+    {
+      if (!filter.getType().equals(BOOLEAN))
+        throw new RuntimeException("Not a boolean expression");
+      query += " where " + OrientExpressionPrinter.toString(filter);
+    }
+
     Map<String, Object> parameters;
 
     if (roleIds.contains(ADMIN_ROLE))
     {
-      where = "";
       parameters = Collections.emptyMap();
     }
     else
     {
-      where = " where id in (select projectId from BcfExtensions where " +
+      query += filter == null ? " where " : " and ";
+      query += "id in (select projectId from BcfExtensions where " +
       "(readRoleIds is null or readRoleIds.size() = 0 or " +
       "readRoleIds containsany :roleIds))";
       parameters = Map.of("roleIds", roleIds);
     }
 
-    String query = "select * from BcfProject" + where + " order by name";
+    if (orderByList != null && !orderByList.isEmpty())
+    {
+      query += " order by " + OrientExpressionPrinter.toString(orderByList);
+    }
 
+    System.out.println("query:" + query);
+    
     List<BcfProject> projects = new ArrayList<>();
     try (OResultSet rs = db.query(query, parameters))
     {

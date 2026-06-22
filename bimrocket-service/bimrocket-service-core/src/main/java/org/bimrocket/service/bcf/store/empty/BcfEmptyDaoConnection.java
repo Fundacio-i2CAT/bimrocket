@@ -42,6 +42,8 @@ import org.bimrocket.api.bcf.BcfViewpoint;
 import org.bimrocket.dao.Dao;
 import org.bimrocket.dao.empty.EmptyDao;
 import org.bimrocket.dao.empty.EmptyDaoConnection;
+import org.bimrocket.dao.expression.Expression;
+import org.bimrocket.dao.expression.OrderByExpression;
 import org.bimrocket.service.bcf.store.BcfDaoConnection;
 
 /**
@@ -58,7 +60,8 @@ public class BcfEmptyDaoConnection extends EmptyDaoConnection
   }
 
   @Override
-  public List<BcfProject> findProjects(Set<String> roles)
+  public List<BcfProject> findProjects(
+    Expression filter, List<OrderByExpression> orderByList, Set<String> roleIds)
   {
     return Collections.emptyList();
   }
