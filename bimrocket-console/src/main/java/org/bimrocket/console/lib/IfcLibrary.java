@@ -270,7 +270,7 @@ public class IfcLibrary extends Library
     {
       throw new RuntimeException("No file loaded.");
     }
-    printCursor(cursor, start, start + count, 0);
+    printCursor(cursor, start, count, 0);
   }
 
   public void tree()
@@ -419,14 +419,13 @@ public class IfcLibrary extends Library
   }
 
   private void printCursor(ExpressCursor cursor,
-    int start, int end, int maxDepth)
+    int start, int count, int maxDepth)
   {
     ExpressType type = cursor.getType();
     int depth = cursor.getDepth();
     String indent = "  ";
     int size = cursor.size();
-    int thisStart = Math.min(start, size - 1);
-    int thisEnd = Math.min(end, size - 1);
+    int thisCount = Math.min(start + count, size);
 
     for (int j = 0; j < depth; j++) print(indent);
 
@@ -442,7 +441,7 @@ public class IfcLibrary extends Library
     }
     println(":");
 
-    for (int i = thisStart; i <= thisEnd; i++)
+    for (int i = start; i < thisCount; i++)
     {
       for (int j = 0; j < depth; j++) print(indent);
       print("[%,d]".formatted(i));
@@ -459,7 +458,7 @@ public class IfcLibrary extends Library
         if (depth < maxDepth)
         {
           println();
-          printCursor(cursor, start, end, maxDepth);
+          printCursor(cursor, start, count, maxDepth);
         }
         else
         {
