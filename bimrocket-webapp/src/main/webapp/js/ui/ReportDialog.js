@@ -12,8 +12,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog.js";
 import { Report } from "../reports/Report.js";
 import { ReportType } from "../reports/ReportType.js";
 import { I18N } from "../i18n/I18N.js";
-import "../lib/codemirror.js";
-import * as THREE from "three";
+import * as CM from "../lib/codemirror.js";
 
 class ReportDialog extends Dialog
 {
@@ -87,10 +86,7 @@ class ReportDialog extends Dialog
       Controls.setCodeEditorDocument(this.editorView, source,
       { language : reportType.getSourceLanguage() });
 
-      const { EditorView } = CM["@codemirror/view"];
-      const { StateEffect } = CM["@codemirror/state"];
-
-      const changeListener = EditorView.updateListener.of(update =>
+      const changeListener = CM.EditorView.updateListener.of(update =>
       {
         if (update.docChanged && this.visible)
         {
@@ -102,7 +98,7 @@ class ReportDialog extends Dialog
 
       this.editorView.dispatch(
       {
-        effects: StateEffect.appendConfig.of(changeListener)
+        effects: CM.StateEffect.appendConfig.of(changeListener)
       });
     }
   }

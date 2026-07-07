@@ -8,8 +8,7 @@ import { Dialog } from "./Dialog.js";
 import { Toast } from "./Toast.js";
 import { MessageDialog } from "./MessageDialog.js";
 import { ConfirmDialog } from "./ConfirmDialog.js";
-import "../lib/codemirror.js";
-import * as THREE from "three";
+import * as CM from "../lib/codemirror.js";
 
 class ScriptDialog extends Dialog
 {
@@ -79,10 +78,7 @@ class ScriptDialog extends Dialog
       Controls.setCodeEditorDocument(this.editorView, code,
         { language : "javascript" });
 
-      const { EditorView } = CM["@codemirror/view"];
-      const { StateEffect, EditorSelection } = CM["@codemirror/state"];
-
-      const changeListener = EditorView.updateListener.of(update =>
+      const changeListener = CM.EditorView.updateListener.of(update =>
       {
         if (update.docChanged && this.visible)
         {
@@ -92,8 +88,8 @@ class ScriptDialog extends Dialog
 
       this.editorView.dispatch(
       {
-        effects: StateEffect.appendConfig.of(changeListener),
-        selection: EditorSelection.cursor(0),
+        effects: CM.StateEffect.appendConfig.of(changeListener),
+        selection: CM.EditorSelection.cursor(0),
         scrollIntoView: true
       });
     }

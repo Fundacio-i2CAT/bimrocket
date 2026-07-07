@@ -47,7 +47,13 @@ class OpenFileAction extends FileAction
       const formatInfo = IOManager.getFormatInfo(result.path);
       if (formatInfo)
       {
-        const blob = new Blob([result.data], { type : formatInfo.mimeType });
+        let type = formatInfo.mimeType;
+        if (formatInfo.dataType === "text" && !type.includes("charset"))
+        {
+          type += ";charset=utf-8";
+        }
+
+        const blob = new Blob([result.data], { type });
         const objectUrl = URL.createObjectURL(blob);
 
         window.open(objectUrl, '_blank');

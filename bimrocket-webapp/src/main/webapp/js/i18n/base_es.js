@@ -398,6 +398,7 @@ export const translations =
   "action.script" : "Programa",
   "action.run_script" : "Ejecutar programa",
   "action.edit_script" : "Editar programa",
+  "action.edit_text" : "Editar",
   "action.create_report" : "Crear informe",
   "action.report" : "Informe",
   "action.run_report" : "Ejecutar informe",
@@ -419,6 +420,7 @@ export const translations =
 
   "label.file_name" : "Nombre del fichero:",
   "label.context_menu" : "Menú contextual",
+  "label.content" : "Contenido:",
 
   "label.language" : "Idioma:",
   "label.units" : "Unidades del modelo:",
@@ -574,7 +576,7 @@ export const translations =
   "label.share_link_type" : "Tipo de enlace",
   "label.share_link" : "Enlace:",
 
-  "label.other_auth_systems": "Otros sistemas de identificación:",  
+  "label.other_auth_systems": "Otros sistemas de identificación:",
 
   "option.no_groups" : "Sin agrupaciones",
   "option.value_asc" : "Valor (ascendente)",
@@ -616,6 +618,7 @@ export const translations =
   "title.add_controller" : "Añadir controlador",
   "title.remove_controller" : "Eliminar controlador",
   "title.properties" : "Propiedades",
+  "title.text_editor" : "Editor de texto",
   "title.script_editor" : "Editor de código",
   "title.report_editor" : "Editor de informes",
   "title.report_type" : "Nuevo informe",

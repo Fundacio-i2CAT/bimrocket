@@ -286,7 +286,7 @@ export function load(application)
   {
     description : "BIMROCKET Specification (*.brs)",
     extensions : ["brs"],
-    mimeType : "text/javasccript",
+    mimeType : "text/javascript",
     dataType : "text",
     icon : "report"
   };
@@ -327,6 +327,53 @@ export function load(application)
     icon : "pdf"
   };
 
+  IOManager.formats["json"] =
+  {
+    description : "JavaScript Object Notation (*.json)",
+    extensions : ["json"],
+    mimeType : "application/json",
+    dataType : "text"
+  };
+
+  IOManager.formats["xml"] =
+  {
+    description : "XML (*.xml)",
+    extensions : ["xml"],
+    mimeType : "application/xml",
+    dataType : "text"
+  };
+
+  IOManager.formats["yaml"] =
+  {
+    description : "YAML (*.yaml, *.yml)",
+    extensions : ["yaml", "yml"],
+    mimeType : "text/x-yaml",
+    dataType : "text"
+  };
+
+  IOManager.formats["html"] =
+  {
+    description : "HTML Document (*.html, *.htm)",
+    extensions : ["html", "htm"],
+    mimeType : "text/html",
+    dataType : "text"
+  };
+
+  IOManager.formats["markdown"] =
+  {
+    description : "Markdown (*.md)",
+    extensions : ["md"],
+    mimeType : "text/markdown",
+    dataType : "text"
+  };
+
+  IOManager.formats["css"] =
+  {
+    description : "Cascade Style Sheet (*.css)",
+    extensions : ["css"],
+    mimeType : "text/css",
+    dataType : "text"
+  };
 
   // create tools
   const newSceneTool = new NewSceneTool(application);

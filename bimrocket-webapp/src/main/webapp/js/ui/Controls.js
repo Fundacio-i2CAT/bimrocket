@@ -4,7 +4,8 @@
  * @author realor
  */
 
-import "../lib/codemirror.js";
+//import "../lib/codemirror.js";
+import * as CM from "../lib/codemirror.js";
 import htm from "../lib/htm.js"
 import { I18N } from "../i18n/I18N.js";
 
@@ -380,7 +381,7 @@ class Controls
 
     const imgElem = document.createElement("img");
 
-    imgElem.onerror = () => 
+    imgElem.onerror = () =>
     {
       imgElem.remove();
       I18N.set(buttonElem, "textContent", label);
@@ -433,9 +434,7 @@ class Controls
     editorElem.className = "cm-editor-holder";
     groupElem.appendChild(editorElem);
 
-    const { EditorView } = CM["@codemirror/view"];
-
-    const editorView = new EditorView(
+    const editorView = new CM.EditorView(
     {
       parent: editorElem
     });
@@ -447,14 +446,6 @@ class Controls
 
   static setCodeEditorDocument(editorView, value = "", options)
   {
-    const { basicSetup } = CM["codemirror"];
-    const { keymap, highlightSpecialChars, highlightActiveLine,
-            drawSelection, EditorView, tooltips } = CM["@codemirror/view"];
-    const { defaultKeymap } = CM["@codemirror/commands"];
-    const { searchKeymap, highlightSelectionMatches } = CM["@codemirror/search"];
-    const { indentOnInput } = CM["@codemirror/language"];
-    const { EditorState } = CM["@codemirror/state"];
-
     const tooltipContainerId = "cm-tooltip-container";
     let tooltipContainer = document.getElementById(tooltipContainerId);
     if (!tooltipContainer)
@@ -464,7 +455,7 @@ class Controls
       document.body.appendChild(tooltipContainer);
     }
 
-    let theme = EditorView.theme({
+    let theme = CM.EditorView.theme({
       "&.cm-focused .cm-cursor" : {
         borderLeftColor: "#000",
         borderLeftWidth: "2px"
@@ -486,6 +477,10 @@ class Controls
       "& .ͼg" : {
         "color" : "#444"
       },
+      "& .ͼi" : {
+        "color" : "#44b",
+        "font-weight": "bold"
+      },
       "& .ͼm" : {
         "color" : "#808080"
       },
@@ -501,44 +496,71 @@ class Controls
     });
 
     const extensions = [
-      basicSetup,
-      highlightSpecialChars(),
-      drawSelection(),
-      EditorState.allowMultipleSelections.of(true),
-      indentOnInput(),
-      highlightActiveLine(),
-      highlightSelectionMatches(),
-      tooltips({ parent : tooltipContainer }),
+      CM.lineNumbers(),
+      CM.highlightActiveLineGutter(),
+      CM.highlightSpecialChars(),
+      CM.history(),
+      CM.drawSelection(),
+      CM.dropCursor(),
+      CM.indentOnInput(),
+      CM.syntaxHighlighting(CM.defaultHighlightStyle),
+      CM.bracketMatching(),
+      CM.foldGutter(),
+      CM.autocompletion(),
+      CM.rectangularSelection(),
+      CM.crosshairCursor(),
+      CM.highlightSelectionMatches(),
+      CM.keymap.of([
+        ...CM.defaultKeymap,
+        ...CM.historyKeymap,
+        ...CM.searchKeymap,
+        ...CM.completionKeymap
+      ]),
+      CM.EditorState.allowMultipleSelections.of(true),
+      CM.highlightActiveLine(),
+      CM.tooltips({ parent : tooltipContainer }),
       theme];
 
-    const language = options?.language || "json";
+    const language = options?.language;
     switch (language)
     {
       case "json":
-        const { json } = CM["@codemirror/lang-json"];
-        extensions.push(json());
+        extensions.push(CM.json());
         break;
 
       case "javascript":
-        const { javascript } = CM["@codemirror/lang-javascript"];
-        extensions.push(javascript());
+        extensions.push(CM.javascript());
         break;
 
       case "xml":
-        const { xml } = CM["@codemirror/lang-xml"];
-        extensions.push(xml({ autoCloseTags : true }));
+        extensions.push(CM.xml({ autoCloseTags : true }));
         break;
 
       case "sql":
-        const { sql } = CM["@codemirror/lang-sql"];
-        extensions.push(sql(options.sqlConfig));
+        extensions.push(CM.sql(options.sqlConfig));
+        break;
+
+      case "html":
+        extensions.push(CM.jinja({ base: CM.html() }));
+        break;
+
+      case "markdown":
+        extensions.push(CM.jinja({ base: CM.markdown() }));
+        break;
+
+      case "css":
+        extensions.push(CM.css());
+        break;
+
+      case "yaml":
+        extensions.push(CM.yaml());
         break;
     }
 
-    const editorState = EditorState.create(
+    const editorState = CM.EditorState.create(
     {
       doc: value || "",
-      extensions : extensions
+      extensions
     });
 
     editorView.setState(editorState);

@@ -398,6 +398,7 @@ export const translations =
   "action.script" : "Script",
   "action.run_script" : "Run script",
   "action.edit_script" : "Edit script",
+  "action.edit_text" : "Edita",
   "action.create_report" : "Create report",
   "action.report" : "Report",
   "action.run_report" : "Run report",
@@ -419,6 +420,7 @@ export const translations =
 
   "label.file_name" : "File name:",
   "label.context_menu" : "Context menu",
+  "label.content" : "Content:",
 
   "label.language" : "Language:",
   "label.units" : "Model units:",
@@ -574,7 +576,7 @@ export const translations =
 
   "label.share_link_type" : "Link type",
   "label.share_link" : "Link:",
-  
+
   "label.other_auth_systems": "Other identification systems:",
 
   "option.no_groups" : "Without groups",
@@ -617,6 +619,7 @@ export const translations =
   "title.add_controller" : "Add controller",
   "title.remove_controller" : "Remove controller",
   "title.properties" : "Properties",
+  "title.text_editor" : "Text editor",
   "title.script_editor" : "Script editor",
   "title.report_editor" : "Report editor",
   "title.report_type" : "New report",

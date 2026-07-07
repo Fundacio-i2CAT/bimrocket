@@ -18,6 +18,7 @@ import { CreateReportAction } from "../ui/file/CreateReportAction.js";
 import { EditScriptAction } from "../ui/file/EditScriptAction.js";
 import { RunScriptAction } from "../ui/file/RunScriptAction.js";
 import { CreateScriptAction } from "../ui/file/CreateScriptAction.js";
+import { EditTextFileAction } from "../ui/file/EditTextFileAction.js";
 
 class CloudExplorerTool extends Tool
 {
@@ -48,6 +49,7 @@ class CloudExplorerTool extends Tool
 
     contextMenu.addMenuItem(action(EditScriptAction), "edit");
     contextMenu.addMenuItem(action(EditReportAction), "edit");
+    contextMenu.addMenuItem(action(EditTextFileAction), "edit");
 
     const addMenu = contextMenu.getMenu("menu.file.create");
     addMenu.addMenuItem(action(CreateScriptAction, { label : "action.script" }));

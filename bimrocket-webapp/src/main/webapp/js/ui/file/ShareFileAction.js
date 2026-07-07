@@ -23,7 +23,7 @@ class ShareFileAction extends FileAction
 
   isDefaultAction()
   {
-    return true;
+    return false;
   }
 
   isEnabled()

@@ -19,6 +19,8 @@ import { I18N } from "../i18n/I18N.js";
 import { ServiceManager } from "../io/ServiceManager.js";
 import { IFCDBService } from "../io/IFCDBService.js";
 import { ErrorHandler } from "./ErrorHandler.js";
+import * as CM from "../lib/codemirror.js";
+
 import * as THREE from "three";
 
 class IFCDBPanel extends Panel
@@ -155,9 +157,7 @@ class IFCDBPanel extends Panel
     commandPanelElem.className = "ifcdb_command";
     this.commandTabElem.appendChild(commandPanelElem);
 
-    const { SQLDialect } = CM["@codemirror/lang-sql"];
-
-    const OrientDBSQL = SQLDialect.define({
+    const OrientDBSQL = CM.SQLDialect.define({
       keywords: "after and as asc batch before between breadth_first by " +
         "cluster contains containsall containskey containstext containsvalue " +
         "create default defined delete depth_first desc distinct edge " +

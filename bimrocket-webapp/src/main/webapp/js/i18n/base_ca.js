@@ -398,6 +398,7 @@ export const translations =
   "action.script" : "Programa",
   "action.run_script" : "Executa programa",
   "action.edit_script" : "Edita programa",
+  "action.edit_text" : "Edita",
   "action.create_report" : "Crea informe",
   "action.report" : "Informe",
   "action.run_report" : "Executa informe",
@@ -419,6 +420,7 @@ export const translations =
 
   "label.file_name" : "Nom del fitxer:",
   "label.context_menu" : "Menú contextual",
+  "label.content" : "Contingut:",
 
   "label.language" : "Idioma:",
   "label.units" : "Unitats del model:",
@@ -573,8 +575,8 @@ export const translations =
 
   "label.share_link_type" : "Tipus d'enllaç",
   "label.share_link" : "Enllaç:",
-  
-  "label.other_auth_systems": "Altres sistemes d'identificació:",  
+
+  "label.other_auth_systems": "Altres sistemes d'identificació:",
 
   "option.no_groups" : "Sense agrupacions",
   "option.value_asc" : "Valor (ascendent)",
@@ -616,6 +618,7 @@ export const translations =
   "title.add_controller" : "Afegeix controlador",
   "title.remove_controller" : "Esborra controlador",
   "title.properties" : "Propietats",
+  "title.text_editor" : "Editor de text",
   "title.script_editor" : "Editor de codi",
   "title.report_editor" : "Editor d'informes",
   "title.report_type" : "Nou informe",
