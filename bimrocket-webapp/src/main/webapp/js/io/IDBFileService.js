@@ -4,6 +4,7 @@
  * @author realor
  */
 
+import { IOManager } from "./IOManager.js";
 import { FileService, Metadata, Result } from "./FileService.js";
 import { ServiceError } from "./Service.js";
 import { ServiceManager } from "./ServiceManager.js";
@@ -325,8 +326,10 @@ class ReadOperation extends Operation
       metadata.lastModified = entry.modified;
       if (this.loadFileData)
       {
-        const mimeType = node.data.type || "text/plain";
-        if (mimeType === "text/plain")
+        let formatInfo = IOManager.getFormatInfo(name);
+        let dataType = formatInfo?.dataType || "arraybuffer";
+
+        if (dataType === "text")
         {
           data = await node.data.text();
         }
