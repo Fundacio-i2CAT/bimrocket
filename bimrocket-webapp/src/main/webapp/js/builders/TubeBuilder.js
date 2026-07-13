@@ -60,8 +60,7 @@ class TubeBuilder extends ObjectBuilder
           object.edgesVisible = false;
           object.scale.set(1, 1, this.zScale);
 
-          let randomOffset = this.zOffset + Math.floor(Math.random() * 10);
-          object.position.z += randomOffset;
+          object.position.z = Math.floor(Math.random() * 5);
 
           // if source is child (WFS ADD_OBJECT mode), we hidden it to avoid duplication
           if (source !== object) source.visible = false;
