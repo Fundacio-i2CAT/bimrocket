@@ -9,13 +9,12 @@ import * as THREE from "three";
 
 class TubeBuilder extends ObjectBuilder 
 {
-  constructor(radius = 6.0, zScale = 0.001, zOffset = -1, segmentsMultiplier = 4, profileEdges = 8, looping = false) 
+  constructor(radius = 6.0, zScale = 0.001, segmentsMultiplier = 4, profileEdges = 8, looping = false) 
   {
     super();
     this.type = "tube";
     this.radius = radius;
     this.zScale = zScale;
-    this.zOffset = zOffset;
     this.segmentsMultiplier = segmentsMultiplier;
     this.profileEdges = profileEdges;
     this.looping = looping;
