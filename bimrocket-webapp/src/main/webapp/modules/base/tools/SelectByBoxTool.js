@@ -8,7 +8,11 @@ import { Tool } from "platform/ui/Tool.js";
 import { Controls } from "platform/ui/Controls.js";
 import { Application } from "platform/ui/Application.js";
 import { BoxHandler } from "platform/ui/BoxHandler.js";
+import { SelectionHandler } from "platform/ui/SelectionHandler.js";
 import { Solid } from "platform/core/Solid.js";
+import { Profile } from "platform/core/Profile.js";
+import { Cord } from "platform/core/Cord.js";
+import { Text2D } from "platform/core/Text2D.js";
 import { GeometryUtils } from "platform/utils/GeometryUtils.js";
 import { I18N } from "platform/i18n/I18N.js";
 import * as THREE from "three";
@@ -27,8 +31,9 @@ class SelectByBoxTool extends Tool
     this.setOptions(options);
     application.addTool(this);
 
-    this.boxHandler = new BoxHandler(this);
-    this.boxHandler.onBoxDrawn = (box, event) => this.onBoxDrawn(box, event);
+    this._boxHandler = new BoxHandler(this);
+    this._boxHandler.onBoxDrawn = (box, event) => this.onBoxDrawn(box, event);
+    this._selectionHandler = new SelectionHandler(this);
 
     this.createPanel();
   }
@@ -39,8 +44,6 @@ class SelectByBoxTool extends Tool
       .setDefaultHeight(120)
       .setDefaultMobileHeight(120)
       .setMinimumHeight(80);
-
-    this.panel.onClose = () => this.application.useTool(null);
 
     const helpElem = document.createElement("div");
     I18N.set(helpElem, "textContent", this.help);
@@ -61,23 +64,36 @@ class SelectByBoxTool extends Tool
   activate()
   {
     this.panel.visible = true;
-    this.boxHandler.enable();
+    this._boxHandler.enable();
+    this._selectionHandler.enable();
     this.selectModeElem.setValue(this.application.selectionMode);
   }
 
   deactivate()
   {
     this.panel.visible = false;
-    this.boxHandler.disable();
+    this._boxHandler.disable();
+    this._selectionHandler.disable();
   }
 
   onBoxDrawn(box, event)
   {
+    const application = this.application;
+    if (!application.isCanvasEvent(event)) return;
+
+    const selection = application.selection;
+
     let boxProjected = new THREE.Box2();
     boxProjected.expandByPoint(this.toCamera(box.min));
     boxProjected.expandByPoint(this.toCamera(box.max));
 
-    this.selectObjects(boxProjected, event);
+    const validBox = !box.min.equals(box.max);
+    const objectsInsideBox = [];
+    if (validBox) this.selectObjects(boxProjected, objectsInsideBox);
+    if (validBox)
+    {
+      application.userSelectObjects(objectsInsideBox, event);
+    }
   }
 
   toCamera(screenPoint)
@@ -89,23 +105,45 @@ class SelectByBoxTool extends Tool
     return pointcc;
   }
 
-  selectObjects(boxProjected, event)
+  selectObjects(boxProjected, selection)
   {
     const application = this.application;
     const baseObject = application.baseObject;
-    const selection = [];
+    const zeroPoint = new THREE.Vector3();
 
-    const explore = object => {
+    const explore = object =>
+    {
       if (object.visible)
       {
         if (object instanceof Solid)
         {
-          if (object.facesVisible)
+          if (object.facesVisible || object.edgesVisible)
           {
             const geometry = object.geometry;
             const vertices = geometry.vertices;
             this.selectObject(object, vertices, boxProjected, selection);
           }
+        }
+        else if (object instanceof Profile)
+        {
+          const geometry = object.geometry;
+          const path = geometry.path;
+          const points = path.getPoints(geometry.divisions);
+          const vertices = points.map(p => new THREE.Vector3(p.x, p.y, 0));
+          this.selectObject(object, vertices, boxProjected, selection);
+        }
+        else if (object instanceof Cord)
+        {
+          const geometry = object.geometry;
+          this.selectObject(object, geometry.points, boxProjected, selection);
+        }
+        else if (object instanceof Text2D ||
+                 object instanceof THREE.Sprite ||
+                 object instanceof THREE.Camera ||
+                 object instanceof THREE.Light ||
+                 object instanceof THREE.Points)
+        {
+          this.selectObject(object, [zeroPoint], boxProjected, selection);
         }
         else if (object instanceof THREE.Mesh)
         {
@@ -124,8 +162,6 @@ class SelectByBoxTool extends Tool
     };
 
     explore(baseObject);
-
-    application.userSelectObjects(selection, event);
   }
 
   selectObject(object, vertices, box, selection)

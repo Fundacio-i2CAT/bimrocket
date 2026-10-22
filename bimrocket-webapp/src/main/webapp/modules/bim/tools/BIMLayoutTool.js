@@ -51,8 +51,6 @@ class BIMLayoutTool extends Tool
       .setDefaultMobileHeight(260)
       .setMinimumHeight(200);
 
-    this.panel.onClose = () => this.application.useTool(null);
-
     this.layoutPanelElem = document.createElement("div");
     this.layoutPanelElem.className = "bim-layout-panel";
     this.panel.bodyElem.appendChild(this.layoutPanelElem);
@@ -178,10 +176,18 @@ class BIMLayoutTool extends Tool
           let elevation = storey.object.userData.IFC.Elevation;
           if (typeof elevation === "number")
           {
-            storeyLabel +=  " (" + application.formatMeasure(elevation);
+            storeyLabel +=  " (";
             // get units from project node
             let units = storey.object.parent?.parent?.parent?.userData.units;
-            if (units) storeyLabel += " " + units;
+            if (units)
+            {
+              elevation /= ObjectUtils.METER_CONVERSION_FACTORS[units] || 1;
+              storeyLabel += application.formatMeasure(elevation, 1);
+            }
+            else
+            {
+              storeyLabel += application.formatMeasure(elevation, 1, "");
+            }
             storeyLabel += ")";
           }
           const storeyTreeNode = buildingTreeNode.addNode(storeyLabel,

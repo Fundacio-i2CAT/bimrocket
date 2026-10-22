@@ -18,7 +18,7 @@
   --menuitem-color: var(--text-color);
   --menuitem-horizontal-padding: 6px;
   --menuitem-vertical-padding: 6px;
-  --menuitem-font-size: 14px;
+  --menuitem-font-size: var(--font-size);
   --menuitem-kbd-color: var(--text-color);
   --menuitem-kbd-border-color: var(--color-5);
   --menuitem-hover-color: var(--color-0);
@@ -129,6 +129,7 @@ menu menu li > button > svg
   stroke: var(--menuitem-icon-stroke);
   stroke-width: var(--menuitem-icon-stroke-width);
   margin-right: 0.25rem;
+  flex-shrink: 0;
 }
 
 menu.contextmenu li > button > svg.icon-toggler,

@@ -46,8 +46,6 @@ class MeasureLengthTool extends Tool
       .setDefaultHeight(140)
       .setDefaultMobileHeight(120);
 
-    this.panel.onClose = () => this.application.useTool(null);
-
     this.helpElem = document.createElement("div");
     this.helpElem.style.padding = "8px";
     this.panel.bodyElem.appendChild(this.helpElem);
@@ -186,7 +184,7 @@ class MeasureLengthTool extends Tool
     let length = this.getLineStringLength();
 
     I18N.set(this.measureElem, "textContent", "analysis|message.measure_length",
-      application.formatMeasure(length), application.setup.units);
+      application.formatMeasure(length));
     application.i18n.update(this.measureElem);
   }
 

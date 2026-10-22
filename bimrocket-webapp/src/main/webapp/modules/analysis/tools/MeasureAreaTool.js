@@ -68,8 +68,6 @@ class MeasureAreaTool extends Tool
       .setDefaultHeight(140)
       .setDefaultMobileHeight(120);
 
-    this.panel.onClose = () => this.application.useTool(null);
-
     this.helpElem = document.createElement("div");
     this.helpElem.style.padding = "8px";
     this.panel.bodyElem.appendChild(this.helpElem);
@@ -239,7 +237,7 @@ class MeasureAreaTool extends Tool
     let area = this.getArea();
 
     I18N.set(this.measureElem, "textContent", "analysis|message.measure_area",
-      application.formatMeasure(area), application.setup.units);
+      application.formatMeasure(area, 2));
 
     application.i18n.update(this.measureElem);
   }

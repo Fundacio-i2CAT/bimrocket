@@ -31,8 +31,11 @@ class SelectTool extends Tool
     this._onPointerUp = this.onPointerUp.bind(this);
     this._onPointerMove = this.onPointerMove.bind(this);
     this._onPointerLeave = this.onPointerLeave.bind(this);
+    this._onContextMenu = this.onContextMenu.bind(this);
 
-    this.dragging = false;
+    this._buttonPressed = -1;
+    this._dragging = false;
+    this._pointerDownTime = 0;
 
     this.createPanel();
 
@@ -54,8 +57,6 @@ class SelectTool extends Tool
       .setDefaultHeight(150)
       .setDefaultMobileHeight(150)
       .setMinimumHeight(80);
-
-    this.panel.onClose = () => this.application.useTool(null);
 
     const helpElem = document.createElement("div");
     I18N.set(helpElem, "textContent", this.help);
@@ -82,9 +83,10 @@ class SelectTool extends Tool
   {
     this.panel.activated = true;
     const container = this.application.container;
-    container.addEventListener("pointerdown", this._onPointerDown, false);
-    container.addEventListener("pointerup", this._onPointerUp, false);
-    container.addEventListener("pointerleave", this._onPointerLeave, false);
+    container.addEventListener("pointerdown", this._onPointerDown);
+    container.addEventListener("pointerup", this._onPointerUp);
+    container.addEventListener("pointerleave", this._onPointerLeave);
+    container.addEventListener("contextmenu", this._onContextMenu);
     this.selectModeElem.setValue(this.application.selectionMode);
   }
 
@@ -92,11 +94,12 @@ class SelectTool extends Tool
   {
     this.panel.activated = false;
     const container = this.application.container;
-    container.removeEventListener("pointerdown", this._onPointerDown, false);
-    container.removeEventListener("pointerup", this._onPointerUp, false);
-    container.removeEventListener("pointerleave", this._onPointerLeave, false);
+    container.removeEventListener("pointerdown", this._onPointerDown);
+    container.removeEventListener("pointerup", this._onPointerUp);
+    container.removeEventListener("pointerleave", this._onPointerLeave);
+    container.removeEventListener("contextmenu", this._onContextMenu);
 
-    this.stopDragging();
+    this.disableDragging();
   }
 
   onPointerDown(event)
@@ -104,52 +107,71 @@ class SelectTool extends Tool
     const application = this.application;
     if (!application.isCanvasEvent(event)) return;
 
-    this.startDragging();
+    if (application.contextMenu.isVisible())
+    {
+      application.contextMenu.hide();
+      this._buttonPressed = -1;
+      return;
+    }
+
+    this._buttonPressed = event.button;
+    this._dragging = false;
+    this._pointerDownTime = Date.now();
+
+    this.enableDragging();
   }
 
   onPointerUp(event)
   {
-    if (!this.dragging) return;
-
-    event.preventDefault();
-
-    this.stopDragging();
+    if (this._buttonPressed === -1) return;
 
     const application = this.application;
+    const container = application.container;
+    const selection = application.selection;
 
     if (!application.isCanvasEvent(event)) return;
 
-    const scene = application.scene;
-    const selection = application.selection;
+    const ellapsed = Date.now() - this._pointerDownTime;
+    let showContextMenu = !this._dragging &&
+      (event.button > 0 || ellapsed > 500);
 
-    let pointerPosition = this.getPointerPosition(event);
-    let intersect = this.intersect(pointerPosition, scene);
-    if (intersect)
+    if (this._buttonPressed === 0 || !this._dragging)
     {
-      const point = intersect.point;
-      const selPoint = new THREE.Vector3();
-      const decimals = 3;
+      let position = this.getPointerPosition(event);
+      let intersect = this.intersect(position, application.baseObject);
+      if (intersect)
+      {
+        const point = intersect.point;
+        const selPoint = new THREE.Vector3();
+        const decimals = 3;
 
-      selPoint.setFromMatrixPosition(application.baseObject.matrix);
-      selPoint.negate().add(point);
+        selPoint.setFromMatrixPosition(application.baseObject.matrix);
+        selPoint.negate().add(point);
 
-      this.posElem.textContent = "(x, y, z) = (" +
-        selPoint.x.toFixed(decimals) + ", " +
-        selPoint.y.toFixed(decimals) + ", " +
-        selPoint.z.toFixed(decimals) + ")";
+        this.posElem.textContent = "(x, y, z) = (" +
+          selPoint.x.toFixed(decimals) + ", " +
+          selPoint.y.toFixed(decimals) + ", " +
+          selPoint.z.toFixed(decimals) + ")";
 
-      let object = this.findActualSelectedObject(intersect.object);
-
-      application.userSelectObjects([object], event);
+        let object = this.findActualSelectedObject(intersect.object);
+        application.userSelectObjects([object], event);
+      }
+      else if (!showContextMenu)
+      {
+        application.userSelectObjects([], event);
+      }
     }
-    else
-    {
-      selection.clear();
-    }
+    this.disableDragging();
+
+    if (showContextMenu) this.application.contextMenu.show(event);
   }
 
   onPointerMove(event)
   {
+    this._dragging = true;
+
+    if (this._buttonPressed > 0) return;
+
     const pointerElem = this.pointerElem;
 
     const application = this.application;
@@ -171,36 +193,39 @@ class SelectTool extends Tool
 
   onPointerLeave(event)
   {
-    if (this.dragging)
-    {
-      this.stopDragging();
-    }
+    this.disableDragging();
   }
 
-  startDragging()
+  onContextMenu(event)
   {
-    const container = this.application.container;
-    container.addEventListener("pointermove", this._onPointerMove, false);
+    const application = this.application;
+    if (!application.isCanvasEvent(event)) return;
 
-    this.dragging = true;
+    event.preventDefault();
   }
 
-  stopDragging()
+  enableDragging()
   {
     const container = this.application.container;
-    container.removeEventListener("pointermove", this._onPointerMove, false);
+    container.addEventListener("pointermove", this._onPointerMove);
+  }
+
+  disableDragging()
+  {
+    const container = this.application.container;
+    container.removeEventListener("pointermove", this._onPointerMove);
 
     const pointerElem = this.pointerElem;
     pointerElem.style.display = "none";
 
-    this.dragging = false;
+    this._buttonPressed = -1;
   }
 
   getPointerPosition(event)
   {
     const pointerPosition = this.application.getPointerPosition(event);
 
-    if (event.pointerType === "touch")
+    if (event.pointerType === "touch" && this._dragging)
     {
       pointerPosition.x += this.touchPointerOffsetX;
       pointerPosition.y += this.touchPointerOffsetY;

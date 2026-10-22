@@ -7,12 +7,13 @@
 import { BundleManager } from "platform/i18n/BundleManager.js";
 import { Panel, PanelManager } from "platform/ui/panel/Panel.js";
 import { ProgressBar } from "platform/ui/progressbar/ProgressBar.js";
-import { MenuBar } from "platform/ui/menu/Menu.js";
+import { MenuBar, ContextMenu } from "platform/ui/menu/Menu.js";
 import { ToolBar } from "platform/ui/toolbar/ToolBar.js";
 import { Inspector } from "platform/ui/inspector/Inspector.js";
 import { MessageDialog } from "platform/ui/dialog/MessageDialog.js";
 import { ErrorHandler } from "platform/ui/ErrorHandler.js";
 import { Tool } from "platform/ui/Tool.js";
+import { Tooltip } from "platform/ui/tooltip/Tooltip.js";
 import { LinesSelectionHighlighter } from "platform/ui/LinesSelectionHighlighter.js";
 
 import { Cord } from "platform/core/Cord.js";
@@ -199,18 +200,27 @@ class Application
     if (WebGL.isWebGL2Available())
     {
       // WebGL renderer
-      renderer = new THREE.WebGLRenderer(
+      try
       {
-        antialias: true,
-        stencil: true,
-        alpha: true,
-        preserveDrawingBuffer: true
-      });
-      renderer.shadowMap.enabled = setup.shadowsEnabled;
-      renderer.shadowMap.type = THREE.PCFShadowMap;
-      renderer.setClearColor(0x000000, 0);
+        renderer = new THREE.WebGLRenderer(
+        {
+          antialias: true,
+          stencil: true,
+          alpha: true,
+          preserveDrawingBuffer: true
+        });
+        renderer.shadowMap.enabled = setup.shadowsEnabled;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+        renderer.setClearColor(0x000000, 0);
+      }
+      catch (ex)
+      {
+        console.error(ex);
+        renderer = null;
+      }
     }
-    else
+
+    if (!renderer)
     {
       // svg renderer fallback
       renderer = new SVGRenderer();
@@ -243,6 +253,9 @@ class Application
 
     // menuBar
     this.menuBar = new MenuBar(this, headerElem);
+
+    // contextMenu (actions on selected objects)
+    this.contextMenu = new ContextMenu(this);
 
     // customBar
     this.customBar = document.createElement("div");
@@ -283,8 +296,11 @@ class Application
     this.setUserLanguage(setup.userLanguage);
     this.setShadowMapEnabled(setup.shadowsEnabled);
     setup.applyBackground();
+    setup.applyFontSize();
 
     this.toolBar.position = setup.toolBarPosition;
+
+    Tooltip.enable();
 
     // init scene
     this.initScene();
@@ -1691,15 +1707,31 @@ class Application
     }
   }
 
-  formatMeasure(value)
+  /**
+   * Formats a value expressed in m, m2 or m3 to the specified units
+   *
+   * @param {number} value - the value in meters
+   * @param {number} dimension - the dimension (1: distance, 2: area, 3: volume)
+   * @param {string} units - the units to convert the value to
+   *   (defined in  ObjectUtils.METER_CONVERSION_FACTORS)
+   * @returns {string} the formatted value
+   */
+  formatMeasure(value, dimension = 1, units)
   {
-    let decimals = this.setup.decimals;
+    const setup = this.setup;
+    let decimals = setup.decimals;
+    if (units === undefined) units = setup.units;
+    let factor = ObjectUtils.METER_CONVERSION_FACTORS[units] || 1;
+
+    value = value * Math.pow(factor, dimension);
+
+    if (dimension > 1) units += dimension;
 
     return value.toLocaleString(undefined,
     {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
-    });
+    }) + " " + units;
   }
 
   rebuild()
@@ -1777,6 +1809,12 @@ class Application
     panel.title = tool.label;
     panel.iconName = tool.getIconName();
     panel.tool = tool;
+
+    if (!tool.immediate)
+    {
+      // release the tool when its panel is closed
+      panel.onClose = () => this.useTool(null);
+    }
 
     this.panelManager.addPanel(panel);
 
