@@ -282,7 +282,8 @@ class ACL
 
   fromJSON(json)
   {
-    let roles = JSON.parse(json);
+    const cleanJson = json.replace(/\u00A0/g, " ");
+    let roles = JSON.parse(cleanJson);
     let acl = new ACL();
 
     // check structure
