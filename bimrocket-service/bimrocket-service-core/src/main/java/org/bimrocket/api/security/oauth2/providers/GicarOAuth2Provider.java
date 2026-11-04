@@ -61,7 +61,7 @@ public class GicarOAuth2Provider extends AbstractOAuth2Provider
   {
     String baseUrl = getValue("baseUrl", "");
     String getUserInfoUrl = getValue("getUserInfoUrl", "/userInfo");
-    boolean emailAsId = config.getValue(BASE + "gicar.emailAsId", Boolean.class);
+    boolean emailAsId = getValueBoolean("emailAsId");
 
     if (getUserInfoUrl.startsWith("/")) getUserInfoUrl = baseUrl + getUserInfoUrl;
 

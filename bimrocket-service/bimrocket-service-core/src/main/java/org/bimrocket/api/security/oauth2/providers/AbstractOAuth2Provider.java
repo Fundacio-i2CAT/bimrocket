@@ -148,6 +148,8 @@ public abstract class AbstractOAuth2Provider implements OAuth2Provider
     return config.getValue(BASE + getName() + "." + path, String.class);
   }
 
+  protected boolean getValueBoolean(String path) { return config.getValue(BASE + getName() + "." + path, Boolean.class); }
+
   protected String getValue(String path, String orElse)
   {
     return config.getOptionalValue(BASE + getName() + "." + path, String.class)
